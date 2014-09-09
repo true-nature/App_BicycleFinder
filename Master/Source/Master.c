@@ -45,6 +45,12 @@
 #include "SMBus.h"
 #include "I2C_impl.h"
 
+// MML 対応
+#ifdef MML
+#include "mml.h"
+#include "melody_defs.h"
+#endif
+
 // 重複チェッカ
 #include "duplicate_checker.h"
 
@@ -138,6 +144,13 @@ uint8 au8SerOutBuff[128]; //!< シリアルの出力書式のための暫定バ�
 
 tsDupChk_Context sDupChk_IoData; //!< 重複チェック(IO関連のデータ転送)  @ingroup MASTER
 tsDupChk_Context sDupChk_SerMsg; //!< 重複チェック(シリアル関連のデータ転送)  @ingroup MASTER
+
+#ifdef MML
+tsMML sMML; //!< MML 関連 @ingroup MASTER
+
+// 以下の定義は melody_defs.[ch] に移動しました。
+// const uint8 au8MML[4][256] = { ... }
+#endif
 
 /****************************************************************************/
 /***        FUNCTIONS                                                     ***/
