@@ -137,6 +137,7 @@ extern "C" {
 #define MML
 #ifdef MML
 #define IGNORE_ADC_CHANGE // ADCの変化による送信は行わない
+#define ENABLE_RX_ON_SLP_1SEC	// 子機間欠モード(1sec)で受信を有効にする
 #endif
 
 /****************************************************************************/

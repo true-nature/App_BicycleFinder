@@ -510,7 +510,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		DBGOUT(3, "%d", sAppData.u8IOFixState);
 
 		// IO状態が確定すれば送信する。
-		if (sAppData.u8IOFixState == 0x3 && !sMML.bHoldPlay) {
+		if (sAppData.u8IOFixState == 0x3) {
 			vfPrintf(&sSerStream,
 					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
 					sAppData.sIOData_now.au8Input[0] & 1,
@@ -535,8 +535,13 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #endif
 			// 完了待ちをするため CbId を保存する。
 			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-
+#ifdef ENABLE_RX_SLP_1SEC && MML
+			if (!sMML.bHoldPlay) {
+				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
+			}
+#else
 			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
+#endif
 		}
 		break;
 
@@ -840,7 +845,12 @@ void cbAppColdStart(bool_t bStart) {
 			case E_IO_MODE_CHILD_SLP_10SEC:
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-				sToCoNet_AppContext.bRxOnIdle = TRUE;
+#ifdef ENABLE_RX_SLP_1SEC
+				// 1秒スリープで受信を有効にする
+				sToCoNet_AppContext.bRxOnIdle = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC ? TRUE : FALSE);
+#else
+				sToCoNet_AppContext.bRxOnIdle = FALSE;
+#endif
 				break;
 			default: // 未定義機能なので、SILENT モードにする。
 				sToCoNet_AppContext.bRxOnIdle = FALSE;
@@ -960,10 +970,11 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
-			// 1秒スリープでは受信処理を抑止しない。
-//			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
+#ifndef ENABLE_RX_SLP_1SEC
+			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
+#endif
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
-		// SILENT, 10秒スリープでは受信処理はしない。
+		// SILENT, 1秒スリープ, 10秒スリープでは受信処理はしない。
 		return;
 	}
 
