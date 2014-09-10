@@ -535,17 +535,24 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #endif
 			// 完了待ちをするため CbId を保存する。
 			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-#ifdef ENABLE_RX_SLP_1SEC && MML
-			if (!sMML.bHoldPlay) {
-				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
-			}
-#else
 			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
-#endif
 		}
 		break;
-
 	case E_STATE_WAIT_TX:
+#ifdef ENABLE_RX_ON_SLP_1SEC
+		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
+			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+		}
+#ifdef USE_SLOW_TX
+		if (PRSEV_u32TickFrNewState(pEv) > 200) {
+			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+		}
+#else
+		if (PRSEV_u32TickFrNewState(pEv) > 100) {
+			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+		}
+#endif
+#else
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
@@ -558,7 +565,16 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 #endif
+#endif
 		break;
+
+#ifdef ENABLE_RX_ON_SLP_1SEC
+	case E_STATE_WAIT_COMMAND:
+		if (!sMML.bHoldPlay) {
+			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		}
+		break;
+#endif
 
 	case E_STATE_FINISHED:
 		_C {
@@ -845,7 +861,7 @@ void cbAppColdStart(bool_t bStart) {
 			case E_IO_MODE_CHILD_SLP_10SEC:
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-#ifdef ENABLE_RX_SLP_1SEC
+#ifdef ENABLE_RX_ON_SLP_1SEC
 				// 1秒スリープで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC ? TRUE : FALSE);
 #else
@@ -970,7 +986,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
-#ifndef ENABLE_RX_SLP_1SEC
+#ifndef ENABLE_RX_ON_SLP_1SEC
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
 #endif
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
