@@ -1380,6 +1380,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 			break;
 		}
 #endif
+#ifdef MML
+		// MML の割り込み処理
+		MML_vInt(&sMML);
+#endif
 		break;
 
 	case E_AHI_DEVICE_ANALOGUE:
@@ -1664,6 +1668,9 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	// PWM
 	uint16 u16PWM_Hz = sAppData.sFlash.sData.u32PWM_Hz; // PWM周波数
 	uint8 u8PWM_prescale = 0; // prescaleの設定
+#ifdef MML
+     u8PWM_prescale = 1; // 130Hz 位まで使用したいので。
+#else
 	if (u16PWM_Hz < 10)
 		u8PWM_prescale = 9;
 	else if (u16PWM_Hz < 100)
@@ -1672,6 +1679,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		u8PWM_prescale = 3;
 	else
 		u8PWM_prescale = 0;
+#endif
 
 	uint16 u16pwm_duty_default = IS_APPCONF_OPT_PWM_INIT_LOW() ? 0 : 1024; // 起動時のデフォルト
 	for (i = 0; i < 4; i++) {
@@ -1712,6 +1720,12 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	vPortAsInput(15);
 #else
 	vSMBusInit();
+#endif
+
+#ifdef MML
+    // PWM1 を使用する。
+    MML_vInit(&sMML, &sTimerPWM[0]); // sTimerPWM[0] 構造体は、sMML 構造体中にコピーされる。
+    sTimerPWM[0].bStarted = FALSE; // 本ルーチンから制御されないように、稼働フラグを FALSE にする。（実際は稼働している）
 #endif
 }
 
@@ -2444,6 +2458,18 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 	// ポートの値を設定する（変更フラグのあるものだけ）
 	for (i = 0, j = 1; i < 4; i++, j <<= 1) {
 		if (u8ButtonChanged & j) {
+#ifdef MML
+			// ボタンが押し下げられた時に、再生を開始する
+			// 注：このコードだけでは以下の振る舞いを行います
+			//   送り側のボタンが複数押された場合、一番最後のボタン指定が有効になります
+			if (u8ButtonState & j) {
+				// ボタンの出力状態が Hi の場合のみ処理を行う。
+				// Lo が継続している場合(ボタン長押し時)は無視。
+				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
+					MML_vPlay(&sMML, au8MML[i]);
+				}
+			}
+#endif
 			vPortSet_TrueAsLo(au8PortTbl_DOut[i], u8ButtonState & j);
 #ifdef USE_I2C_LCD_TEST_CODE
 			if ((u8ButtonState & j) && sAppData.sIOData_now.au8Output[i] == 0) {

@@ -42,6 +42,12 @@
 
 #include "config.h"
 
+// MML 対応
+#ifdef MML
+#include "mml.h"
+#include "melody_defs.h"
+#endif
+
 #include "sercmd_gen.h"
 #include "sercmd_plus3.h"
 
@@ -57,6 +63,10 @@ extern tsFILE sSerStream;
 extern tsSerialPortSetup sSerPort;
 
 extern tsAppData sAppData; //!< アプリケーションデータ  @ingroup MASTER
+
+#ifdef MML
+extern tsMML sMML; //!< MML 関連 @ingroup MASTER
+#endif
 
 //tsModbusCmd sSerCmd; //!< シリアル入力系列のパーサー (modbus もどき)  @ingroup MASTER
 tsInpStr_Context sSerInpStr; //!< 文字列入力  @ingroup MASTER
@@ -474,6 +484,22 @@ static void vProcessInputByte(uint8 u8Byte) {
 		break;
 #endif
 
+#ifdef MML
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+		// テスト再生
+		MML_vPlay(&sMML, au8MML[u8Byte - '1']);
+		break;
+
+	case 'M':
+		// MML入力によるテスト再生
+		V_PRINT(LB"MML: ");
+		INPSTR_vStart(&sSerInpStr, E_INPUTSTRING_DATATYPE_STRING, 120, E_APPCONF_TEST);
+		break;
+#endif
+
 	default:
 		u8lastbyte = 0xFF;
 		break;
@@ -742,6 +768,17 @@ static void vProcessInputString(tsInpStr_Context *pContext) {
 		}
 		break;
 
+#ifdef MML
+	// MMLデバッグ再生用
+	case E_APPCONF_TEST:
+		_C {
+			MML_vPlay(&sMML, pu8str);
+			u16HoldUpdateScreen = 0; // 画面の再描画がうっとおしいので。
+			return;
+		}
+		break;
+#endif
+
 	default:
 		break;
 	}
@@ -959,6 +996,11 @@ void vSerUpdateScreen() {
 	V_PRINT("---"LB);
 
 	V_PRINT(" S: save Configuration" LB " R: reset to Defaults" LB LB);
+
+#ifdef MML
+	V_PRINT("---"LB);
+	V_PRINT(" M: try MML play." LB);
+#endif
 	//       0123456789+123456789+123456789+1234567894123456789+123456789+123456789+123456789
 }
 

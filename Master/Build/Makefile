@@ -56,6 +56,9 @@ APPSRC += Interactive.c
 APPSRC += I2C_impl.c
 APPSRC += sercmd_plus3.c
 APPSRC += sercmd_ascii.c
+APPSRC += modbus_ascii.c
+APPSRC += mml.c
+APPSRC += melody_defs.c
 
 ### Target type
 # アプリケーション(.bin)をビルドするか、ライブラリ(.a)にするか指定します。
