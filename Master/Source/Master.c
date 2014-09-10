@@ -541,15 +541,15 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	case E_STATE_WAIT_TX:
 #ifdef ENABLE_RX_ON_SLP_1SEC
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
 #ifdef USE_SLOW_TX
 		if (PRSEV_u32TickFrNewState(pEv) > 200) {
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
 #else
 		if (PRSEV_u32TickFrNewState(pEv) > 100) {
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_COMMAND);
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
 #endif
 #else
@@ -569,11 +569,14 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		break;
 
 #ifdef ENABLE_RX_ON_SLP_1SEC
-	case E_STATE_WAIT_COMMAND:
-		if (!sMML.bHoldPlay) {
+	case E_STATE_APP_WAIT_PLAY_MML:
+#ifdef MML
+		// 再生完了を最大60秒間まで待つ
+		if (!sMML.bHoldPlay || PRSEV_u32TickFrNewState(pEv) > 60000) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
+#endif
 #endif
 
 	case E_STATE_FINISHED:
