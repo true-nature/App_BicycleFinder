@@ -539,7 +539,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 		break;
 	case E_STATE_WAIT_TX:
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
@@ -568,7 +568,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #endif
 		break;
 
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 	case E_STATE_APP_WAIT_PLAY_MML:
 #ifdef MML
 		// 再生完了を最大60秒間まで待つ
@@ -864,7 +864,7 @@ void cbAppColdStart(bool_t bStart) {
 			case E_IO_MODE_CHILD_SLP_10SEC:
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 				// 1秒スリープで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC ? TRUE : FALSE);
 #else
@@ -989,7 +989,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
-#ifndef ENABLE_RX_ON_SLP_1SEC
+#ifndef USE_RX_ON_SLP_1SEC
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
 #endif
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
