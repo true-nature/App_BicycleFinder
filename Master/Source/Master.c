@@ -989,9 +989,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
-#ifndef USE_RX_ON_SLP_1SEC
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
-#endif
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
 		// SILENT, 1秒スリープ, 10秒スリープでは受信処理はしない。
 		return;
