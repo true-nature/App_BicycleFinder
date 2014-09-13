@@ -21,9 +21,9 @@
 
 ■ 改造部について
   ●MMLに関する部分は、App_Melodyと同様に #ifdef MML ... #endif で囲っています。
-  ●1秒スリープで受信を有効化する部分は、#ifdef ENABLE_RX_ON_SLP_1SEC ... #endif で囲っています。
+  ●1秒スリープで受信を有効化する部分は、#ifdef USE_RX_ON_SLP_1SEC ... #endif で囲っています。
 
 ■ 改造部のライセンスについて
-  ●ENABLE_RX_ON_SLP_1SEC によって有効化される改造部については、ToCoNet SDKの利用規定に準じるものとします。
+  ●USE_RX_ON_SLP_1SEC によって有効化される改造部については、ToCoNet SDKの利用規定に準じるものとします。
 
 ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝

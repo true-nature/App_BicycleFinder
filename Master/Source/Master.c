@@ -512,7 +512,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		// IO状態が確定すれば送信する。
 		if (sAppData.u8IOFixState == 0x3) {
 			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
+					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d b%04x"LB,
 					sAppData.sIOData_now.au8Input[0] & 1,
 					sAppData.sIOData_now.au8Input[1] & 1,
 					sAppData.sIOData_now.au8Input[2] & 1,
@@ -524,7 +524,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 					sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
 							9999 : sAppData.sIOData_now.au16InputADC[2],
 					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[3]);
+							9999 : sAppData.sIOData_now.au16InputADC[3], sToCoNet_AppContext.bRxOnIdle);
 
 #ifdef USE_SLOW_TX
 			// スローで送信
@@ -539,7 +539,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 		break;
 	case E_STATE_WAIT_TX:
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
@@ -568,9 +568,13 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #endif
 		break;
 
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 	case E_STATE_APP_WAIT_PLAY_MML:
 #ifdef MML
+#ifdef USE_DO4_AS_STATUS_LED
+		// 再生中に約250s毎にLED点滅
+		vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & (1<<8));
+#endif
 		// 再生完了を最大60秒間まで待つ
 		if (!sMML.bHoldPlay || PRSEV_u32TickFrNewState(pEv) > 60000) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
@@ -606,6 +610,10 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef SET_DO_ON_SLEEP
 			vPortSetHi(PORT_OUT1);
 			vPortSetHi(PORT_OUT2);
+#endif
+#ifdef USE_DO4_AS_STATUS_LED
+			// 再生終了したので点灯を抑止
+			vPortSetHi(PORT_OUT4);
 #endif
 			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
 		}
@@ -864,7 +872,7 @@ void cbAppColdStart(bool_t bStart) {
 			case E_IO_MODE_CHILD_SLP_10SEC:
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-#ifdef ENABLE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP_1SEC
 				// 1秒スリープで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC ? TRUE : FALSE);
 #else
@@ -989,7 +997,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
-#ifndef ENABLE_RX_ON_SLP_1SEC
+#ifndef USE_RX_ON_SLP_1SEC
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
 #endif
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
@@ -3112,7 +3120,7 @@ static bool_t bUpdateAdcValues() {
 	if (sAppData.sIOData_now.u16Volt != 0xFFFF) {
 		if (sAppData.sIOData_now.u16Volt <= 2300) {
 			sAppData.sIOData_now.au16InputADC[3] = 0;
-		} else if (sAppData.sIOData_now.u16Volt <= 2500) {
+		} else if (sAppData.sIOData_now.u16Volt <= 2400) {
 			sAppData.sIOData_now.au16InputADC[3] = sAppData.sIOData_now.u16Volt / 4;
 		} else {
 			sAppData.sIOData_now.au16InputADC[3] = sAppData.sIOData_now.u16Volt / 2;
