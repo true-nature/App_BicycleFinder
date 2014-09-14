@@ -58,6 +58,9 @@ typedef struct {
 #endif
 	uint16 u16Volt; //!< 12bits, 0xFFFF: 未確定
 	int16 i16Temp; //!< 12bits
+#ifdef USE_DO4_AS_STATUS_LED
+	uint16 u16Volt_LastRx;
+#endif
 
 	uint8 au8Input[4]; //!< 入力ポート (0: Hi, 1: Lo, 0xFF: 未確定)
 	uint8 au8Output[4]; //!< 出力ポート (0: Hi, 1:Lo, 0xFF: 未確定)
