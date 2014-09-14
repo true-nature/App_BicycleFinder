@@ -512,7 +512,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		// IO状態が確定すれば送信する。
 		if (sAppData.u8IOFixState == 0x3) {
 			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
+					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04dx"LB,
 					sAppData.sIOData_now.au8Input[0] & 1,
 					sAppData.sIOData_now.au8Input[1] & 1,
 					sAppData.sIOData_now.au8Input[2] & 1,
@@ -571,9 +571,23 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef USE_RX_ON_SLP_1SEC
 	case E_STATE_APP_WAIT_PLAY_MML:
 #ifdef MML
-		// 再生完了を最大60秒間まで待つ
-		if (!sMML.bHoldPlay || PRSEV_u32TickFrNewState(pEv) > 60000) {
+		// 再生中でなければ終了
+		if (!sMML.bHoldPlay) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		} else {
+#ifdef USE_DO4_AS_STATUS_LED
+			static uint32 period;
+			if (eEvent == E_EVENT_NEW_STATE) {
+				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
+				// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
+				period = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 5 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 7 : 9));
+			}
+			vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
+#endif
+			// 60秒以上再生させない
+			if (PRSEV_u32TickFrNewState(pEv) > 60000) {
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+			}
 		}
 		break;
 #endif
@@ -606,6 +620,10 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef SET_DO_ON_SLEEP
 			vPortSetHi(PORT_OUT1);
 			vPortSetHi(PORT_OUT2);
+#endif
+#ifdef USE_DO4_AS_STATUS_LED
+			// 再生終了したので点灯を抑止
+			vPortSetHi(PORT_OUT4);
 #endif
 			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
 		}
@@ -2473,6 +2491,9 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 
 	/* 電圧 */
 	uint16 u16Volt = G_BE_WORD();
+#ifdef USE_DO4_AS_STATUS_LED
+	sAppData.sIOData_now.u16Volt_LastRx = u16Volt;
+#endif
 
 	/* 温度 */
 #ifdef USE_I2C_PORT_AS_PWM_SPECIAL
@@ -3112,7 +3133,7 @@ static bool_t bUpdateAdcValues() {
 	if (sAppData.sIOData_now.u16Volt != 0xFFFF) {
 		if (sAppData.sIOData_now.u16Volt <= 2300) {
 			sAppData.sIOData_now.au16InputADC[3] = 0;
-		} else if (sAppData.sIOData_now.u16Volt <= 2500) {
+		} else if (sAppData.sIOData_now.u16Volt <= 2400) {
 			sAppData.sIOData_now.au16InputADC[3] = sAppData.sIOData_now.u16Volt / 4;
 		} else {
 			sAppData.sIOData_now.au16InputADC[3] = sAppData.sIOData_now.u16Volt / 2;
