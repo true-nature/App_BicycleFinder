@@ -571,13 +571,18 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef USE_RX_ON_SLP_1SEC
 	case E_STATE_APP_WAIT_PLAY_MML:
 #ifdef MML
-#ifdef USE_DO4_AS_STATUS_LED
-		// 再生中に約250s毎にLED点滅
-		vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & (1<<8));
-#endif
-		// 再生完了を最大60秒間まで待つ
-		if (!sMML.bHoldPlay || PRSEV_u32TickFrNewState(pEv) > 60000) {
+		// 再生中でなければ終了
+		if (!sMML.bHoldPlay) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		} else {
+#ifdef USE_DO4_AS_STATUS_LED
+			// 再生中は約250ms毎にDO4のLED点滅
+			vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & (1<<8));
+#endif
+			// 60秒以上再生させない
+			if (PRSEV_u32TickFrNewState(pEv) > 60000) {
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+			}
 		}
 		break;
 #endif
