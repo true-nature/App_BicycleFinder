@@ -44,7 +44,7 @@ extern "C" {
 #define UART_PORT_MASTER    E_AHI_UART_0 //!< UARTポートの指定
 
 /* Specify the PAN ID and CHANNEL to be used by tags, readers and gateway */
-#define APP_ID_ASSIGNED     0x81007AFD //!< アプリケーションID。同じIDでないと通信しない。
+#define APP_ID_ASSIGNED     0x81002BD0 //!< アプリケーションID。同じIDでないと通信しない。
 #define APP_ID              APP_ID_ASSIGNED //!< アプリケーションID。同じIDでないと通信しない。
 //#define APP_ID              0x67720202 //!< アプリケーションID。同じIDでないと通信しない。
 #if APP_ID != APP_ID_ASSIGNED

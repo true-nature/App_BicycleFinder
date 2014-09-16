@@ -348,6 +348,25 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 #endif
 
+#ifdef MML
+#ifdef USE_DO4_AS_STATUS_LED
+		static uint32 period;
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
+			// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
+			period = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 5 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 7 : 9));
+		} else if (eEvent == E_EVENT_APP_TICK_A) {
+			// 再生中でなければ終了
+			if (sMML.bHoldPlay) {
+				vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
+			} else {
+				// 点灯を抑止
+				vPortSetHi(PORT_OUT4);
+			}
+		}
+#endif
+#endif
+
 		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
 		&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 				) {
@@ -512,7 +531,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		// IO状態が確定すれば送信する。
 		if (sAppData.u8IOFixState == 0x3) {
 			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04dx"LB,
+					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
 					sAppData.sIOData_now.au8Input[0] & 1,
 					sAppData.sIOData_now.au8Input[1] & 1,
 					sAppData.sIOData_now.au8Input[2] & 1,
@@ -573,6 +592,10 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef MML
 		// 再生中でなければ終了
 		if (!sMML.bHoldPlay) {
+#ifdef USE_DO4_AS_STATUS_LED
+			// 点灯を抑止
+			vPortSetHi(PORT_OUT4);
+#endif
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		} else {
 #ifdef USE_DO4_AS_STATUS_LED
@@ -620,10 +643,6 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef SET_DO_ON_SLEEP
 			vPortSetHi(PORT_OUT1);
 			vPortSetHi(PORT_OUT2);
-#endif
-#ifdef USE_DO4_AS_STATUS_LED
-			// 再生終了したので点灯を抑止
-			vPortSetHi(PORT_OUT4);
 #endif
 			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
 		}
