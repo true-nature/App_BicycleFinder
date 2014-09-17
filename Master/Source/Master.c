@@ -505,8 +505,8 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			// vfPrintf(&sSerStream, "START_UP"LB, eEvent);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
 				// スリープからの復帰時の場合
-				vfPrintf(&sSerStream, "!INF %s WAKE UP."LB,
-						sAppData.bWakeupByButton ? "DI" : "TIMER");
+				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
+						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
 			} else {
 #ifdef SET_DO_ON_SLEEP
 				// 初回起動時の処理
@@ -531,7 +531,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		// IO状態が確定すれば送信する。
 		if (sAppData.u8IOFixState == 0x3) {
 			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
+					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
 					sAppData.sIOData_now.au8Input[0] & 1,
 					sAppData.sIOData_now.au8Input[1] & 1,
 					sAppData.sIOData_now.au8Input[2] & 1,
@@ -543,7 +543,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 					sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
 							9999 : sAppData.sIOData_now.au16InputADC[2],
 					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[3]);
+							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
 #ifdef USE_SLOW_TX
 			// スローで送信
@@ -560,6 +560,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	case E_STATE_WAIT_TX:
 #ifdef USE_RX_ON_SLP_1SEC
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
+			vfPrintf(&sSerStream, "!INF TX_COMPLETE @%dms"LB, u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
 #ifdef USE_SLOW_TX
@@ -601,7 +602,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #ifdef USE_DO4_AS_STATUS_LED
 			static uint32 period;
 			if (eEvent == E_EVENT_NEW_STATE) {
-				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
+				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV @%dms"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx, u32TickCount_ms);
 				// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
 				period = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 5 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 7 : 9));
 			}
@@ -622,8 +623,8 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			if (eEvent == E_EVENT_NEW_STATE) {
 				u8GoSleep = sAppData.bWakeupByButton ? 0 : 1;
 
-				vfPrintf(&sSerStream, "!INF SLEEP %dms."LB,
-						sAppData.u32SleepDur);
+				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
+						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
 			}
 
