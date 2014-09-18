@@ -348,8 +348,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 #endif
 
-#ifdef MML
-#ifdef USE_DO4_AS_STATUS_LED
+#if defined(MML) && defined(USE_DO4_AS_STATUS_LED)
 		static uint32 period;
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
@@ -365,10 +364,14 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			}
 		}
 #endif
-#endif
 
+#ifdef INCREASE_ADC_INTERVAL_ms
+#define APPT_TICK_A_MASK ~0
+#else
+#define APPT_TICK_A_MASK 1
+#endif
 		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
-		&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
+		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
 				) {
 			// 変更が有った場合は送信する
 			int i;
@@ -601,7 +604,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 
 #ifdef USE_RX_ON_SLP_1SEC
 	case E_STATE_APP_WAIT_RX_IDLE:
-		if (PRSEV_u32TickFrNewState(pEv) > 28) {
+		if (PRSEV_u32TickFrNewState(pEv) >= 16) {
 			// ADCをスキップする場合は受信のための時間を確保する
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
