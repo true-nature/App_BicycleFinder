@@ -518,10 +518,22 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 
 		if (eEvent == E_EVENT_TICK_TIMER) { // 何故 TickTiemr を待っていたのか不明だが、このままとする。
+#ifdef INCREASE_ADC_INTERVAL_ms
+			if (sAppData.u16CtRndCt > 0) {
+				sAppData.u16CtRndCt--;
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+			} else {
+				sAppData.u8AdcState = 0; // ADC の開始
+				sAppData.u32AdcLastTick = u32TickCount_ms;
+				sAppData.u16CtRndCt = INCREASE_ADC_INTERVAL_ms / sAppData.u32SleepDur;
+				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
+			}
+#else
 			sAppData.u8AdcState = 0; // ADC の開始
 			sAppData.u32AdcLastTick = u32TickCount_ms;
 
 			ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
+#endif
 		}
 		break;
 
@@ -1724,9 +1736,14 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	// ADC
 	vADC_Init(&sAppData.sObjADC, &sAppData.sADC, TRUE);
 	sAppData.u8AdcState = 0xFF; // 初期化中
-	sAppData.sObjADC.u8SourceMask = TEH_ADC_SRC_VOLT | TEH_ADC_SRC_TEMP
-			| TEH_ADC_SRC_ADC_1 | TEH_ADC_SRC_ADC_2 | TEH_ADC_SRC_ADC_3
-			| TEH_ADC_SRC_ADC_4;
+	if (IS_APPCONF_OPT_DISABLE_ADC()) {
+		// 動作時間短縮のため電源電圧以外はAD変換しない
+		sAppData.sObjADC.u8SourceMask = TEH_ADC_SRC_VOLT;
+	} else {
+		sAppData.sObjADC.u8SourceMask = TEH_ADC_SRC_VOLT | TEH_ADC_SRC_TEMP
+				| TEH_ADC_SRC_ADC_1 | TEH_ADC_SRC_ADC_2 | TEH_ADC_SRC_ADC_3
+				| TEH_ADC_SRC_ADC_4;
+	}
 
 	// DAC
 #if defined(JN514x)
