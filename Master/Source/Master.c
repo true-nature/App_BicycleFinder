@@ -516,18 +516,16 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 #endif
 			}
 		} else {
-#ifdef INCREASE_ADC_INTERVAL_ms
-			if (sAppData.u16CtRndCt > 0) {
-				sAppData.u16CtRndCt--;
-				if (PRSEV_u32TickFrNewState(pEv) > 8) {
-					// ADCをスキップする場合は受信のための時間を確保する
-					ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
-				}
-			} else {
+#if defined(USE_RX_ON_SLP_1SEC) && defined(INCREASE_ADC_INTERVAL_ms)
+			if (sAppData.u16CtRndCt == 0) {
 				sAppData.u8AdcState = 0; // ADC の開始
 				sAppData.u32AdcLastTick = u32TickCount_ms;
 				sAppData.u16CtRndCt = INCREASE_ADC_INTERVAL_ms / sAppData.u32SleepDur;
 				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
+			} else {
+				sAppData.u16CtRndCt--;
+				// ADCをスキップする場合は受信のための時間を確保する
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_RX_IDLE);
 			}
 #else
 			sAppData.u8AdcState = 0; // ADC の開始
@@ -602,6 +600,12 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		break;
 
 #ifdef USE_RX_ON_SLP_1SEC
+	case E_STATE_APP_WAIT_RX_IDLE:
+		if (PRSEV_u32TickFrNewState(pEv) > 28) {
+			// ADCをスキップする場合は受信のための時間を確保する
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+		}
+		break;
 	case E_STATE_APP_WAIT_PLAY_MML:
 #ifdef MML
 		// 再生中でなければ終了
@@ -618,6 +622,8 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV @%dms"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx, u32TickCount_ms);
 				// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
 				period = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 5 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 7 : 9));
+				// 再生後は電池が大きく減るので残量を更新
+				sAppData.u16CtRndCt = 0;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
 #endif
@@ -987,6 +993,9 @@ void cbAppWarmStart(bool_t bStart) {
 		memcpy(sAppData.sIOData_now.au16InputADC_LastTx,
 				sAppData.sIOData_reserve.au16InputADC_LastTx,
 				sizeof(sAppData.sIOData_now.au16InputADC_LastTx));
+#ifdef INCREASE_ADC_INTERVAL_ms
+		sAppData.sIOData_now.u16Volt = sAppData.sIOData_reserve.u16Volt;
+#endif
 
 		// 変数の初期化（必要なものだけ）
 		sAppData.u16CtTimer0 = 0; // このカウンタは、起動時からのカウントとする
