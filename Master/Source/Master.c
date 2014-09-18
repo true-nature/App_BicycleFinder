@@ -515,13 +515,14 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 				}
 #endif
 			}
-		}
-
-		if (eEvent == E_EVENT_TICK_TIMER) { // 何故 TickTiemr を待っていたのか不明だが、このままとする。
+		} else {
 #ifdef INCREASE_ADC_INTERVAL_ms
 			if (sAppData.u16CtRndCt > 0) {
 				sAppData.u16CtRndCt--;
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+				if (PRSEV_u32TickFrNewState(pEv) > 8) {
+					// ADCをスキップする場合は受信のための時間を確保する
+					ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+				}
 			} else {
 				sAppData.u8AdcState = 0; // ADC の開始
 				sAppData.u32AdcLastTick = u32TickCount_ms;
