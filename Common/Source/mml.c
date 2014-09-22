@@ -230,10 +230,8 @@ void MML_vInt(tsMML *psMML) {
 			} else {
 				// 音を止めて return
 				MML_vMute(psMML);
-#ifdef USE_RX_ON_SLP_1SEC
 				// 再生を終了
 				psMML->bHoldPlay = FALSE;
-#endif
 				return; // なにもしない
 			}
 		}
