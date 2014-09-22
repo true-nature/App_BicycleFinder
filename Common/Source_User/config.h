@@ -33,6 +33,18 @@ extern "C" {
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
+#define ENABLE_BICYCLE_FINDER
+#ifdef ENABLE_BICYCLE_FINDER
+/**
+ * MML 言語の対応
+ */
+#define MML
+#define INCREASE_ADC_INTERVAL_ms 30000 //!< 子機ADCの間隔を長くする
+#define USE_RX_ON_SLP         //!< 子機間欠モードで受信を有効にする
+#define USE_DO4_AS_STATUS_LED //!< DO4を状態表示のLEDで使用。MML再生中点滅。
+#define USE_CHILD_TO_CHILD_COMM //!< 子機から子機への通信を無視しない
+#endif
+
 /* Serial Configuration */
 #define UART_BAUD			115200UL //!< UART のボーレート（デフォルト）
 #define UART_BAUD_SAFE		38400UL //!< UART のボーレート（他の設定）
@@ -53,7 +65,7 @@ extern "C" {
 
 //#define CHANNEL             17
 //#define CHMASK              ((1UL << 11) | (1UL << 17) | (1UL << 25))
-#define CHANNEL 18 //!< 使用するチャネル
+#define CHANNEL 16 //!< 使用するチャネル
 #define CHMASK (1UL << CHANNEL) //!< チャネルマスク（３つまで指定する事が出来る）
 
 // Coordinator specific settings
@@ -83,8 +95,13 @@ extern "C" {
 #endif
 
 // スリープ間隔
+#if defined(ENABLE_BICYCLE_FINDER)
+#define MODE4_SLEEP_DUR_ms 4000UL
+#define MODE7_SLEEP_DUR_ms 0UL
+#else
 #define MODE4_SLEEP_DUR_ms 1000UL
 #define MODE7_SLEEP_DUR_ms 10000UL
+#endif
 
 /**
  * ボタン押し下げ時連続送信モード
@@ -131,15 +148,6 @@ extern "C" {
 #define USE_I2C_ACM1620 //!< ACM1620 をサポートする
 #define USE_I2C_AQM0802A //!< AQM0802A をサポートする
 
-/**
- * MML 言語の対応
- */
-#define MML
-#ifdef MML
-#define INCREASE_ADC_INTERVAL_ms 60000 // ADCの間隔を長くする
-#define USE_RX_ON_SLP_1SEC	// 子機間欠モード(1sec)で受信を有効にする
-#define USE_DO4_AS_STATUS_LED // DO4を状態表示のLEDで使用。MML再生中点滅。
-#endif
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/

@@ -41,7 +41,7 @@ typedef enum
 	E_STATE_APP_BASE = ToCoNet_STATE_APP_BASE,//!< ToCoNet 組み込み状態と重複させないため
 	E_STATE_APP_WAIT_IO_FIRST_CAPTURE,        //!< 最初のADCやDIの状態確定を待つ
 	E_STATE_APP_SET_INITIAL_ON,               //!< 起動時に全ポートをONにする
-#ifdef USE_RX_ON_SLP_1SEC
+#ifdef USE_RX_ON_SLP
 	E_STATE_APP_WAIT_RX_IDLE,                 //!< 連続送信を見逃さない程度の受信時間を確保する
 	E_STATE_APP_WAIT_PLAY_MML,                //!< MML再生完了を待つ
 #endif
