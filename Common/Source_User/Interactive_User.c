@@ -34,7 +34,7 @@ static void Config_vSetDefaults(tsFlashApp *p) {
 	p->u8role = E_APPCONF_ROLE_MAC_NODE;
 	p->u8layer = 1;
 
-	p->u16SleepDur_ms = 1000;
+	p->u16SleepDur_ms = MODE4_SLEEP_DUR_ms;
 	p->u16SleepDur_s = (MODE7_SLEEP_DUR_ms / 1000);
 	p->u8Fps = 32;
 
