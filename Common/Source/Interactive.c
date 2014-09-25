@@ -94,7 +94,7 @@ static void vProcessInputString(tsInpStr_Context *pContext);
 
 static void vConfig_SaveAndReset();
 static void vConfig_UnSetAll(tsFlashApp *p);
-static void Config_vSetDefaults(tsFlashApp *p);
+void Config_vSetDefaults(tsFlashApp *p);
 void vSerUpdateScreen();
 
 void vProcessSerialCmd();

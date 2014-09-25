@@ -25,7 +25,7 @@
  *
  * @param p 構造体へのアドレス
  */
-static void Config_vSetDefaults(tsFlashApp *p) {
+void Config_vSetDefaults(tsFlashApp *p) {
 	p->u32appid = APP_ID;
 	p->u32chmask = CHMASK;
 	p->u8ch = CHANNEL;
