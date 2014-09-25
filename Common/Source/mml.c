@@ -29,7 +29,6 @@
 
 #define DBGMSG
 #ifdef DBGMSG
-extern tsModbusCmd sSerCmd; //!< シリアル入力系列のパーサー (modbus もどき)  @ingroup MASTER
 extern tsFILE sSerStream; //!< シリアル出力ストリーム  @ingroup MASTER
 #endif
 
