@@ -2252,8 +2252,13 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	S_OCTET(APP_PROTOCOL_VERSION);
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
+
+#ifndef USE_CHILD_TO_CHILD_COMM
+	S_OCTET(LOGICAL_ID_CHILDREN); // 宛先は常に子機
+#else
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
+#endif
 #ifdef USE_SLOW_TX
 	S_BE_WORD(sAppData.u32CtTimer0 & 0x7FFF); // タイムスタンプ
 #else
@@ -2754,16 +2759,14 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 		}
 	}
 
-#ifndef USE_CHILD_TO_CHILD_COMM
 	// 親機子機の判定
 	if ((IS_LOGICAL_ID_PARENT(u8AppLogicalId)
 			&& IS_LOGICAL_ID_CHILD(sAppData.u8AppLogicalId))
-	|| (IS_LOGICAL_ID_CHILD(u8AppLogicalId) && IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId)) ){
+	|| (IS_LOGICAL_ID_CHILD(u8AppLogicalId) && (IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) || IS_LOGICAL_ID_CHILD(u8AppLogicalId_Dest))) ){
 		; // 親機⇒子機、または子機⇒親機への伝送
 	} else {
 		return;
 	}
-#endif
 
 	/* 電圧 */
 	uint16 u16Volt = G_BE_WORD();
