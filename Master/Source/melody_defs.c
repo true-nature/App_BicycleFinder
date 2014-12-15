@@ -20,6 +20,19 @@
 #include <jendefs.h>
 #include "melody_defs.h"
 
+#ifdef JN516x
+# define USE_EEPROM //!< JN516x でフラッシュを使用する
+#endif
+
+#include "ccitt8.h"
+#include "config.h"
+
+#ifdef USE_EEPROM
+# include "eeprom_6x.h"
+#endif
+
+#define FLASH_MAGIC_NUMBER (0xA501EF5A ^ APP_ID) //!< フラッシュ書き込み時のマジック番号  @ingroup FLASH
+
 /**
  * メロディの定義
  *
@@ -73,3 +86,32 @@ const uint8 au8MML[4][256] = {
 		// 停止
 		"R"
 };
+
+tsUserMML sUserMMLData;
+
+
+/**
+ * MMLの読み出し
+ * バージョン等のチェックを行い、問題が有れば FALSE を返す
+ *
+ * @param p
+ * @return
+ */
+bool_t MML_bLoad(tsUserMML *psMml) {
+	bool_t bRet = FALSE;
+
+#ifdef USE_EEPROM
+    if (EEP_6x_bRead(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
+    	bRet = TRUE;
+    }
+#endif
+    // validate content
+    if (bRet && psMml->u32Magic != FLASH_MAGIC_NUMBER) {
+    	bRet = FALSE;
+    }
+    if (bRet && psMml->u8CRC != u8CCITT8((uint8*)&(psMml->u8Data), sizeof(tsUserMML))) {
+    	bRet = FALSE;
+    }
+
+	return bRet;
+}

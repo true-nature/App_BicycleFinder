@@ -109,6 +109,7 @@ extern void vSerUpdateScreen();
 static void vReceiveSerMsg(tsRxDataApp *pRx);
 static void vReceiveIoData(tsRxDataApp *pRx);
 static void vReceiveIoSettingRequest(tsRxDataApp *pRx);
+static void vReceiveMmlData(tsRxDataApp *pRx);
 
 static bool_t bCheckDupPacket(tsDupChk_Context *pc, uint32 u32Addr,
 		uint16 u16TimeStamp);
@@ -1174,6 +1175,7 @@ void cbToCoNet_vMain(void) {
  *   - TOCONET_PACKET_CMD_APP_DATA : シリアル電文パケット
  *   - TOCONET_PACKET_CMD_APP_USER_IO_DATA : IO状態の伝送
  *   - TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT : シリアル電文による IO 状態の伝送
+ *   - TOCONET_PACKET_CMD_APP_USER_MML_DATA : シリアル電文による MMLデータの伝送
  *
  * @param psRx 受信パケット
  */
@@ -1184,12 +1186,13 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			psRx->u32SrcAddr, psRx->u32DstAddr);
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
+			// SILENTでは受信処理はしない。
 #ifndef USE_RX_ON_SLP
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
+			// 1秒スリープ, 10秒スリープでは受信処理はしない。
 #endif
 			) {
-		// SILENT, 1秒スリープ, 10秒スリープでは受信処理はしない。
 		return;
 	}
 
@@ -1205,6 +1208,14 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 	case TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT: // IO状態の伝送(UART経由)
 		if (PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING) { // 稼動状態でパケット処理をする
 			vReceiveIoSettingRequest(psRx);
+		}
+		break;
+	case TOCONET_PACKET_CMD_APP_USER_MML_DATA: // MMLデータの伝送(UART経由)
+		// 1秒間欠動作の稼働状態または受信待ちでパケット処理をする
+		if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC &&
+				(PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING
+				|| PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_APP_WAIT_RX_IDLE)) {
+			vReceiveMmlData(psRx);
 		}
 		break;
 	}
@@ -2188,6 +2199,18 @@ void vProcessSerialCmd(tsSerCmd_Context *pSer) {
 					sAppData.u8UartReqNum++);
 		}
 	}
+}
+
+/** @ingroup MASTER
+ * MMLデータの受信処理を行います。
+ *
+ * - 受信したデータに格納されるMMLをEEPROMに保存します。
+ *
+ * @param pRx 受信データ
+ */
+static void vReceiveMmlData(tsRxDataApp *pRx) {
+	// TODO 受信データのパース
+	// TODO EEPROMへの保存
 }
 
 /** @ingroup MASTER

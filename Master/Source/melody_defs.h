@@ -27,4 +27,19 @@
  */
 const uint8 au8MML[4][256];
 
+/** @ingroup FLASH
+ * フラッシュデータ構造体
+ * - u32Magic と u8CRC により、書き込みデータが有為かどうか判定する
+ * - u8CRC は データ中の CRC8 チェックサム
+ */
+typedef struct _tsUserMML {
+	uint32 u32Magic;
+	uint8 u8Data[251];
+	uint8 u8CRC;
+} tsUserMML;
+
+extern tsUserMML sUserMMLData;
+
+bool_t MML_bLoad(tsUserMML *p);
+
 #endif
