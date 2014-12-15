@@ -935,19 +935,32 @@ void cbAppColdStart(bool_t bStart) {
 			if (!IS_LOGICAL_ID_CHILD(sAppData.u8AppLogicalId )) {
 				sAppData.u8AppLogicalId =
 						au8IoModeTbl_To_LogicalID[sAppData.u8Mode];
-			}
-		}
-
-		// 論理IDを121,122に保存した場合、親機で起動する
-		if (sAppData.bFlashLoaded) {
-			if (sAppData.sFlash.sData.u8id == 121) {
-				sAppData.u8Mode = 1; // 親機のモード番号
-				sAppData.u8AppLogicalId =
-						au8IoModeTbl_To_LogicalID[sAppData.u8Mode]; // 論理IDを設定
-			} else if (sAppData.sFlash.sData.u8id == 122) {
-				sAppData.u8Mode = 2; // 親機のモード番号
-				sAppData.u8AppLogicalId =
-						au8IoModeTbl_To_LogicalID[sAppData.u8Mode]; // 論理IDを設定
+			} else {
+				/* M1,M2,M3が子機状態で論理IDに121,122,123,124,127が保存されていた場合、
+				 * 指定のモードで起動する。
+				 * 間欠モードで設定変更する場合は、M1またはM2をGNDに接続してモード変更を抑止する。
+				 */
+				switch (sAppData.u8AppLogicalId)
+				{
+				case 121:
+					sAppData.u8Mode = E_IO_MODE_PARNET; // 親機のモード番号
+					break;
+				case 122:
+					sAppData.u8Mode = E_IO_MODE_ROUTER; // 中継器のモード番号
+					break;
+				case 123:
+					sAppData.u8Mode = E_IO_MODE_CHILD_CONT_TX; // 子機：連続0.03秒のモード番号
+					break;
+				case 124:
+					sAppData.u8Mode = E_IO_MODE_CHILD_SLP_1SEC; // 子機：間欠1秒のモード番号
+					break;
+				case 127:
+					sAppData.u8Mode = E_IO_MODE_CHILD_SLP_10SEC; // 子機：間欠10秒のモード番号
+					break;
+				default:
+					// nothing
+					break;
+				}
 			}
 		}
 
