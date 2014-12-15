@@ -97,7 +97,7 @@ tsUserMML sUserMMLData;
  * @param p
  * @return
  */
-bool_t MML_bLoad(tsUserMML *psMml) {
+bool MML_bLoad(tsUserMML *psMml) {
 	bool_t bRet = FALSE;
 
 #ifdef USE_EEPROM
@@ -109,9 +109,29 @@ bool_t MML_bLoad(tsUserMML *psMml) {
     if (bRet && psMml->u32Magic != FLASH_MAGIC_NUMBER) {
     	bRet = FALSE;
     }
-    if (bRet && psMml->u8CRC != u8CCITT8((uint8*)&(psMml->u8Data), sizeof(tsUserMML))) {
+    if (bRet && psMml->u8CRC != u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data))) {
     	bRet = FALSE;
     }
-
-	return bRet;
+    // set default
+    if (!bRet) {
+    	memset(psMml->u8Data, 0, sizeof(psMml->u8Data));
+    	strncpy(psMml->u8Data, au8MML[0], sizeof(psMml->u8Data) - 1);
+    	bRet = MML_bSave(psMml);
+    }
+    return bRet;
 }
+
+
+bool MML_bSave(tsUserMML *psMml) {
+	bool_t bRet = FALSE;
+
+	psMml->u32Magic = FLASH_MAGIC_NUMBER;
+	psMml->u8CRC = u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data));
+#ifdef USE_EEPROM
+    if (EEP_6x_bWrite(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
+    	bRet = TRUE;
+    }
+#endif
+    return bRet;
+}
+

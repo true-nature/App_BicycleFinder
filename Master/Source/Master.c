@@ -834,6 +834,7 @@ void cbAppColdStart(bool_t bStart) {
 		sToCoNet_AppContext.u8Channel = CHANNEL; // デフォルトのチャネル
 
 		// フラッシュの読み出し
+		MML_bLoad(&sUserMMLData);
 		sAppData.bFlashLoaded = Config_bLoad(&sAppData.sFlash);
 
 		// Version String のチェック
@@ -2202,18 +2203,6 @@ void vProcessSerialCmd(tsSerCmd_Context *pSer) {
 }
 
 /** @ingroup MASTER
- * MMLデータの受信処理を行います。
- *
- * - 受信したデータに格納されるMMLをEEPROMに保存します。
- *
- * @param pRx 受信データ
- */
-static void vReceiveMmlData(tsRxDataApp *pRx) {
-	// TODO 受信データのパース
-	// TODO EEPROMへの保存
-}
-
-/** @ingroup MASTER
  * 重複パケットの判定。タイムスタンプの比較で、ごく最近であって旧いパケットを除外する。
  *
  * - 注意点
@@ -2833,7 +2822,7 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 				// ボタンの出力状態が Hi の場合のみ処理を行う。
 				// Lo が継続している場合(ボタン長押し時)は無視。
 				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
-					MML_vPlay(&sMML, au8MML[i]);
+					MML_vPlay(&sMML, i == 0 ? sUserMMLData->u8Data : au8MML[i]);
 				}
 			}
 #endif
@@ -3130,6 +3119,18 @@ static void vReceiveIoSettingRequest(tsRxDataApp *pRx) {
 		SerCmdAscii_Output_AdrCmd(&sSerStream, u8AppLogicalId, SERCMD_ID_INFORM_IO_DATA, pRx->auData, pRx->u8Len);
 	}
 #endif
+}
+
+/** @ingroup MASTER
+ * MMLデータの受信処理を行います。
+ *
+ * - 受信したデータに格納されるMMLをEEPROMに保存します。
+ *
+ * @param pRx 受信データ
+ */
+static void vReceiveMmlData(tsRxDataApp *pRx) {
+	// TODO 受信データのパース
+	// TODO EEPROMへの保存
 }
 
 /** @ingroup MASTER
