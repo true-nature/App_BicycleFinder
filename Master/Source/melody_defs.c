@@ -21,8 +21,6 @@
 #include <jendefs.h>
 #include <utils.h>
 
-#include "melody_defs.h"
-
 #ifdef JN516x
 # define USE_EEPROM //!< JN516x でフラッシュを使用する
 #endif
@@ -37,6 +35,8 @@
 #ifdef USE_EEPROM
 # include "eeprom_6x.h"
 #endif
+
+#include "melody_defs.h"
 
 #define FLASH_MAGIC_NUMBER (0xA501EF5A ^ APP_ID) //!< フラッシュ書き込み時のマジック番号  @ingroup FLASH
 
@@ -103,7 +103,7 @@ const uint8 au8MML[4][256] = {
 		"R"
 };
 
-tsUserMML sUserMMLData;
+usUserMML sUserMMLData;
 
 
 /**
@@ -117,8 +117,10 @@ bool MML_bLoad(tsUserMML *psMml) {
 	bool_t bRet = FALSE;
 
 #ifdef USE_EEPROM
-	// TODO EEPROMのセグメントを跨がないようにすること
-    if (EEP_6x_bRead(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
+    if (EEP_6x_bRead(1, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
+    		&& EEP_6x_bRead(2, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
+    		&& EEP_6x_bRead(3, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
+    		&& EEP_6x_bRead(4, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
     	bRet = TRUE;
     }
 #endif
@@ -145,8 +147,10 @@ bool MML_bSave(tsUserMML *psMml) {
 	psMml->u32Magic = FLASH_MAGIC_NUMBER;
 	psMml->u8CRC = u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data));
 #ifdef USE_EEPROM
-	// TODO EEPROMのセグメントを跨がないようにすること
-    if (EEP_6x_bWrite(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
+    if (EEP_6x_bWrite(1, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
+    		&& EEP_6x_bWrite(2, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
+    		&& EEP_6x_bWrite(3, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
+    		&& EEP_6x_bWrite(4, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
     	bRet = TRUE;
     }
 #endif

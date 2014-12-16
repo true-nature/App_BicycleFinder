@@ -22,6 +22,9 @@
 
 #include <jendefs.h>
 
+#include "eeprom_6x.h"
+
+
 /**
  * メロディの定義
  */
@@ -32,13 +35,17 @@ const uint8 au8MML[4][256];
  * - u32Magic と u8CRC により、書き込みデータが有為かどうか判定する
  * - u8CRC は データ中の CRC8 チェックサム
  */
-typedef struct _tsUserMML {
+typedef struct {
 	uint32 u32Magic;
-	uint8 u8Data[123];
+	uint8 u8Data[251];
 	uint8 u8CRC;
 } tsUserMML;
 
-tsUserMML sUserMMLData;
+typedef union {
+	tsUserMML st;
+	uint8 segment[4][EEPROM_6X_SEGMENT_SIZE];
+} usUserMML;
+extern usUserMML sUserMMLData;
 
 bool MML_bLoad(tsUserMML *p);
 bool MML_bSave(tsUserMML *psMml);
