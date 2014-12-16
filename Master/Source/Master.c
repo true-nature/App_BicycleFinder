@@ -109,7 +109,6 @@ extern void vSerUpdateScreen();
 static void vReceiveSerMsg(tsRxDataApp *pRx);
 static void vReceiveIoData(tsRxDataApp *pRx);
 static void vReceiveIoSettingRequest(tsRxDataApp *pRx);
-static void vReceiveMmlData(tsRxDataApp *pRx);
 
 static bool_t bCheckDupPacket(tsDupChk_Context *pc, uint32 u32Addr,
 		uint16 u16TimeStamp);
@@ -1209,14 +1208,6 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 	case TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT: // IO状態の伝送(UART経由)
 		if (PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING) { // 稼動状態でパケット処理をする
 			vReceiveIoSettingRequest(psRx);
-		}
-		break;
-	case TOCONET_PACKET_CMD_APP_USER_MML_DATA: // MMLデータの伝送(UART経由)
-		// 1秒間欠動作の稼働状態または受信待ちでパケット処理をする
-		if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC &&
-				(PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING
-				|| PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_APP_WAIT_RX_IDLE)) {
-			vReceiveMmlData(psRx);
 		}
 		break;
 	}
@@ -3119,18 +3110,6 @@ static void vReceiveIoSettingRequest(tsRxDataApp *pRx) {
 		SerCmdAscii_Output_AdrCmd(&sSerStream, u8AppLogicalId, SERCMD_ID_INFORM_IO_DATA, pRx->auData, pRx->u8Len);
 	}
 #endif
-}
-
-/** @ingroup MASTER
- * MMLデータの受信処理を行います。
- *
- * - 受信したデータに格納されるMMLをEEPROMに保存します。
- *
- * @param pRx 受信データ
- */
-static void vReceiveMmlData(tsRxDataApp *pRx) {
-	// TODO 受信データのパース
-	// TODO EEPROMへの保存
 }
 
 /** @ingroup MASTER
