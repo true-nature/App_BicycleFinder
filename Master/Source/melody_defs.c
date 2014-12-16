@@ -117,6 +117,7 @@ bool MML_bLoad(tsUserMML *psMml) {
 	bool_t bRet = FALSE;
 
 #ifdef USE_EEPROM
+	// TODO EEPROMのセグメントを跨がないようにすること
     if (EEP_6x_bRead(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
     	bRet = TRUE;
     }
@@ -144,6 +145,7 @@ bool MML_bSave(tsUserMML *psMml) {
 	psMml->u32Magic = FLASH_MAGIC_NUMBER;
 	psMml->u8CRC = u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data));
 #ifdef USE_EEPROM
+	// TODO EEPROMのセグメントを跨がないようにすること
     if (EEP_6x_bWrite(1, sizeof(sUserMMLData), (uint8 *)psMml)) {
     	bRet = TRUE;
     }
