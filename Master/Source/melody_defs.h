@@ -42,5 +42,6 @@ tsUserMML sUserMMLData;
 
 bool MML_bLoad(tsUserMML *p);
 bool MML_bSave(tsUserMML *psMml);
+void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc);
 
 #endif

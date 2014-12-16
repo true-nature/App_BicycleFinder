@@ -2822,7 +2822,7 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 				// ボタンの出力状態が Hi の場合のみ処理を行う。
 				// Lo が継続している場合(ボタン長押し時)は無視。
 				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
-					MML_vPlay(&sMML, i == 0 ? sUserMMLData->u8Data : au8MML[i]);
+					MML_vPlay(&sMML, i == 0 ? sUserMMLData.u8Data : au8MML[i]);
 				}
 			}
 #endif
@@ -3290,6 +3290,10 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
 					// I2C の処理
 #ifndef USE_I2C_PORT_AS_OTHER_FUNCTION
 					vProcessI2CCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
+#endif
+				} else if (au8SerBuffRx[1] == SERCMD_ID_MML_UPDATE_CMD) {
+#ifdef MML
+					vProcessMmlCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
 #endif
 				} else {
 					// 受信データの出力

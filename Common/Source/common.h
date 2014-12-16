@@ -179,6 +179,9 @@ extern const uint8 au8IoModeTbl_To_LogicalID[8]; //!< tePortConf2Mode から論�
 #define SERCMD_ID_INFORM_NETWORK_CONFIG 0x93
 #define SERCMD_ID_SET_NETWORK_CONFIG 0x94
 
+#define SERCMD_ID_MML_UPDATE_CMD 0x95
+#define SERCMD_ID_MML_UPDATE_RSP 0x96
+
 // Packet CMD IDs
 #define TOCONET_PACKET_CMD_APP_USER_IO_DATA (TOCONET_PACKET_CMD_APP_USER+0) //!< IO の入出力データ
 #define TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT (TOCONET_PACKET_CMD_APP_USER+1) //!< IO の入出力データ

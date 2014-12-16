@@ -17,21 +17,37 @@
  *
  ****************************************************************************/
 
+#include <string.h>
 #include <jendefs.h>
+#include <utils.h>
+
 #include "melody_defs.h"
 
 #ifdef JN516x
 # define USE_EEPROM //!< JN516x でフラッシュを使用する
 #endif
 
+#include "Master.h"
+
 #include "ccitt8.h"
+#include "common.h"
 #include "config.h"
+#include "sercmd_gen.h"
 
 #ifdef USE_EEPROM
 # include "eeprom_6x.h"
 #endif
 
 #define FLASH_MAGIC_NUMBER (0xA501EF5A ^ APP_ID) //!< フラッシュ書き込み時のマジック番号  @ingroup FLASH
+
+#define MML_OPER_WRITE 1
+#define MML_OPER_READ 2
+
+/****************************************************************************/
+/***        Exported Variables                                            ***/
+/****************************************************************************/
+extern tsAppData sAppData; //!< アプリケーションデータ  @ingroup MASTER
+extern tsFILE sSerStream;
 
 /**
  * メロディの定義
@@ -115,7 +131,7 @@ bool MML_bLoad(tsUserMML *psMml) {
     // set default
     if (!bRet) {
     	memset(psMml->u8Data, 0, sizeof(psMml->u8Data));
-    	strncpy(psMml->u8Data, au8MML[0], sizeof(psMml->u8Data) - 1);
+    	memcpy(psMml->u8Data, au8MML[0], sizeof(psMml->u8Data) - 1);
     	bRet = MML_bSave(psMml);
     }
     return bRet;
@@ -135,3 +151,104 @@ bool MML_bSave(tsUserMML *psMml) {
     return bRet;
 }
 
+
+/** @ingroup MASTER
+ * MML の曲データを更新します。
+ * 無線経由ので要求の場合は、応答は送信元へ無線パケットで戻されます。
+ * アドレスが0xDBの場合は、要求は自身のモジュールで実行された上 UART に応答します。
+ *
+ * - 入力フォーマット
+ *   - OCTET: ネットワークアドレス(宛先,0xDBは自身のモジュールで実行してUARTに出力)
+ *   - OCTET: SERCMD_ID_MML_UPDATE_CMD (=0x95)
+ *   - OCTET: 要求番号
+ *   - OCTET: コマンド (0x1: Write, 0x2: Read, 0x3: Write and Read)
+ *   - OCTET: 0x00 (曲インデックス)
+ *   - OCTET: データサイズ (無い時は 0)
+ *   - OCTET[N]: データ (データサイズが0のときは、本フィールドは無し)
+ *
+ * - 出力フォーマット
+ *   - OCTET: ネットワークアドレス
+ *   - OCTET: SERCMD_ID_MML_UPDATE_RSP (=0x96)
+ *   - OCTET: 要求番号、入力フォーマットの値がコピーされる
+ *   - OCTET: コマンド (0x1: Write, 0x2: Read, 0x3: Write and Read)
+ *   - OCTET: 0:FAIL, 1:SUCCESS
+ *   - OCTET: データサイズ (無い時は 0)
+ *   - OCTET[N]: データ (データサイズが0のときは、本フィールドは無し)
+ *
+ * @param p 入力書式のバイト列
+ * @param u16len バイト列長
+ * @param u8AddrSrc 要求元のネットワークアドレス
+ */
+void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
+	uint8 *p_end = p + u16len;
+	uint8 au8OutBuf[256 + 32];
+	uint8 *q = au8OutBuf;
+
+	bool_t bOk = TRUE;
+
+	// 入力データの解釈
+	uint8 u8Addr = G_OCTET();
+	(void) u8Addr;
+
+	uint8 u8Command = G_OCTET();
+	if (u8Command != SERCMD_ID_MML_UPDATE_CMD) {
+		return;
+	}
+
+	uint8 u8ReqNum = G_OCTET();
+	uint8 u8MML_Oper = G_OCTET();
+	uint8 u8MML_Addr = G_OCTET();
+	uint8 u8DataSize = G_OCTET();
+
+	uint8 *pu8data_end = p + u8DataSize;
+
+#if 1
+	if (pu8data_end != p_end) {
+		DBGOUT(1, "MMLCMD: incorrect data."LB);
+		return;
+	}
+#endif
+
+	// 出力用のバッファを用意しておく
+	S_OCTET(sAppData.u8AppLogicalId);
+	S_OCTET(SERCMD_ID_MML_UPDATE_RSP);
+	S_OCTET(u8ReqNum);
+	S_OCTET(u8MML_Oper);
+	//ここで q[0] 成功失敗フラグ, q[1] データサイズ, q[2]... データ
+	q[0] = FALSE;
+	q[1] = 0;
+
+	DBGOUT(1, "MMLCMD: req#=%d Oper=%d Addr=%02x Siz=%d"LB, u8ReqNum,
+			u8MML_Oper, u8MML_Addr, u8DataSize);
+
+	switch (u8MML_Oper) {
+	case MML_OPER_WRITE:
+		// Save
+		break;
+
+	case MML_OPER_WRITE|MML_OPER_READ:
+		// Save
+		// no break
+
+	case MML_OPER_READ:
+		// Read
+		break;
+
+
+	default:
+		DBGOUT(1, "MMLCMD: unknown operation(%d)."LB, u8MML_Oper);
+		return;
+	}
+
+	q[0] = bOk; // 成功失敗フラグを書き込む
+	q = q + 2 + q[1]; // ポインタ q を進める（データ末尾+1)
+
+	if (u8AddrSrc == SERCMD_ADDR_TO_MODULE) {
+		SerCmdAscii_Output_AdrCmd(&sSerStream, u8AddrSrc, au8OutBuf[1],
+				au8OutBuf + 2, q - au8OutBuf - 2);
+	} else {
+		i16TransmitSerMsg(au8OutBuf, q - au8OutBuf, ToCoNet_u32GetSerial(),
+				sAppData.u8AppLogicalId, u8AddrSrc, FALSE,
+				sAppData.u8UartReqNum++);
+	}
+}

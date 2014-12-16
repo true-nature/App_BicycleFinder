@@ -487,7 +487,7 @@ static void vProcessInputByte(uint8 u8Byte) {
 #ifdef MML
 	case '1':
 		// テスト再生
-		MML_vPlay(&sMML, sUserMMLData->u8Data);
+		MML_vPlay(&sMML, sUserMMLData.u8Data);
 		break;
 	case '2':
 	case '3':
