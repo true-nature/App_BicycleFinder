@@ -151,6 +151,12 @@ bool MML_bSave(tsUserMML *psMml) {
     return bRet;
 }
 
+void cpyMmlData(tsUserMML* psMml, uint8* p, uint8 u8DataSize) {
+	uint16 dstlen = sizeof(psMml->u8Data) - 1;
+	uint16 len = (dstlen < u8DataSize ? dstlen : u8DataSize);
+	memset(psMml->u8Data, 0, sizeof(psMml->u8Data));
+	memcpy(psMml->u8Data, p, len - 1);
+}
 
 /** @ingroup MASTER
  * MML の曲データを更新します。
@@ -183,8 +189,7 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 	uint8 *p_end = p + u16len;
 	uint8 au8OutBuf[256 + 32];
 	uint8 *q = au8OutBuf;
-
-	bool_t bOk = TRUE;
+	tsUserMML *psMml = &sUserMMLData;
 
 	// 入力データの解釈
 	uint8 u8Addr = G_OCTET();
@@ -223,24 +228,37 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 
 	switch (u8MML_Oper) {
 	case MML_OPER_WRITE:
-		// Save
+	// Save
+		cpyMmlData(psMml, p, u8DataSize);
+		q[0] = MML_bSave(psMml);
 		break;
 
 	case MML_OPER_WRITE|MML_OPER_READ:
-		// Save
+	// Save
+		cpyMmlData(psMml, p, u8DataSize);
+		q[0] = MML_bSave(psMml);
+		if (!q[0]) {
+			break;
+		}
 		// no break
 
 	case MML_OPER_READ:
-		// Read
+	// Read
+		{
+			uint16 maxlen = sizeof(psMml->u8Data) - 1;
+			uint16 datalen = strnlen((const char *)psMml->u8Data, maxlen);
+			uint16 len = (datalen < u8DataSize - 1 ? datalen : u8DataSize - 1);
+			q[1] = len + 1;
+			memset(&q[2], 0, len + 1);
+			memcpy(&q[2], psMml->u8Data, len);
+		}
 		break;
-
 
 	default:
 		DBGOUT(1, "MMLCMD: unknown operation(%d)."LB, u8MML_Oper);
 		return;
 	}
 
-	q[0] = bOk; // 成功失敗フラグを書き込む
 	q = q + 2 + q[1]; // ポインタ q を進める（データ末尾+1)
 
 	if (u8AddrSrc == SERCMD_ADDR_TO_MODULE) {
