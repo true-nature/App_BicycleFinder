@@ -195,7 +195,7 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 	uint8 *p_end = p + u16len;
 	uint8 au8OutBuf[256 + 32];
 	uint8 *q = au8OutBuf;
-	tsUserMML *psMml = &sUserMMLData;
+	tsUserMML *psMml = &sUserMMLData.st;
 
 	// 入力データの解釈
 	uint8 u8Addr = G_OCTET();
