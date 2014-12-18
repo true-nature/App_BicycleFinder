@@ -42,6 +42,7 @@
 
 #define MML_OPER_WRITE 1
 #define MML_OPER_READ 2
+#define MML_EEPROM_START (EEPROM_6X_SEGMENT_SIZE)
 
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -117,10 +118,10 @@ bool MML_bLoad(tsUserMML *psMml) {
 	bool_t bRet = FALSE;
 
 #ifdef USE_EEPROM
-    if (EEP_6x_bRead(1, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
-    		&& EEP_6x_bRead(2, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
-    		&& EEP_6x_bRead(3, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
-    		&& EEP_6x_bRead(4, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
+    if (EEP_6x_bRead(MML_EEPROM_START, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
+    		&& EEP_6x_bRead(MML_EEPROM_START+1*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
+    		&& EEP_6x_bRead(MML_EEPROM_START+2*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
+    		&& EEP_6x_bRead(MML_EEPROM_START+3*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
     	bRet = TRUE;
     }
 #endif
@@ -147,10 +148,10 @@ bool MML_bSave(tsUserMML *psMml) {
 	psMml->u32Magic = FLASH_MAGIC_NUMBER;
 	psMml->u8CRC = u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data));
 #ifdef USE_EEPROM
-    if (EEP_6x_bWrite(1, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
-    		&& EEP_6x_bWrite(2, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
-    		&& EEP_6x_bWrite(3, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
-    		&& EEP_6x_bWrite(4, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
+    if (EEP_6x_bWrite(MML_EEPROM_START, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
+    		&& EEP_6x_bWrite(MML_EEPROM_START+EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
+    		&& EEP_6x_bWrite(MML_EEPROM_START+2*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
+    		&& EEP_6x_bWrite(MML_EEPROM_START+3*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
     	bRet = TRUE;
     }
 #endif
