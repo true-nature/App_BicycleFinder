@@ -48,7 +48,7 @@ void Config_vSetDefaults(tsFlashApp *p) {
 	p->u8id = 121; // ToCoStick では親機をデフォルトにする
 #else
 	p->u8id = 0;
-	p->u32Opt = 0;
+	p->u32Opt = 0x00000120;
 #endif
 
 	p->u32Opt2 = 0;
