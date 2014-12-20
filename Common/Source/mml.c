@@ -319,12 +319,12 @@ void MML_vInt(tsMML *psMML) {
 				}
 				break;
 
-			case '<': // オクターブ up
+			case '>': // オクターブ up
 				if (psMML->u8_octave < MML_OCT_MAX)
 					psMML->u8_octave++;
 				break;
 
-			case '>': // オクターブ dn
+			case '<': // オクターブ dn
 				if (psMML->u8_octave > MML_OCT_MIN)
 					psMML->u8_octave--;
 				break;

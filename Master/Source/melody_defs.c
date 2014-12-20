@@ -28,6 +28,7 @@
 #include "Master.h"
 
 #include "ccitt8.h"
+#include "mml.h"
 #include "common.h"
 #include "config.h"
 #include "sercmd_gen.h"
@@ -43,6 +44,8 @@
 #define MML_OPER_WRITE 1
 #define MML_OPER_READ 2
 #define MML_EEPROM_START (EEPROM_6X_SEGMENT_SIZE)
+
+extern tsMML sMML; //!< MML 関連 @ingroup MASTER
 
 /****************************************************************************/
 /***        Exported Variables                                            ***/
@@ -82,8 +85,8 @@ extern tsFILE sSerStream;
  * - On (n=3..8): オクターブの指定
  *   圧電ブザーの場合 O3,O4 の音階は、うまく出ないようです。
  *
- * - <: 1オクターブ上げる
- * - >: 1オクターブ下げる
+ * - >: 1オクターブ上げる
+ * - <: 1オクターブ下げる
  *
  */
 
@@ -92,13 +95,13 @@ const uint8 au8MML[4][256] = {
 		"O6T96 GEE2 FDD2 CDEF GGG2 GEEE FDDD CEGG EE2",
 
 		// トロイメライ
-		"O5T88L8 C4F2&F(EFA<C)FF2(EDC)F>(GAB-)<D>(FGA)<C>G2",
+		"O5T88L8 C4F2&F(EFA>C)FF2(EDC)F(GAB-)>D<(FGA)>C<G2",
 
 		// 春の海
-		//"O6T96L16 <(DE>B<D> ABGA EGDE >B<D>A)B (EGAB <DEG)A >(B<DEG AB<D)E >"
-		//"R1 (D8E4. G8.E32D32>B8A8) B1 E2. (<DEGA B4.&BA) B. R2.",
+		//"O6T96L16 >(DE<B>D< ABGA EGDE <B>D<A)B (EGAB >DEG)A <(B>DEG AB>D)E <"
+		//"R1 (D8E4. G8.E32D32<B8A8) B1 E2. (>DEGA B4.&BA) B. R2.",
 		// Happy Birthday
-		"O6T96 C8.C16D8.D16C4 F4E4.R8 C8.C16D8.D16C4 G4F4.R8 C8.C16<C8.C16>A4 F8.F16E16.E16.E16.D2 R2 B-8.B-16A8.A16F4 G4F4.R8",
+		"O6T96 C8.C16D8.D16C4 F4E4.R8 C8.C16D8.D16C4 G4F4.R8 C8.C16>C8.C16<A4 F8.F16E16.E16.E16.D2 R2 B-8.B-16A8.A16F4 G4F4.R8",
 
 		// 停止
 		"R"
@@ -275,5 +278,9 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 		i16TransmitSerMsg(au8OutBuf, q - au8OutBuf, ToCoNet_u32GetSerial(),
 				sAppData.u8AppLogicalId, u8AddrSrc, FALSE,
 				sAppData.u8UartReqNum++);
+	}
+	// 書き込んだら再生
+	if (u8MML_Oper & MML_OPER_WRITE) {
+		MML_vPlay(&sMML, sUserMMLData.st.u8Data);
 	}
 }
