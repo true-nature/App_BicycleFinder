@@ -363,9 +363,11 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			// 再生中でなければ終了
 			if (sMML.bHoldPlay) {
 				vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
+				vPortSet_TrueAsLo(PORT_OUT3, !(u32TickCount_ms & period));
 			} else {
 				// 点灯を抑止
 				vPortSetHi(PORT_OUT4);
+				vPortSetHi(PORT_OUT3);
 			}
 		}
 #endif
@@ -589,20 +591,23 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 #ifdef USE_DO4_AS_STATUS_LED
 			// 点灯を抑止
 			vPortSetHi(PORT_OUT4);
+			vPortSetHi(PORT_OUT3);
 #endif
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		} else {
 #ifdef USE_DO4_AS_STATUS_LED
-			static uint32 mask, duty;
+			static uint32 mask, duty, duty2;
 			if (eEvent == E_EVENT_NEW_STATE) {
 				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV @%dms"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx, u32TickCount_ms);
 				// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
 				mask = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 6 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 8 : 10)) - 1;
 				duty = mask >> 2;
+				duty2 = mask - duty;
 				// 再生後は電池が大きく減るので残量を更新
 				sAppData.u16CtRndCt = 0;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			vPortSet_TrueAsLo(PORT_OUT3, (u32TickCount_ms & mask) >= duty2);
 #endif
 			// 60秒以上再生させない
 			if (PRSEV_u32TickFrNewState(pEv) > 60000) {
