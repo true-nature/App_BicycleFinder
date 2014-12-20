@@ -547,6 +547,7 @@ static void vProcessInputString(tsInpStr_Context *pContext) {
 			// チャネルマスク（リスト）を入力解釈する。
 			//  11,15,19 のように１０進数を区切って入力する。
 			//  以下では区切り文字は任意で MAX_CHANNELS 分処理したら終了する。
+			//  末尾に指定したチャネルがデフォルトチャネルになる。
 
 			uint8 b = 0, e = 0, i = 0, n_ch = 0;
 			uint32 u32chmask = 0; // 新しいチャネルマスク
