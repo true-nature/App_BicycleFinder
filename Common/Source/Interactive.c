@@ -568,6 +568,8 @@ static void vProcessInputString(tsInpStr_Context *pContext) {
 							V_PRINT("%d", u8ch);
 							u32chmask |= (1UL << u8ch);
 
+							sConfig_UnSaved.u8ch = u8ch; // CHANNEL
+
 							n_ch++;
 							if (n_ch >= MAX_CHANNELS) {
 								break;
