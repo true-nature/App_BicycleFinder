@@ -484,7 +484,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
  * @param u32evarg
  */
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
-	const uint8 u8bm = 0x04;
+	const uint8 u8bm = 0x01;	// EEPROMから読んだ1番のメロディーに固定
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
