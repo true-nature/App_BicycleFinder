@@ -846,7 +846,7 @@ void cbAppColdStart(bool_t bStart) {
 		// フラッシュ設定値の反映
 		if (sAppData.bFlashLoaded) {
 			sToCoNet_AppContext.u32AppId = sAppData.sFlash.sData.u32appid;
-			// sToCoNet_AppContext.u8Channel = sAppData.sFlash.sData.u8ch; // チャネルマネージャで決定するので設定不要
+			sToCoNet_AppContext.u8Channel = sAppData.sFlash.sData.u8ch; // チャネルマネージャで決定するので設定不要とされているが復帰
 			sToCoNet_AppContext.u32ChMask = sAppData.sFlash.sData.u32chmask;
 			sToCoNet_AppContext.u8TxPower = sAppData.sFlash.sData.u8pow; // 出力の設定
 
