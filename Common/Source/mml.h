@@ -71,7 +71,7 @@ extern const uint8 u8MmmlLenToneStacc[];
 typedef struct {
 	tsTimerContext sTimer; //! PWMタイマーコンテキスト
 
-	uint8 au8MML[128]; //! MML文字列
+	uint8 au8MML[256]; //! MML文字列
 	uint8 u8idx; //! MML 文字列の次の命令位置
 
 	bool_t bLegart; //!< レガート再生中
