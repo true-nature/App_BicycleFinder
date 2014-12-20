@@ -41,11 +41,7 @@ typedef struct {
 	uint8 u8CRC;
 } tsUserMML;
 
-typedef union {
-	tsUserMML st;
-	uint8 segment[4][EEPROM_6X_SEGMENT_SIZE];
-} usUserMML;
-extern usUserMML sUserMMLData;
+extern tsUserMML sUserMMLData;
 
 bool MML_bLoad(tsUserMML *p);
 bool MML_bSave(tsUserMML *psMml);

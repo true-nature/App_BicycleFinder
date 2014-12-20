@@ -107,7 +107,7 @@ const uint8 au8MML[4][256] = {
 		"R"
 };
 
-usUserMML sUserMMLData;
+tsUserMML sUserMMLData;
 
 
 /**
@@ -121,10 +121,7 @@ bool MML_bLoad(tsUserMML *psMml) {
 	bool_t bRet = FALSE;
 
 #ifdef USE_EEPROM
-    if (EEP_6x_bRead(MML_EEPROM_START, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
-    		&& EEP_6x_bRead(MML_EEPROM_START+1*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
-    		&& EEP_6x_bRead(MML_EEPROM_START+2*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
-    		&& EEP_6x_bRead(MML_EEPROM_START+3*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
+    if (EEP_6x_bRead(MML_EEPROM_START, sizeof(sUserMMLData), (uint8 *)&sUserMMLData)) {
     	bRet = TRUE;
     }
 #endif
@@ -151,10 +148,7 @@ bool MML_bSave(tsUserMML *psMml) {
 	psMml->u32Magic = FLASH_MAGIC_NUMBER;
 	psMml->u8CRC = u8CCITT8(psMml->u8Data, sizeof(psMml->u8Data));
 #ifdef USE_EEPROM
-    if (EEP_6x_bWrite(MML_EEPROM_START, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[0])
-    		&& EEP_6x_bWrite(MML_EEPROM_START+EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[1])
-    		&& EEP_6x_bWrite(MML_EEPROM_START+2*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[2])
-    		&& EEP_6x_bWrite(MML_EEPROM_START+3*EEPROM_6X_SEGMENT_SIZE, EEPROM_6X_SEGMENT_SIZE, sUserMMLData.segment[3])) {
+    if (EEP_6x_bWrite(MML_EEPROM_START, sizeof(sUserMMLData), (uint8 *)&sUserMMLData)) {
     	bRet = TRUE;
     }
 #endif
@@ -199,7 +193,7 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 	uint8 *p_end = p + u16len;
 	uint8 au8OutBuf[256 + 32];
 	uint8 *q = au8OutBuf;
-	tsUserMML *psMml = &sUserMMLData.st;
+	tsUserMML *psMml = &sUserMMLData;
 
 	// 入力データの解釈
 	uint8 u8Addr = G_OCTET();
@@ -281,6 +275,6 @@ void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc) {
 	}
 	// 書き込んだら再生
 	if (u8MML_Oper & MML_OPER_WRITE) {
-		MML_vPlay(&sMML, sUserMMLData.st.u8Data);
+		MML_vPlay(&sMML, sUserMMLData.u8Data);
 	}
 }

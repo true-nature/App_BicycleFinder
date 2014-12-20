@@ -838,7 +838,7 @@ void cbAppColdStart(bool_t bStart) {
 		sToCoNet_AppContext.u8Channel = CHANNEL; // デフォルトのチャネル
 
 		// フラッシュの読み出し
-		MML_bLoad(&sUserMMLData.st);
+		MML_bLoad(&sUserMMLData);
 		sAppData.bFlashLoaded = Config_bLoad(&sAppData.sFlash);
 
 		// Version String のチェック
@@ -2825,7 +2825,7 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 				// ボタンの出力状態が Hi の場合のみ処理を行う。
 				// Lo が継続している場合(ボタン長押し時)は無視。
 				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
-					MML_vPlay(&sMML, i == 0 ? sUserMMLData.st.u8Data : au8MML[i]);
+					MML_vPlay(&sMML, i == 0 ? sUserMMLData.u8Data : au8MML[i]);
 				}
 			}
 #endif
