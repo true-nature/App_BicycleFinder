@@ -159,7 +159,7 @@ void cpyMmlData(tsUserMML* psMml, uint8* p, uint8 u8DataSize) {
 	uint16 dstlen = sizeof(psMml->u8Data) - 1;
 	uint16 len = (dstlen < u8DataSize ? dstlen : u8DataSize);
 	memset(psMml->u8Data, 0, sizeof(psMml->u8Data));
-	memcpy(psMml->u8Data, p, len - 1);
+	memcpy(psMml->u8Data, p, len);
 }
 
 /** @ingroup MASTER
