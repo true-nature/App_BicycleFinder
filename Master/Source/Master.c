@@ -81,6 +81,8 @@
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
+#define BATTERY_LOW_ALARM_VOLT 2400
+#define BATTERY_REPEAT_TX_VOLT 2300
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -359,7 +361,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
 			// 再生中は約1秒周期でDO4のLED点滅, 対抗機の電池残量が少なければ250ms周期の早い点滅、自機の電圧が低ければ64ms周期
-			period = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 5 : sAppData.sIOData_now.u16Volt_LastRx < 2400 ? 7 : 9));
+			period = (1 << (sAppData.sIOData_now.u16Volt < BATTERY_LOW_ALARM_VOLT ? 5 : sAppData.sIOData_now.u16Volt_LastRx < BATTERY_LOW_ALARM_VOLT ? 7 : 9));
 		} else if (eEvent == E_EVENT_APP_TICK_A) {
 			// 再生中でなければ終了
 			if (sMML.bHoldPlay) {
@@ -546,7 +548,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC	// 10秒間欠モード
 				&& sAppData.u32SleepDur == 0					// ボタンで起床
 				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()			// 連続送信フラグ
-				&& sAppData.sIOData_now.u16Volt > 2300) {
+				&& sAppData.sIOData_now.u16Volt > BATTERY_REPEAT_TX_VOLT) {
 				// 電池残量が少なければ連続送信しない。
 				// stay this state
 			} else {
