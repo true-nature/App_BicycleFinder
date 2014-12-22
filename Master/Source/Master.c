@@ -82,7 +82,7 @@
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 #define BATTERY_LOW_ALARM_VOLT 2400
-#define BATTERY_REPEAT_TX_VOLT 2300
+#define BATTERY_REPEAT_TX_VOLT 2350
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -493,7 +493,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
 
-			vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
+			// vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
 				// スリープからの復帰時の場合
 				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
@@ -527,26 +527,22 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
 			// クイックで送信
-			if (sAppData.bWakeupByButton) {
-				if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
-					&& sAppData.u32SleepDur == 0) {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
-				} else {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
-				}
-				// 完了待ちをするため CbId を保存する。
-				// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
+			if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
+				&& sAppData.u32SleepDur == 0) {
+				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
 			} else {
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
 			}
+			// 完了待ちをするため CbId を保存する。
+			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
+			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
 		}
 		break;
 	case E_STATE_WAIT_TX:
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
 			if (sAppData.u32SleepDur == 0					// ボタンで起床
 				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()			// 連続送信フラグ
-				&& sAppData.sIOData_now.u16Volt > BATTERY_REPEAT_TX_VOLT) {
+				&& sAppData.sIOData_now.u16Volt >= BATTERY_REPEAT_TX_VOLT) {
 				// 電圧が低い(==EDLC充電不足)ならば連続送信しない。
 				// stay this state
 			} else {
@@ -558,8 +554,8 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
 			}
 		}
-		if ((u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 100)) {
-			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 100), u32TickCount_ms);
+		if ((u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 200)) {
+			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 200), u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
@@ -589,7 +585,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_APP_SLEEPING:
 		if (eEvent == E_EVENT_NEW_STATE) {
-			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
+			vSleep(sAppData.u32SleepDur, TRUE, (sAppData.u32SleepDur == 0));
 		}
 
 		break;
@@ -915,7 +911,7 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
  * - 本関数終了後は登録したイベントマシン、および cbToCoNet_vMain() など各種コールバック関数が
  *   呼び出される。
  *
- * @param bStart TRUE:u32AHI_Init() 前の呼び出し FALSE: 後
+ * @param bStart TRUE:u32AHI_Init() 後の呼び出し FALSE: 前
  */
 void cbAppColdStart(bool_t bStart) {
 	if (!bStart) {
