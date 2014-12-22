@@ -1045,6 +1045,7 @@ void cbAppColdStart(bool_t bStart) {
 
 		if (!(IS_APPCONF_ROLE_SILENT_MODE())) {
 
+			sToCoNet_AppContext.bRxOnIdle = FALSE;
 			// 状態遷移マシンの登録
 			switch (sAppData.u8Mode) {
 			case E_IO_MODE_PARNET:
@@ -1055,17 +1056,19 @@ void cbAppColdStart(bool_t bStart) {
 				sAppData.prPrsEv = (void*) vProcessEvCorePwr;
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
 				break;
+#ifndef USE_RX_ON_SLP
 			case E_IO_MODE_CHILD_SLP_1SEC:
 			case E_IO_MODE_CHILD_SLP_10SEC:
-#ifndef USE_RX_ON_SLP
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-				sToCoNet_AppContext.bRxOnIdle = FALSE;
 #else
-				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpBeacon); // スリープ用の処理
-				sAppData.prPrsEv = (void*) vProcessEvCoreSlpBeacon;
+			case E_IO_MODE_CHILD_SLP_1SEC:
 				// 間欠モードで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
+				// no break
+			case E_IO_MODE_CHILD_SLP_10SEC:
+				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpBeacon); // スリープ用の処理
+				sAppData.prPrsEv = (void*) vProcessEvCoreSlpBeacon;
 #endif
 				break;
 			default: // 未定義機能なので、SILENT モードにする。
@@ -1192,10 +1195,11 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
 			// SILENTでは受信処理はしない。
+			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
+			// 10秒スリープでは受信処理はしない。
 #ifndef USE_RX_ON_SLP
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
-			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
-			// 1秒スリープ, 10秒スリープでは受信処理はしない。
+			// 1秒スリープでは受信処理はしない。
 #endif
 			) {
 		return;
