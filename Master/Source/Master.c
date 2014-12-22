@@ -543,9 +543,11 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		break;
 	case E_STATE_WAIT_TX:
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
-				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
-				&& sAppData.u32SleepDur == 0) {
+			if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC	// 10秒間欠モード
+				&& sAppData.u32SleepDur == 0					// ボタンで起床
+				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()			// 連続送信フラグ
+				&& sAppData.sIOData_now.u16Volt > 2300) {
+				// 電池残量が少なければ連続送信しない。
 				// stay this state
 			} else {
 				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
