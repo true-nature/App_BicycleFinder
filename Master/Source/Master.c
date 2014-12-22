@@ -493,20 +493,16 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
 
-			// vfPrintf(&sSerStream, "START_UP"LB, eEvent);
+			vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
 				// スリープからの復帰時の場合
 				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
 						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
 			}
-			if (sAppData.bWakeupByButton) {
-				sAppData.u8AdcState = 0; // ADC の開始
-				sAppData.u32AdcLastTick = u32TickCount_ms;
+			sAppData.u8AdcState = 0; // ADC の開始
+			sAppData.u32AdcLastTick = u32TickCount_ms;
 
-				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
-			} else {
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-			}
+			ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
 		}
 		break;
 
@@ -531,25 +527,27 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
 			// クイックで送信
-			if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
-							&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
-							&& sAppData.u32SleepDur == 0) {
-				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+			if (sAppData.bWakeupByButton) {
+				if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
+					&& sAppData.u32SleepDur == 0) {
+					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+				} else {
+					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
+				}
+				// 完了待ちをするため CbId を保存する。
+				// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
+				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
 			} else {
-				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
-			// 完了待ちをするため CbId を保存する。
-			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
 		}
 		break;
 	case E_STATE_WAIT_TX:
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC	// 10秒間欠モード
-				&& sAppData.u32SleepDur == 0					// ボタンで起床
+			if (sAppData.u32SleepDur == 0					// ボタンで起床
 				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()			// 連続送信フラグ
 				&& sAppData.sIOData_now.u16Volt > BATTERY_REPEAT_TX_VOLT) {
-				// 電池残量が少なければ連続送信しない。
+				// 電圧が低い(==EDLC充電不足)ならば連続送信しない。
 				// stay this state
 			} else {
 				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
@@ -560,8 +558,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
 			}
 		}
-		if ((PRSEV_u32TickFrNewState(pEv) > 100 && sAppData.u8Mode != E_IO_MODE_CHILD_SLP_10SEC)
-				|| (u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 100)) {
+		if ((u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 100)) {
 			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 100), u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
@@ -592,8 +589,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_APP_SLEEPING:
 		if (eEvent == E_EVENT_NEW_STATE) {
-			bool_t ramoff = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC && sAppData.u32SleepDur == 0);
-			vSleep(sAppData.u32SleepDur, TRUE, ramoff);
+			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
 		}
 
 		break;
@@ -748,8 +744,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_APP_SLEEPING:
 		if (eEvent == E_EVENT_NEW_STATE) {
-			bool_t ramoff = (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC && sAppData.u32SleepDur == 0);
-			vSleep(sAppData.u32SleepDur, TRUE, ramoff);
+			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
 		}
 
 		break;
@@ -1174,12 +1169,12 @@ void cbAppColdStart(bool_t bStart) {
 			case E_IO_MODE_CHILD_SLP_1SEC:
 				// 間欠モードで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
-				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpSender); // スリープ用の処理
-				sAppData.prPrsEv = (void*) vProcessEvCoreSlpSender;
-				break;
-			case E_IO_MODE_CHILD_SLP_10SEC:
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpBeacon); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlpBeacon;
+				break;
+			case E_IO_MODE_CHILD_SLP_10SEC:
+				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpSender); // スリープ用の処理
+				sAppData.prPrsEv = (void*) vProcessEvCoreSlpSender;
 				break;
 #endif
 			default: // 未定義機能なので、SILENT モードにする。
@@ -1207,7 +1202,7 @@ void cbAppColdStart(bool_t bStart) {
  * - ハードウェアの初期化（スリープ後は基本的に再初期化が必要）
  * - イベントマシンは登録済み。
  *
- * @param bStart TRUE:u32AHI_Init() 前の呼び出し FALSE: 後
+ * @param bStart TRUE:u32AHI_Init() 後の呼び出し FALSE: 前
  */
 void cbAppWarmStart(bool_t bStart) {
 	if (!bStart) {
@@ -1882,8 +1877,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	vPortAsInput(PORT_CONF1);
 	vPortAsInput(PORT_CONF2);
 	vPortAsInput(PORT_CONF3);
-	sAppData.u8Mode = (bPortRead(PORT_CONF1) | (bPortRead(PORT_CONF2) << 1)
-			| (bPortRead(PORT_CONF3) << 2));
+	if (!f_warm_start) {
+		sAppData.u8Mode = (bPortRead(PORT_CONF1) | (bPortRead(PORT_CONF2) << 1)
+				| (bPortRead(PORT_CONF3) << 2));
+	}
 
 	// UART 設定
 	{
