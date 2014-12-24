@@ -1,6 +1,8 @@
-update=2014/12/19 16:02:09
+update=2014/12/24 15:16:33
 version=1
-last_client=kicad
+last_client=pcbnew
+[general]
+version=1
 [cvpcb]
 version=1
 NetIExt=net
@@ -45,6 +47,7 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
+LibName31=TWE-Lite
 [pcbnew]
 version=1
 LastNetListRead=
@@ -64,5 +67,6 @@ SolderMaskMinWidth=0.000000000000
 DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
-[general]
-version=1
+[pcbnew/libraries]
+LibDir=
+LibName1=TWE-Lite
