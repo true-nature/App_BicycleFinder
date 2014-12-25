@@ -1,0 +1,45 @@
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2014/12/25 16:49:39
+
+BeginCmp
+TimeStamp = /5493D0B5;
+Reference = BT1;
+ValeurCmp = 3V;
+IdModule  = CR2032H;
+EndCmp
+
+BeginCmp
+TimeStamp = /549BC5A8;
+Reference = C1;
+ValeurCmp = 1F;
+IdModule  = CP_22x41mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /549BABE9;
+Reference = P1;
+ValeurCmp = CONN_14;
+IdModule  = SIL-14;
+EndCmp
+
+BeginCmp
+TimeStamp = /549BADEF;
+Reference = P2;
+ValeurCmp = CONN_14;
+IdModule  = SIL-14;
+EndCmp
+
+BeginCmp
+TimeStamp = /549BC4AC;
+Reference = SW1;
+ValeurCmp = SW_PUSH;
+IdModule  = SW_PUSH-12mm;
+EndCmp
+
+BeginCmp
+TimeStamp = /549BBD70;
+Reference = U1;
+ValeurCmp = LITE_LITE;
+IdModule  = LITE;
+EndCmp
+
+EndListe
