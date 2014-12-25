@@ -1053,6 +1053,7 @@ void cbAppColdStart(bool_t bStart) {
 				case 122:
 					sAppData.u8Mode = E_IO_MODE_ROUTER; // 中継器のモード番号
 					break;
+#ifndef USE_TOCOSTICK
 				case 123:
 					sAppData.u8Mode = E_IO_MODE_CHILD_CONT_TX; // 子機：連続0.03秒のモード番号
 					break;
@@ -1063,6 +1064,7 @@ void cbAppColdStart(bool_t bStart) {
 					sAppData.u8Mode = E_IO_MODE_CHILD_SLP_10SEC; // 子機：間欠10秒のモード番号
 					break;
 				default:
+#endif
 					// nothing
 					break;
 				}
@@ -2926,10 +2928,10 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 	for (i = 0, j = 1; i < 4; i++, j <<= 1) {
 		if (u8ButtonChanged & j) {
 #ifdef MML
-			// 子機1秒完結モードでリモコンのボタンが押し下げられた時に、再生を開始する
+			// 子機1秒間欠モードでリモコンのボタンが押し下げられた時に、再生を開始する
 			// 注：このコードだけでは以下の振る舞いを行います
 			//   送り側のボタンが複数押された場合、一番最後のボタン指定が有効になります
-			if (u8ButtonState & j && sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC) {
+			if ((u8ButtonState & j) && sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC) {
 				// ボタンの出力状態が Hi の場合のみ処理を行う。
 				// Lo が継続している場合(ボタン長押し時)は無視。
 				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
