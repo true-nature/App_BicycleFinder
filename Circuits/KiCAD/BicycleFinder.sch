@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "7 jan 2015"
+Date "8 jan 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -449,9 +449,22 @@ Wire Wire Line
 	5600 4100 5600 5600
 Wire Wire Line
 	5600 5600 5800 5600
-Wire Wire Line
-	6200 5600 8000 5600
 Connection ~ 8000 5600
 Wire Wire Line
 	8000 5700 8000 1700
+Text Label 2600 1700 0    60   ~ 0
+3V
+$Comp
+L R R2
+U 1 1 54AE44D9
+P 6450 5600
+F 0 "R2" V 6530 5600 40  0000 C CNN
+F 1 "1k" V 6457 5601 40  0000 C CNN
+F 2 "~" V 6380 5600 30  0000 C CNN
+F 3 "~" H 6450 5600 30  0000 C CNN
+	1    6450 5600
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6700 5600 8000 5600
 $EndSCHEMATC
