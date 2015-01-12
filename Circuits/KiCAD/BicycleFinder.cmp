@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/01/12 18:44:21
+Cmp-Mod V01 Created by PcbNew date = 2015/01/12 23:31:16
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -46,7 +46,7 @@ BeginCmp
 TimeStamp = /549BC4AC;
 Reference = SW1;
 ValeurCmp = SW_PUSH;
-IdModule  = SW_PUSH-18mm;
+IdModule  = JF-15CKCBNP2;
 EndCmp
 
 BeginCmp

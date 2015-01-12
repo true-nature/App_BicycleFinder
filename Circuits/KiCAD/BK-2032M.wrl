@@ -4,13 +4,13 @@ DEF Fusion Transform {
   children [
     Shape {
       appearance Appearance {
-        material DEF default Material {
-          diffuseColor 0.7898538076923077 0.8133333333333334 0.6940444444444445
+        material DEF color_161_161_161 Material {
+          diffuseColor 0.631373 0.6313725490196078 0.6313725490196078
           emissiveColor 0.0 0.0 0.0
-          specularColor 0.0 0.0 0.0
-          ambientIntensity 0.765743861823362
+          specularColor 1.0 1.0 1.0
+          ambientIntensity 1.0
           transparency 0.0
-          shininess 0.0
+          shininess 1.0
         }
       }
       geometry IndexedFaceSet {
@@ -1053,7 +1053,7 @@ DEF Fusion Transform {
           178, 180, 181, -1,
           180, 182, 181, -1 ]
         color Color { color [
-          0.7500000000000004 0.7500000000000004 0.7500000000000004,
+          0.631373 0.6313725490196078 0.6313725490196078,
           1.0 1.0 1.0 ] }
         colorIndex [
           0, 0, 0, -1,
