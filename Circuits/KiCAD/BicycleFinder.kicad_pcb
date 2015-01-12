@@ -537,7 +537,7 @@
   )
 
   (module SIL-7 (layer F.Cu) (tedit 54B3DB66) (tstamp 54B267B4)
-    (at 80.01 38.1)
+    (at 83.185 38.1)
     (descr "Connecteur 7 pins")
     (tags "CONN DEV")
     (path /54AD18E9)
