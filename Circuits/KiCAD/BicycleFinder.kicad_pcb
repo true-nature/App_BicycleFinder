@@ -3,7 +3,7 @@
   (general
     (links 18)
     (no_connects 16)
-    (area 12.065 12.065 92.71 53.34)
+    (area 34.820999 31.055999 115.179001 71.869059)
     (thickness 1.6)
     (drawings 0)
     (tracks 9)
@@ -121,7 +121,7 @@
   )
 
   (module SW_PUSH-18mm   placed (layer F.Cu) (tedit 4C612761) (tstamp 54B1BC57)
-    (at 75.565 32.385 90)
+    (at 94.615 50.8 90)
     (path /549BC4AC)
     (fp_text reference SW1 (at 0 -0.762 90) (layer F.SilkS)
       (effects (font (size 1.016 1.016) (thickness 0.2032)))
@@ -153,7 +153,7 @@
   )
 
   (module LED-3MM (layer F.Cu) (tedit 50ADE848) (tstamp 54AD20F1)
-    (at 33.02 46.99 180)
+    (at 52.07 65.405 180)
     (descr "LED 3mm - Lead pitch 100mil (2,54mm)")
     (tags "LED led 3mm 3MM 100mil 2,54mm")
     (path /54AD1F8E)
@@ -198,7 +198,7 @@
   )
 
   (module PS-85 (layer F.Cu) (tedit 54AE27EB) (tstamp 54B5FE16)
-    (at 50.8 33.02)
+    (at 69.85 51.435)
     (fp_text reference PS-85 (at 0 0) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
     )
@@ -222,7 +222,7 @@
   )
 
   (module SE-5R5-D105VY   placed (layer F.Cu) (tedit 54B0935D) (tstamp 54B1BC4C)
-    (at 53.975 32.385 180)
+    (at 73.025 50.8 180)
     (descr "Capacitor, EDLC, cyl 20.7x7.5mm")
     (path /549BC5A8)
     (fp_text reference C1 (at 0.508 -12.192 180) (layer F.SilkS)
@@ -254,7 +254,7 @@
   )
 
   (module LITE (layer B.Cu) (tedit 54B254B6) (tstamp 54ADBDEF)
-    (at 21.59 40.005 90)
+    (at 40.64 58.42 90)
     (path /549BBD70)
     (fp_text reference U1 (at 0 0 90) (layer B.SilkS) hide
       (effects (font (size 0 0) (thickness 0.000001)) (justify mirror))
@@ -507,7 +507,7 @@
   )
 
   (module SM1206 (layer F.Cu) (tedit 42806E24) (tstamp 54ACCDD2)
-    (at 41.275 20.955)
+    (at 60.325 39.37)
     (path /54ACCB34)
     (attr smd)
     (fp_text reference R1 (at 0 0) (layer F.SilkS)
@@ -538,7 +538,7 @@
   )
 
   (module SM1206 (layer F.Cu) (tedit 42806E24) (tstamp 54AE452A)
-    (at 41.275 46.355)
+    (at 60.325 64.77)
     (path /54AE44D9)
     (attr smd)
     (fp_text reference R2 (at 0 0) (layer F.SilkS)
@@ -569,7 +569,7 @@
   )
 
   (module SIL-7 (layer F.Cu) (tedit 200000) (tstamp 54B267B4)
-    (at 64.135 45.085)
+    (at 83.185 63.5)
     (descr "Connecteur 7 pins")
     (tags "CONN DEV")
     (path /54AD18E9)
@@ -617,7 +617,7 @@
   )
 
   (module BK-888+CR2032 (layer F.Cu) (tedit 54AE4300) (tstamp 54ACECAE)
-    (at 29.845 33.02 90)
+    (at 48.895 51.435 90)
     (path /5493D0B5)
     (fp_text reference BT1 (at 0 -3.05 90) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
@@ -655,15 +655,15 @@
     )
   )
 
-  (segment (start 42.926 46.355) (end 43.18 46.355) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 43.18 46.355) (end 42.926 46.355) (width 0.254) (layer F.Cu) (net 11) (tstamp 54B5FDD3) (status 80000))
-  (segment (start 53.975 29.845) (end 52.07 29.845) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 52.07 29.845) (end 43.18 20.955) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 43.18 20.955) (end 42.926 20.955) (width 0.254) (layer F.Cu) (net 11) (tstamp 54B27D32) (status 80000))
-  (segment (start 56.515 45.085) (end 55.88 44.45) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 55.88 44.45) (end 55.88 33.02) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 55.88 33.02) (end 53.975 31.115) (width 0.254) (layer F.Cu) (net 11) (status 80000))
-  (segment (start 53.975 31.115) (end 53.975 29.845) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 61.976 64.77) (end 62.23 64.77) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 62.23 64.77) (end 61.976 64.77) (width 0.254) (layer F.Cu) (net 11) (tstamp 54B5FDD3) (status 80000))
+  (segment (start 73.025 48.26) (end 71.12 48.26) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 71.12 48.26) (end 62.23 39.37) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 62.23 39.37) (end 61.976 39.37) (width 0.254) (layer F.Cu) (net 11) (tstamp 54B27D32) (status 80000))
+  (segment (start 75.565 63.5) (end 74.93 62.865) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 74.93 62.865) (end 74.93 51.435) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 74.93 51.435) (end 73.025 49.53) (width 0.254) (layer F.Cu) (net 11) (status 80000))
+  (segment (start 73.025 49.53) (end 73.025 48.26) (width 0.254) (layer F.Cu) (net 11) (status 80000))
 
   (zone (net 0) (net_name "") (layer F.Cu) (tstamp 54B27E00) (hatch edge 0.508)
     (connect_pads (clearance 0.508))
@@ -672,7 +672,7 @@
     (fill (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 35.56 40.005) (xy 21.59 40.005) (xy 21.59 26.035) (xy 35.56 26.035)
+        (xy 54.61 58.42) (xy 40.64 58.42) (xy 40.64 44.45) (xy 54.61 44.45)
       )
     )
   )
