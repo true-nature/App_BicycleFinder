@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "11 jan 2015"
+Date "13 jan 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -151,10 +151,8 @@ Wire Wire Line
 	5200 5500 5200 5800
 Wire Wire Line
 	4900 5800 4900 4300
-Connection ~ 4800 5400
 Wire Wire Line
 	4800 5800 4800 5400
-Connection ~ 4700 5300
 Wire Wire Line
 	4700 5800 4700 5300
 Wire Wire Line
@@ -201,7 +199,6 @@ F 3 "~" H 6000 5600 60  0000 C CNN
 	1    6000 5600
 	-1   0    0    1   
 $EndComp
-Connection ~ 5600 5200
 Wire Wire Line
 	7200 2400 7200 6050
 Wire Wire Line
@@ -251,7 +248,7 @@ Wire Wire Line
 Wire Wire Line
 	4700 5300 5700 5300
 Wire Wire Line
-	4800 5400 7100 5400
+	4800 5400 7200 5400
 $Comp
 L LITE_LITE U1
 U 1 1 549BBD70
@@ -280,7 +277,6 @@ NoConn ~ 5900 2000
 NoConn ~ 6000 2000
 Wire Wire Line
 	7100 3000 7100 5500
-Connection ~ 7100 5400
 Connection ~ 6900 3100
 Connection ~ 7200 3100
 Connection ~ 7200 1700
@@ -288,4 +284,23 @@ NoConn ~ 6800 2900
 NoConn ~ 6800 2800
 NoConn ~ 6800 2700
 NoConn ~ 6100 2000
+Connection ~ 7200 5400
+Text Label 4700 5800 1    60   ~ 0
+M1
+Text Label 5200 5800 1    60   ~ 0
+RST
+Text Label 5100 5800 1    60   ~ 0
+RX
+Text Label 5000 5800 1    60   ~ 0
+PRG
+Text Label 4900 5800 1    60   ~ 0
+TX
+Text Label 4800 5800 1    60   ~ 0
+GND
+Text Label 5300 5800 1    60   ~ 0
+Vcc
+Text Label 5800 4500 0    60   ~ 0
+DI1
+Text Label 5600 4800 1    60   ~ 0
+DO4
 $EndSCHEMATC
