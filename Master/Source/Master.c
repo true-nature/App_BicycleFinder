@@ -546,6 +546,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				// 電圧が低い(==EDLC充電不足)ならば連続送信しない。
 				// stay this state
 			} else {
+				// 点灯を抑止
 				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
 		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
@@ -553,6 +554,16 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				// 対抗のスリープ間隔を跨いで連続送信
 				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
 			}
+		}
+		_C {
+			static uint32 mask, duty;
+			if (eEvent == E_EVENT_NEW_STATE) {
+				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV"LB, sAppData.sIOData_now.u16Volt, u32TickCount_ms);
+				// 再生中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
+				mask = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 8 : 10)) - 1;
+				duty = mask >> 2;
+			}
+			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 		}
 		if ((u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 200)) {
 			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 200), u32TickCount_ms);
@@ -570,6 +581,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
+				vPortSetHi(PORT_OUT4);
 			}
 
 			// ボタンでウェイクアップしたときはチャタリングが落ち着くのを待つのにしばらく停滞する
