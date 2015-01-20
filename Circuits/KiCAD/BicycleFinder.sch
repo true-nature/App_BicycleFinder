@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "18 jan 2015"
+Date "20 jan 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -249,28 +249,6 @@ F 3 "~" H 3700 2600 60  0000 C CNN
 	1    3700 2600
 	0    1    1    0   
 $EndComp
-$Comp
-L R R3
-U 1 1 54BB4AF9
-P 3200 1900
-F 0 "R3" V 3280 1900 40  0000 C CNN
-F 1 "560" V 3207 1901 40  0000 C CNN
-F 2 "~" V 3130 1900 30  0000 C CNN
-F 3 "~" H 3200 1900 30  0000 C CNN
-	1    3200 1900
-	0    -1   -1   0   
-$EndComp
-$Comp
-L R R4
-U 1 1 54BB4AFF
-P 7750 5000
-F 0 "R4" V 7830 5000 40  0000 C CNN
-F 1 "560" V 7757 5001 40  0000 C CNN
-F 2 "~" V 7680 5000 30  0000 C CNN
-F 3 "~" H 7750 5000 30  0000 C CNN
-	1    7750 5000
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	6200 5500 6200 5800
 Wire Wire Line
@@ -317,7 +295,7 @@ Wire Wire Line
 Wire Wire Line
 	6600 4800 6800 4800
 Wire Wire Line
-	9000 1100 9000 5700
+	9000 5700 9000 1100
 Wire Wire Line
 	8000 4800 8500 4800
 Wire Wire Line
@@ -383,24 +361,4 @@ Connection ~ 3600 1950
 Wire Wire Line
 	3800 2250 4750 2250
 Connection ~ 4750 2250
-Wire Wire Line
-	2950 1900 2900 1900
-Wire Wire Line
-	2900 1900 2900 1700
-Connection ~ 2900 1700
-Wire Wire Line
-	3450 1900 3500 1900
-Wire Wire Line
-	3500 1900 3500 1700
-Connection ~ 3500 1700
-Wire Wire Line
-	7500 5000 7450 5000
-Wire Wire Line
-	7450 5000 7450 4800
-Connection ~ 7450 4800
-Wire Wire Line
-	8000 5000 8050 5000
-Wire Wire Line
-	8050 5000 8050 4800
-Connection ~ 8050 4800
 $EndSCHEMATC
