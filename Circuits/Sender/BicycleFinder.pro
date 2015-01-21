@@ -1,8 +1,6 @@
-update=2015/01/14 18:07:12
+update=2015/01/21 11:00:48
 version=1
-last_client=pcbnew
-[general]
-version=1
+last_client=kicad
 [cvpcb]
 version=1
 NetIExt=net
@@ -10,14 +8,14 @@ NetIExt=net
 EquName1=devcms
 [eeschema]
 version=1
-LibDir=
+LibDir=../../../kicad-twe/library
 NetFmtName=
 RptD_X=0
 RptD_Y=100
 RptLab=1
 LabSize=60
 [eeschema/libraries]
-LibName1=BicycleFinder
+LibName1=TWE-Lite
 LibName2=power
 LibName3=device
 LibName4=transistors
@@ -52,10 +50,10 @@ LibName31=valves
 version=1
 LastNetListRead=
 UseCmpFile=1
-PadDrill=1.800000000000
-PadDrillOvalY=1.800000000000
-PadSizeH=2.800000000000
-PadSizeV=2.800000000000
+PadDrill=0.812800000000
+PadDrillOvalY=0.812800000000
+PadSizeH=3.048000000000
+PadSizeV=1.727200000000
 PcbTextSizeV=1.500000000000
 PcbTextSizeH=1.500000000000
 PcbTextThickness=0.300000000000
@@ -68,8 +66,8 @@ DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [pcbnew/libraries]
-LibDir=
-LibName1=BicycleFinder
+LibDir=../../../kicad-twe/modules
+LibName1=TWE-Lite
 LibName2=capacitors
 LibName3=connect
 LibName4=connectors_molex_serial_53047-A123
@@ -93,3 +91,5 @@ LibName21=smd_ssop_packages
 LibName22=smd_transistors
 LibName23=sockets
 LibName24=valves
+[general]
+version=1
