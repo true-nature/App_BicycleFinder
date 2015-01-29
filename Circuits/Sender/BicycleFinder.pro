@@ -1,11 +1,6 @@
-update=2015/01/21 11:00:48
+update=2015/01/29 11:28:23
 version=1
-last_client=kicad
-[cvpcb]
-version=1
-NetIExt=net
-[cvpcb/libraries]
-EquName1=devcms
+last_client=cvpcb
 [eeschema]
 version=1
 LibDir=../../../kicad-twe/library
@@ -66,7 +61,6 @@ DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [pcbnew/libraries]
-LibDir=../../../kicad-twe/modules
 LibName1=TWE-Lite
 LibName2=capacitors
 LibName3=connect
@@ -91,5 +85,11 @@ LibName21=smd_ssop_packages
 LibName22=smd_transistors
 LibName23=sockets
 LibName24=valves
+LibDir=../../../kicad-twe/modules
 [general]
 version=1
+[cvpcb]
+version=1
+NetIExt=net
+[cvpcb/libraries]
+EquName1=devcms

@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/01/20 16:06:58
+Cmp-Mod V01 Created by PcbNew date = 2015/01/29 13:39:47
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -38,7 +38,7 @@ EndCmp
 BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
-ValeurCmp = 560;
+ValeurCmp = 330;
 IdModule  = SM0603;
 EndCmp
 
@@ -60,7 +60,7 @@ BeginCmp
 TimeStamp = /549BBD70;
 Reference = U1;
 ValeurCmp = LITE_LITE;
-IdModule  = TWE-001L-SMD-noNTH;
+IdModule  = TWE-001L-SMD;
 EndCmp
 
 BeginCmp

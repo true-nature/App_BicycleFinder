@@ -1,5 +1,5 @@
 EESchema Schematic File Version 2
-LIBS:BicycleFinder
+LIBS:TWE-Lite
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "20 jan 2015"
+Date "29 jan 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -108,7 +108,7 @@ L R R1
 U 1 1 54ACCB34
 P 3200 1700
 F 0 "R1" V 3280 1700 40  0000 C CNN
-F 1 "560" V 3207 1701 40  0000 C CNN
+F 1 "330" V 3207 1701 40  0000 C CNN
 F 2 "~" V 3130 1700 30  0000 C CNN
 F 3 "~" H 3200 1700 30  0000 C CNN
 	1    3200 1700
