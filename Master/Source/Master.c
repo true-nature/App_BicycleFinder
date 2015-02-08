@@ -509,33 +509,39 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	case E_STATE_RUNNING:
 		DBGOUT(3, "%d", sAppData.u8IOFixState);
 
-		// IO状態が確定すれば送信する。
-		if (sAppData.u8IOFixState == 0x3) {
-			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
-					sAppData.sIOData_now.au8Input[0] & 1,
-					sAppData.sIOData_now.au8Input[1] & 1,
-					sAppData.sIOData_now.au8Input[2] & 1,
-					sAppData.sIOData_now.au8Input[3] & 1,
-					sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[0],
-					sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[1],
-					sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[2],
-					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
+		// IO状態の確定後、チャタリングが落ち着くのを待って送信する。
+		if (sAppData.u8IOFixState == 0x3 && PRSEV_u32TickFrNewState(pEv) > 20) {
+			if (sAppData.sIOData_now.u32BtmBitmap != 0) {
+				vfPrintf(&sSerStream,
+						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
+						sAppData.sIOData_now.au8Input[0] & 1,
+						sAppData.sIOData_now.au8Input[1] & 1,
+						sAppData.sIOData_now.au8Input[2] & 1,
+						sAppData.sIOData_now.au8Input[3] & 1,
+						sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[0],
+						sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[1],
+						sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[2],
+						sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
-			// クイックで送信
-			if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
-				&& sAppData.u32SleepDur == 0) {
-				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+				// クイックで送信
+				if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
+					&& sAppData.u32SleepDur == 0) {
+					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+				} else {
+					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
+				}
+				// 完了待ちをするため CbId を保存する。
+				// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
+				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
 			} else {
-				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
+				// ボタンが押されていなければチャタリングとみなす
+				vfPrintf(&sSerStream, "!Detected bounce. @%dms"LB, u32TickCount_ms);
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
-			// 完了待ちをするため CbId を保存する。
-			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
 		}
 		break;
 	case E_STATE_WAIT_TX:
@@ -550,16 +556,14 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
 		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
-			if (sAppData.u32CtTimer0 & 1) { // 秒32回にする
-				// 対抗のスリープ間隔を跨いで連続送信
-				sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
-			}
+			// 対抗のスリープ間隔を跨いで連続送信
+			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
 		}
 		_C {
 			static uint32 mask, duty;
 			if (eEvent == E_EVENT_NEW_STATE) {
 				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV"LB, sAppData.sIOData_now.u16Volt, u32TickCount_ms);
-				// 再生中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
+				// 送信中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
 				mask = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 8 : 10)) - 1;
 				duty = mask >> 2;
 			}
@@ -570,7 +574,6 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
-
 
 	case E_STATE_FINISHED:
 		_C {
@@ -2000,11 +2003,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	if (sAppData.sFlash.sData.u32Opt & E_APPCONF_OPT_LOW_LATENCY_INPUT) {
 		sAppData.sBTM_Config.u16Tick_ms = 1;
-		sAppData.sBTM_Config.u8MaxHistory = 5;
 	} else {
 		sAppData.sBTM_Config.u16Tick_ms = 4;
-		sAppData.sBTM_Config.u8MaxHistory = 5;
 	}
+	sAppData.sBTM_Config.u8MaxHistory = 5;
 	sAppData.sBTM_Config.u8DeviceTimer = 0xFF; // TickTimer を流用する。
 	sAppData.pr_BTM_handler = prBTM_InitExternal(&sAppData.sBTM_Config);
 	vBTM_Enable();
