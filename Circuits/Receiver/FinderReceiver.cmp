@@ -1,0 +1,59 @@
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/02/14 21:06:52
+
+BeginCmp
+TimeStamp = /54DE9794;
+Reference = BT1;
+ValeurCmp = BATTERY;
+IdModule  = PIN_ARRAY_2X1;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE99E0;
+Reference = D1;
+ValeurCmp = LED;
+IdModule  = LED-1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9AF2;
+Reference = D2;
+ValeurCmp = DIODE;
+IdModule  = SOD123;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9BCC;
+Reference = P1;
+ValeurCmp = WRITER;
+IdModule  = SIL-6;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9A28;
+Reference = R1;
+ValeurCmp = 680;
+IdModule  = SM0603_Resistor;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9B06;
+Reference = R2;
+ValeurCmp = 1k;
+IdModule  = SM0603_Resistor;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9911;
+Reference = SP1;
+ValeurCmp = PIEZO SP;
+IdModule  = PIEZOSPK;
+EndCmp
+
+BeginCmp
+TimeStamp = /54DE9748;
+Reference = U1;
+ValeurCmp = TWE_LITE_SMD;
+IdModule  = TWE-001L-SMD;
+EndCmp
+
+EndListe
