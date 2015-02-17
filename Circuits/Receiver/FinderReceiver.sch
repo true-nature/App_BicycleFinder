@@ -30,14 +30,13 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:FinderReceiver-cache
 EELAYER 27 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "Bicycle Finder / Remote Commander"
-Date "14 feb 2015"
+Date "17 feb 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -355,11 +354,13 @@ TXD
 Text Label 3950 1900 0    60   ~ 0
 CFG
 Text Label 5950 2600 0    60   ~ 0
-LED
+DO4
 Text Label 7350 3050 0    60   ~ 0
 SPK
 Text Label 6050 3050 0    60   ~ 0
 SOUND
 Wire Wire Line
 	3550 1900 3550 2500
+Text Label 6600 2550 0    60   ~ 0
+LED
 $EndSCHEMATC
