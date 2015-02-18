@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/02/18 0:06:17
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/02/18 15:35:19
 
 BeginCmp
 TimeStamp = /54DE9794;
@@ -10,19 +10,19 @@ EndCmp
 BeginCmp
 TimeStamp = /54DE9AF2;
 Reference = D1;
-ValeurCmp = DIODE;
+ValeurCmp = 1N4148W;
 IdModule  = SOD123;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE99E0;
+TimeStamp = /54E33E98;
 Reference = LD1;
 ValeurCmp = LED;
 IdModule  = LED-3MM;
 EndCmp
 
 BeginCmp
-TimeStamp = /54E33E98;
+TimeStamp = /54DE99E0;
 Reference = LD2;
 ValeurCmp = LED;
 IdModule  = LED-3MM;
@@ -32,7 +32,7 @@ BeginCmp
 TimeStamp = /54DE9BCC;
 Reference = P1;
 ValeurCmp = WRITER;
-IdModule  = SIL-6;
+IdModule  = WRITER-6P;
 EndCmp
 
 BeginCmp
@@ -50,14 +50,14 @@ IdModule  = SM0603_Resistor;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE9911;
+TimeStamp = /54E33E0C;
 Reference = SP1;
 ValeurCmp = PIEZO SP;
 IdModule  = PIEZOSPK;
 EndCmp
 
 BeginCmp
-TimeStamp = /54E33E0C;
+TimeStamp = /54DE9911;
 Reference = SP2;
 ValeurCmp = PIEZO SP;
 IdModule  = PIEZOSPK;
