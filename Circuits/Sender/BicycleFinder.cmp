@@ -1,10 +1,10 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/01/30 15:24:45
+Cmp-Mod V01 Created by PcbNew date = 2015/02/20 13:53:01
 
 BeginCmp
 TimeStamp = /5493D0B5;
 Reference = BT1;
 ValeurCmp = 3V;
-IdModule  = SMTU2032;
+IdModule  = SMTU1220;
 EndCmp
 
 BeginCmp
@@ -12,13 +12,6 @@ TimeStamp = /549BC5A8;
 Reference = C1;
 ValeurCmp = 1F;
 IdModule  = SE-5R5-D105VYV;
-EndCmp
-
-BeginCmp
-TimeStamp = /54AD18E9;
-Reference = CN1;
-ValeurCmp = WRITER;
-IdModule  = SIL-7;
 EndCmp
 
 BeginCmp
@@ -36,6 +29,13 @@ IdModule  = LED-3MM;
 EndCmp
 
 BeginCmp
+TimeStamp = /54E4785D;
+Reference = P1;
+ValeurCmp = WRITER-VCC;
+IdModule  = WRITE-7P;
+EndCmp
+
+BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
 ValeurCmp = 330;
@@ -45,7 +45,7 @@ EndCmp
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
-ValeurCmp = 560;
+ValeurCmp = 680;
 IdModule  = SM0603;
 EndCmp
 
@@ -57,9 +57,16 @@ IdModule  = JF-15CKCBNP2;
 EndCmp
 
 BeginCmp
-TimeStamp = /549BBD70;
+TimeStamp = /54E4493A;
+Reference = SW2;
+ValeurCmp = REED SW;
+IdModule  = R6;
+EndCmp
+
+BeginCmp
+TimeStamp = /54E4765F;
 Reference = U1;
-ValeurCmp = LITE_LITE;
+ValeurCmp = TWE_LITE_SMD;
 IdModule  = TWE-001L-SMD;
 EndCmp
 
