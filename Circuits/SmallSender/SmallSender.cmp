@@ -1,10 +1,10 @@
-Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/02/20 15:04:16
+Cmp-Mod V01 Created by PcbNew date = 2015/02/21 21:35:13
 
 BeginCmp
 TimeStamp = /5493D0B5;
 Reference = BT1;
 ValeurCmp = 3V;
-IdModule  = BK-885;
+IdModule  = BK-890;
 EndCmp
 
 BeginCmp
@@ -36,6 +36,13 @@ IdModule  = DCK-3R3E224-E;
 EndCmp
 
 BeginCmp
+TimeStamp = /54E87886;
+Reference = C5;
+ValeurCmp = 0.22;
+IdModule  = DCK-3R3E224-E;
+EndCmp
+
+BeginCmp
 TimeStamp = /54B7E0F7;
 Reference = JP1;
 ValeurCmp = BYPASS;
@@ -45,6 +52,13 @@ EndCmp
 BeginCmp
 TimeStamp = /54AD1F8E;
 Reference = LD1;
+ValeurCmp = LED;
+IdModule  = LED-1206;
+EndCmp
+
+BeginCmp
+TimeStamp = /54E737C6;
+Reference = LD2;
 ValeurCmp = LED;
 IdModule  = LED-3MM;
 EndCmp
@@ -81,7 +95,7 @@ BeginCmp
 TimeStamp = /54E4493A;
 Reference = SW2;
 ValeurCmp = REED SW;
-IdModule  = R6;
+IdModule  = REEDSW;
 EndCmp
 
 BeginCmp

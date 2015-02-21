@@ -1,10 +1,10 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/02/20 13:53:01
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/02/21 20:16:23
 
 BeginCmp
 TimeStamp = /5493D0B5;
 Reference = BT1;
 ValeurCmp = 3V;
-IdModule  = SMTU1220;
+IdModule  = SMTU2032;
 EndCmp
 
 BeginCmp
