@@ -1,58 +1,30 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/02/21 21:35:13
+Cmp-Mod V01 Created by PcbNew date = 2015/02/22 17:21:36
 
 BeginCmp
 TimeStamp = /5493D0B5;
 Reference = BT1;
-ValeurCmp = 3V;
-IdModule  = BK-890;
+ValeurCmp = CR1220;
+IdModule  = BK-885;
 EndCmp
 
 BeginCmp
 TimeStamp = /549BC5A8;
 Reference = C1;
-ValeurCmp = 0.22;
-IdModule  = DCK-3R3E224-E;
-EndCmp
-
-BeginCmp
-TimeStamp = /54E6C438;
-Reference = C2;
-ValeurCmp = 0.22;
-IdModule  = DCK-3R3E224-E;
-EndCmp
-
-BeginCmp
-TimeStamp = /54E6CE2B;
-Reference = C3;
-ValeurCmp = 0.22;
-IdModule  = DCK-3R3E224-E;
-EndCmp
-
-BeginCmp
-TimeStamp = /54E6CED1;
-Reference = C4;
-ValeurCmp = 0.22;
-IdModule  = DCK-3R3E224-E;
-EndCmp
-
-BeginCmp
-TimeStamp = /54E87886;
-Reference = C5;
-ValeurCmp = 0.22;
-IdModule  = DCK-3R3E224-E;
+ValeurCmp = 1F;
+IdModule  = SE-5R5-D105VYV;
 EndCmp
 
 BeginCmp
 TimeStamp = /54B7E0F7;
 Reference = JP1;
 ValeurCmp = BYPASS;
-IdModule  = GS2;
+IdModule  = JUMPER;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AD1F8E;
 Reference = LD1;
-ValeurCmp = LED;
+ValeurCmp = SML-012WT;
 IdModule  = LED-1206;
 EndCmp
 
@@ -87,14 +59,14 @@ EndCmp
 BeginCmp
 TimeStamp = /549BC4AC;
 Reference = SW1;
-ValeurCmp = SW_PUSH;
+ValeurCmp = JB-15FBP2;
 IdModule  = JB-15HFBP2;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E4493A;
 Reference = SW2;
-ValeurCmp = REED SW;
+ValeurCmp = MKA-10110;
 IdModule  = REEDSW;
 EndCmp
 
