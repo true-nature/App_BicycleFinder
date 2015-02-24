@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "Bicycle Finder / Remote Commander"
-Date "22 feb 2015"
+Date "24 feb 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -180,12 +180,12 @@ $EndComp
 $Comp
 L R R2
 U 1 1 54DE9B06
-P 6950 3050
-F 0 "R2" V 7030 3050 40  0000 C CNN
-F 1 "1k" V 6957 3051 40  0000 C CNN
-F 2 "~" V 6880 3050 30  0000 C CNN
-F 3 "~" H 6950 3050 30  0000 C CNN
-	1    6950 3050
+P 7000 2750
+F 0 "R2" V 7080 2750 40  0000 C CNN
+F 1 "1k" V 7007 2751 40  0000 C CNN
+F 2 "~" V 6930 2750 30  0000 C CNN
+F 3 "~" H 7000 2750 30  0000 C CNN
+	1    7000 2750
 	0    -1   -1   0   
 $EndComp
 $Comp
@@ -238,14 +238,9 @@ Connection ~ 7300 2050
 Wire Wire Line
 	7600 2250 7550 2250
 Wire Wire Line
-	7550 3050 7550 1800
+	7550 1800 7550 2750
 Wire Wire Line
-	7200 3050 7550 3050
-Wire Wire Line
-	7300 2500 7300 3050
-Connection ~ 7300 3050
-Wire Wire Line
-	6700 3050 5800 3050
+	5800 2750 6750 2750
 Wire Wire Line
 	3300 2300 3400 2300
 Wire Wire Line
@@ -293,7 +288,6 @@ NoConn ~ 5800 2050
 NoConn ~ 5800 2150
 NoConn ~ 5800 2300
 NoConn ~ 5800 2400
-NoConn ~ 5800 2750
 NoConn ~ 5800 2850
 Wire Wire Line
 	5800 3300 6100 3300
@@ -351,9 +345,9 @@ Text Label 3950 1900 0    60   ~ 0
 CFG
 Text Label 5950 2600 0    60   ~ 0
 DO4
-Text Label 7350 3050 0    60   ~ 0
+Text Label 7300 2750 0    60   ~ 0
 SPK
-Text Label 6050 3050 0    60   ~ 0
+Text Label 6150 2750 0    60   ~ 0
 SOUND
 Wire Wire Line
 	3550 1900 3550 2500
@@ -370,7 +364,6 @@ F 3 "~" H 7850 1700 60  0000 C CNN
 	1    7850 1700
 	1    0    0    -1  
 $EndComp
-Connection ~ 7550 2250
 Wire Wire Line
 	7550 1600 7300 1600
 Connection ~ 7300 1600
@@ -420,4 +413,11 @@ Connection ~ 4050 2850
 Wire Wire Line
 	4300 2750 4050 2750
 Connection ~ 4050 2750
+Wire Wire Line
+	7550 2750 7250 2750
+Connection ~ 7550 2250
+NoConn ~ 5800 3050
+Wire Wire Line
+	7300 2500 7300 2750
+Connection ~ 7300 2750
 $EndSCHEMATC
