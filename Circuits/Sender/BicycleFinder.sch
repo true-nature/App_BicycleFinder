@@ -30,14 +30,13 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:SmallSender-cache
 EELAYER 27 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "18 feb 2015"
+Date "26 feb 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -389,4 +388,8 @@ Wire Wire Line
 	7050 1950 7200 1950
 Connection ~ 7200 1950
 NoConn ~ 5300 3000
+Text Label 4850 3600 0    60   ~ 0
+WUP
+Text Label 5100 3900 0    60   ~ 0
+STOP
 $EndSCHEMATC
