@@ -160,6 +160,9 @@ tsMML sMML; //!< MML 関連 @ingroup MASTER
 // const uint8 au8MML[4][256] = { ... }
 #endif
 
+static bool_t bWakeupByButton;
+static bool_t bResetOnBrownOut;
+
 /****************************************************************************/
 /***        FUNCTIONS                                                     ***/
 /****************************************************************************/
@@ -492,6 +495,17 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
+			if (bResetOnBrownOut) {
+				// BrownOutで再起動していたら寝て待つ
+				bResetOnBrownOut = FALSE;
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING); // スリープ状態へ遷移
+			}
+			// enable brown out detect
+			vAHI_BrownOutConfigure(3,//0:1.95V 1:2.0V(default), 2:2.1V, 3:2.2V, 4:2.3V
+					TRUE,	// bVboRestEn
+					TRUE,	// bVboEn
+					FALSE,	// bVboIntEnFalling, bVboIntEnRising
+					FALSE);
 
 			// vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
@@ -931,6 +945,21 @@ void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 void cbAppColdStart(bool_t bStart) {
 	if (!bStart) {
 		// before AHI initialization (very first of code)
+		bWakeupByButton = FALSE;
+		// check DIO source
+		if(u8AHI_WakeTimerFiredStatus()) {
+		} else
+		if(u32AHI_DioWakeStatus() & PORT_INPUT_MASK) {
+			// woke up from DIO events
+			bWakeupByButton = TRUE;
+		}
+		bResetOnBrownOut = bAHI_BrownOutEventResetStatus();
+		// disable brown out detect
+		vAHI_BrownOutConfigure(0,//0:1.95V 1:2.0V(default), 2:2.1V, 3:2.2V, 4:2.3V
+				FALSE,	// bVboRestEn
+				FALSE,	// bVboEn
+				FALSE,	// bVboIntEnFalling, bVboIntEnRising
+				FALSE);
 
 		// Module Registration
 		ToCoNet_REG_MOD_ALL();
