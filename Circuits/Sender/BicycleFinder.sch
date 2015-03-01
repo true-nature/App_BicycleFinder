@@ -30,13 +30,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
+LIBS:BicycleFinder-cache
 EELAYER 27 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "26 feb 2015"
+Date "1 mar 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -220,12 +221,12 @@ $EndComp
 $Comp
 L WRITER-VCC P1
 U 1 1 54E4785D
-P 3700 3700
-F 0 "P1" V 3800 3700 60  0000 C CNN
-F 1 "WRITER-VCC" V 3900 3700 60  0000 C CNN
-F 2 "~" H 3650 3650 60  0000 C CNN
-F 3 "~" H 3650 3650 60  0000 C CNN
-	1    3700 3700
+P 3700 3750
+F 0 "P1" V 3800 3750 60  0000 C CNN
+F 1 "WRITER-VCC" V 3900 3750 60  0000 C CNN
+F 2 "~" H 3650 3700 60  0000 C CNN
+F 3 "~" H 3650 3700 60  0000 C CNN
+	1    3700 3750
 	-1   0    0    -1  
 $EndComp
 NoConn ~ 5300 2400
@@ -239,10 +240,6 @@ NoConn ~ 6800 3250
 NoConn ~ 6800 3450
 NoConn ~ 5300 3700
 NoConn ~ 5300 3800
-NoConn ~ 5300 3150
-NoConn ~ 5300 3250
-NoConn ~ 5300 3350
-NoConn ~ 5300 3450
 Wire Wire Line
 	2550 2400 2850 2400
 Wire Wire Line
@@ -282,9 +279,9 @@ Wire Wire Line
 Wire Wire Line
 	6900 2300 6900 1700
 Wire Wire Line
-	4900 3400 4100 3400
+	4100 3450 5300 3450
 Wire Wire Line
-	4900 1100 4900 3400
+	4900 1100 4900 3450
 Wire Wire Line
 	6800 3600 7200 3600
 Wire Wire Line
@@ -305,9 +302,9 @@ NoConn ~ 6800 2900
 Wire Wire Line
 	5300 2650 4700 2650
 Wire Wire Line
-	4700 2650 4700 3600
+	4700 2650 4700 3650
 Wire Wire Line
-	4700 3600 4100 3600
+	4700 3650 4100 3650
 Wire Wire Line
 	5100 3900 5300 3900
 Wire Wire Line
@@ -337,21 +334,21 @@ Wire Wire Line
 	4600 5000 5100 5000
 Connection ~ 4800 5000
 Wire Wire Line
-	4100 3800 4600 3800
+	4100 3850 4600 3850
 Wire Wire Line
-	4600 3800 4600 2750
+	4600 3850 4600 2750
 Wire Wire Line
 	4600 2750 5300 2750
 Wire Wire Line
-	4100 3500 4500 3500
+	4100 3550 4500 3550
 Wire Wire Line
-	4500 3500 4500 2900
+	4500 3550 4500 2900
 Wire Wire Line
 	4500 2900 5300 2900
 Wire Wire Line
-	4100 4000 4400 4000
+	4100 4050 4400 4050
 Wire Wire Line
-	4400 4000 4400 2300
+	4400 4050 4400 2300
 Wire Wire Line
 	4400 2300 5300 2300
 Wire Wire Line
@@ -360,13 +357,13 @@ Wire Wire Line
 	3800 2200 4750 2200
 Connection ~ 4750 1950
 Wire Wire Line
-	4100 3900 4600 3900
+	4100 3950 4600 3950
 Wire Wire Line
-	4600 3900 4600 5000
+	4600 3950 4600 5000
 Wire Wire Line
-	4100 3700 4300 3700
+	4100 3750 4300 3750
 Wire Wire Line
-	4300 3700 4300 4200
+	4300 3750 4300 4200
 Wire Wire Line
 	4300 4200 6900 4200
 Wire Wire Line
@@ -392,4 +389,32 @@ Text Label 4850 3600 0    60   ~ 0
 WUP
 Text Label 5100 3900 0    60   ~ 0
 STOP
+Text Label 6950 3000 0    60   ~ 0
+DO4
+Text Label 7500 2350 0    60   ~ 0
+LED
+Text Label 4150 3550 0    60   ~ 0
+RST
+Text Label 4150 3650 0    60   ~ 0
+RXD
+Text Label 4150 3750 0    60   ~ 0
+PRG
+Text Label 4150 3850 0    60   ~ 0
+TXD
+Text Label 4150 3950 0    60   ~ 0
+GND
+Text Label 4150 4050 0    60   ~ 0
+CFG
+Text Label 4150 3450 0    60   ~ 0
+ExVcc
+Wire Wire Line
+	4900 3150 5300 3150
+Connection ~ 4900 3150
+Wire Wire Line
+	4900 3250 5300 3250
+Wire Wire Line
+	4900 3350 5300 3350
+Connection ~ 4900 3250
+Connection ~ 4900 3350
+Connection ~ 4900 3450
 $EndSCHEMATC
