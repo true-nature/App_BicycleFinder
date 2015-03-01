@@ -161,7 +161,6 @@ tsMML sMML; //!< MML 関連 @ingroup MASTER
 #endif
 
 static bool_t bWakeupByButton;
-static bool_t bResetOnBrownOut;
 
 /****************************************************************************/
 /***        FUNCTIONS                                                     ***/
@@ -495,18 +494,6 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
-			if (bResetOnBrownOut) {
-				// BrownOutで再起動していたら寝て待つ
-				bResetOnBrownOut = FALSE;
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING); // スリープ状態へ遷移
-			}
-			// enable brown out detect
-			vAHI_BrownOutConfigure(3,//0:1.95V 1:2.0V(default), 2:2.1V, 3:2.2V, 4:2.3V
-					TRUE,	// bVboRestEn
-					TRUE,	// bVboEn
-					FALSE,	// bVboIntEnFalling, bVboIntEnRising
-					FALSE);
-
 			// vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
 				// スリープからの復帰時の場合
@@ -953,7 +940,9 @@ void cbAppColdStart(bool_t bStart) {
 			// woke up from DIO events
 			bWakeupByButton = TRUE;
 		}
-		bResetOnBrownOut = bAHI_BrownOutEventResetStatus();
+		// Module Registration
+		ToCoNet_REG_MOD_ALL();
+	} else {
 		// disable brown out detect
 		vAHI_BrownOutConfigure(0,//0:1.95V 1:2.0V(default), 2:2.1V, 3:2.2V, 4:2.3V
 				FALSE,	// bVboRestEn
@@ -961,9 +950,6 @@ void cbAppColdStart(bool_t bStart) {
 				FALSE,	// bVboIntEnFalling, bVboIntEnRising
 				FALSE);
 
-		// Module Registration
-		ToCoNet_REG_MOD_ALL();
-	} else {
 		// メモリのクリア
 		memset(&sAppData, 0x00, sizeof(sAppData));
 		memset(&sAppData.sIOData_now, 0xFF, sizeof(tsIOData));
@@ -1017,6 +1003,7 @@ void cbAppColdStart(bool_t bStart) {
 
 		// IOより状態を読み取る (ID など)
 		sAppData.u32DIO_startup = ~u32PortReadBitmap(); // この時点では全部入力ポート
+		sAppData.bWakeupByButton = bWakeupByButton;
 
 		// 緊急のフラッシュ消去モード
 		if ((0 == (sAppData.u32DIO_startup & (1UL << PORT_CONF1)))
