@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/02/25 0:31:57
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/03/01 23:29:12
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -43,17 +43,45 @@ IdModule  = WRITE-7P;
 EndCmp
 
 BeginCmp
+TimeStamp = /54F31D53;
+Reference = Q1;
+ValeurCmp = MOS_N;
+IdModule  = ;
+EndCmp
+
+BeginCmp
+TimeStamp = /54F31D44;
+Reference = Q2;
+ValeurCmp = MOS_N;
+IdModule  = ;
+EndCmp
+
+BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
 ValeurCmp = 330;
-IdModule  = SM0603;
+IdModule  = SM0603_Resistor;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
 ValeurCmp = 680;
-IdModule  = SM0603;
+IdModule  = SM0603_Resistor;
+EndCmp
+
+BeginCmp
+TimeStamp = /54F31CC8;
+Reference = R3;
+ValeurCmp = 10M;
+IdModule  = SM0603_Resistor;
+EndCmp
+
+BeginCmp
+TimeStamp = /54F31D10;
+Reference = R4;
+ValeurCmp = 10M;
+IdModule  = SM0603_Resistor;
 EndCmp
 
 BeginCmp
@@ -82,6 +110,13 @@ TimeStamp = /54B6402D;
 Reference = U2;
 ValeurCmp = HN2S01FU;
 IdModule  = HN2S01FU;
+EndCmp
+
+BeginCmp
+TimeStamp = /54F31C38;
+Reference = U3;
+ValeurCmp = TCM809RVNB;
+IdModule  = SOT23;
 EndCmp
 
 EndListe
