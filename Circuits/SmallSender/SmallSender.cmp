@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/03/01 23:29:12
+Cmp-Mod V01 Created by PcbNew date = 2015/03/02 14:30:10
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -45,15 +45,8 @@ EndCmp
 BeginCmp
 TimeStamp = /54F31D53;
 Reference = Q1;
-ValeurCmp = MOS_N;
-IdModule  = ;
-EndCmp
-
-BeginCmp
-TimeStamp = /54F31D44;
-Reference = Q2;
-ValeurCmp = MOS_N;
-IdModule  = ;
+ValeurCmp = RUE002N02;
+IdModule  = EMT3;
 EndCmp
 
 BeginCmp
@@ -78,7 +71,7 @@ IdModule  = SM0603_Resistor;
 EndCmp
 
 BeginCmp
-TimeStamp = /54F31D10;
+TimeStamp = /54F3E04D;
 Reference = R4;
 ValeurCmp = 10M;
 IdModule  = SM0603_Resistor;
@@ -102,7 +95,7 @@ BeginCmp
 TimeStamp = /54E4765F;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
-IdModule  = TWE-001L-NC7;
+IdModule  = TWE-001L-SMD-noNTH;
 EndCmp
 
 BeginCmp
