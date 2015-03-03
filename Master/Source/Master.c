@@ -950,6 +950,13 @@ void cbAppColdStart(bool_t bStart) {
 				FALSE,	// bVboIntEnFalling, bVboIntEnRising
 				FALSE);
 
+#ifdef ENABLE_BICYCLE_FINDER
+		// リセットICの無効化
+		vPortSetLo(DIO_VOLTAGE_CHECKER);
+		vPortAsOutput(DIO_VOLTAGE_CHECKER);
+		vPortDisablePullup(DIO_VOLTAGE_CHECKER);
+#endif
+
 		// メモリのクリア
 		memset(&sAppData, 0x00, sizeof(sAppData));
 		memset(&sAppData.sIOData_now, 0xFF, sizeof(tsIOData));

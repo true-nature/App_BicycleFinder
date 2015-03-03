@@ -35,6 +35,7 @@ extern "C" {
 
 #define ENABLE_BICYCLE_FINDER
 #ifdef ENABLE_BICYCLE_FINDER
+#define DIO_VOLTAGE_CHECKER (PORT_OUT1)  // DO1: 始動後速やかに LO になる
 /**
  * MML 言語の対応
  */
