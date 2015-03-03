@@ -117,9 +117,10 @@ static bool_t bCheckDupPacket(tsDupChk_Context *pc, uint32 u32Addr,
 		uint16 u16TimeStamp);
 
 static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular);
-static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 bm);
+static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm);
 static int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq);
 static int16 i16TransmitRepeat(tsRxDataApp *pRx);
+static void vTransmitMmlData(void);
 
 static uint16 u16GetAve(uint16 *pu16k, uint8 u8Scale);
 static bool_t bUpdateAdcValues();
@@ -490,7 +491,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
  * @param u32evarg
  */
 static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
-	const uint8 u8bm = 0x01;	// EEPROMから読んだ1番のメロディーに固定
+	static uint8 u8bm;
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
@@ -502,6 +503,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			}
 			sAppData.u8AdcState = 0; // ADC の開始
 			sAppData.u32AdcLastTick = u32TickCount_ms;
+			u8bm = 0;	// ボタン状態をクリア
 
 			ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
 		}
@@ -531,7 +533,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				// クイックで送信
 				if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
 					&& sAppData.u32SleepDur == 0) {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
 				} else {
 					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
 				}
@@ -558,7 +560,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			}
 		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
 			// 対抗のスリープ間隔を跨いで連続送信
-			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, u8bm);
+			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
 		}
 		_C {
 			static uint32 mask, duty;
@@ -570,8 +572,9 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 		}
-		if ((u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 200)) {
-			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 200), u32TickCount_ms);
+		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
+		if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
+			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
@@ -1520,7 +1523,28 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				uint32 u32used = sAppData.sIOData_now.u32BtmUsed; // 関数呼び出し中だけ値を変更する
 				sAppData.sIOData_now.u32BtmUsed = u32ItemBitmap
 						& PORT_INPUT_MASK; // 割り込みでLoになったDINだけ変更対照として送信する
+#ifdef ENABLE_BICYCLE_FINDER
+				int i;
+				uint8 u8bm = 0;
+
+				for (i = 0; i < 4; i++) {
+					uint8 u8ct = sAppData.sIOData_now.au8Input[i] >> 4;
+
+					if (u8ct >= LOW_LATENCY_DELAYED_TRANSMIT_COUNTER - 3) { // カウンタ値が残っている場合は 1 を送る
+						u8bm |= (1 << i);
+					} else {
+						u8bm |= (sAppData.sIOData_now.au8Input[i] & 1) ? (1 << i) : 0;
+					}
+				}
+				if (u8bm == 0x09) {
+					// タクトスイッチ押しながらリードスイッチ作動なら選曲変更
+					vTransmitMmlData();
+				} else {
+					// sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm); // 送信処理を行う
+				}
+#else
 				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE); // 送信処理を行う
+#endif
 				sAppData.sIOData_now.u32BtmUsed = u32used
 						| (u32ItemBitmap & PORT_INPUT_MASK); //値を復元する
 			}
@@ -2523,8 +2547,8 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	return i16Ret;
 }
 
-static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 bm) {
-	if (IS_APPCONF_ROLE_SILENT_MODE())
+static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
+	if (IS_APPCONF_ROLE_SILENT_MODE() || bm == NULL)
 		return -1;
 
 	int16 i16Ret = -1;
@@ -2566,18 +2590,37 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 bm) {
 	S_OCTET((uint8)((sAppData.sIOData_now.i16Temp + 50)/100)); //チップ内温度センサー(TWE-Liteでは正しく動作しない)
 #endif
 
-	// ボタンのビットマップは指定値を使用
+	// ボタンのビットマップ
+	if (*bm != 0)
 	{
-		uint8 u8bm = bm & 0x0F;
+		// 指定値を使用
+		uint8 u8bm = *bm & 0x0F;
+		if (bRegular) u8bm |= 0x80; // MSB を設定
+
+		S_OCTET(u8bm);
+	} else {
+		int i;
+		uint8 u8bm = 0;
+
+		for (i = 0; i < 4; i++) {
+			uint8 u8ct = sAppData.sIOData_now.au8Input[i] >> 4;
+
+			if (u8ct >= LOW_LATENCY_DELAYED_TRANSMIT_COUNTER - 3) { // カウンタ値が残っている場合は 1 を送る
+				u8bm |= (1 << i);
+			} else {
+				u8bm |= (sAppData.sIOData_now.au8Input[i] & 1) ? (1 << i) : 0;
+			}
+		}
+		*bm = u8bm;	// ボタン状態を通知
+
 		if (bRegular) u8bm |= 0x80; // MSB を設定
 
 		S_OCTET(u8bm);
 	}
 
 	// ボタンのビットマップ使用フラグ (１度でもLoになったポートは１になる）
-//	S_OCTET(
-//			( (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT1) ? 1 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT2) ? 2 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT3) ? 4 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT4) ? 8 : 0) ));
-	S_OCTET(bm & 0x0F);
+	S_OCTET(
+			( (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT1) ? 1 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT2) ? 2 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT3) ? 4 : 0) | (sAppData.sIOData_now.u32BtmUsed & (1UL << PORT_INPUT4) ? 8 : 0) ));
 
 	// ADC 部のエンコード
 	uint8 u8LSBs = 0;
@@ -2864,6 +2907,54 @@ int16 i16TransmitSerMsg(uint8 *p, uint16 u16len, uint32 u32AddrSrc,
 
 	return 0;
 }
+
+
+/** @ingroup MASTER
+ *  MMLの曲データ更新の送信要求を行います。
+ *
+ */
+void vTransmitMmlData(void)
+{
+	static int mmlidx;
+	uint8 payload[256];
+	uint16 dstlength = 0;
+	const uint8 *src = au8MmlBank[mmlidx];
+	uint8 *q = payload;
+	if (src == NULL) {
+		mmlidx = 0;
+		src = au8MmlBank[0];
+	}
+#ifdef ENABLE_BICYCLE_FINDER
+	// 自転車発見器のリモコンは子機宛に送信
+	S_OCTET(
+			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN :
+					((sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC && IS_APPCONF_OPT_ON_PRESS_TRANSMIT() && sAppData.u32SleepDur == 0) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT)); // 宛先
+#else
+	S_OCTET(
+			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
+#endif
+	S_OCTET(SERCMD_ID_MML_UPDATE_CMD);
+	S_OCTET(0x00);	// 要求番号
+	S_OCTET(0x01);	// コマンド (0x1: Write)
+	S_OCTET(0x00);	// 曲インデックス
+	S_OCTET(0xFF);	// MML length (dummy)
+
+	for (dstlength = (q - payload); *src && dstlength < 256; src++)
+	{
+		if (*src > 0x20 && *src < 0x7f) {
+			S_OCTET(*src);
+			dstlength++;
+		}
+	}
+	payload[5] = dstlength - 6;	// set MML length
+	S_OCTET('X');
+	dstlength++;
+	i16TransmitSerMsg(payload, dstlength, ToCoNet_u32GetSerial(),
+			sAppData.u8AppLogicalId, payload[0], FALSE,
+			sAppData.u8UartReqNum++);
+	mmlidx++;
+}
+
 
 /** @ingroup MASTER
  * IO状態パケットの受信処理を行います。

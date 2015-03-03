@@ -29,6 +29,7 @@
  * メロディの定義
  */
 const uint8 au8MML[4][256];
+const uint8 *au8MmlBank[5];
 
 /** @ingroup FLASH
  * フラッシュデータ構造体
