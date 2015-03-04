@@ -46,6 +46,7 @@ typedef enum
 	E_STATE_APP_WAIT_RX_IDLE,                 //!< 連続送信を見逃さない程度の受信時間を確保する
 	E_STATE_APP_WAIT_PLAY_MML,                //!< MML再生完了を待つ
 	E_STATE_APP_SEND_MML,                     //!< MML書き換えコマンドを送信する
+	E_STATE_APP_WAIT_TX_MML,                  //!< MML送信完了を待つ
 #endif
 	E_STATE_APP_SLEEPING                      //!< スリープ処理
 } teStateApp;

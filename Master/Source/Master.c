@@ -585,9 +585,23 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	case E_STATE_APP_SEND_MML:
 		// MML書き換え要求
 		if (eEvent == E_EVENT_NEW_STATE) {
-			vTransmitMmlData();
+			DBGOUT(1, LB"E_STATE_APP_SEND_MML E_EVENT_NEW_STATE");
 		}
-		else if (eEvent == E_EVENT_APP_TX_COMPLETE || PRSEV_u32TickFrNewState(pEv) > 32) {
+		else if (eEvent == E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 100) {
+			DBGOUT(1, LB"E_STATE_APP_SEND_MML vTransmitMmlData()");
+			vTransmitMmlData();
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_TX_MML);
+		}
+		break;
+
+	case E_STATE_APP_WAIT_TX_MML:
+		// MML書き換え要求
+		if (eEvent == E_EVENT_APP_TX_COMPLETE ) {
+			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML E_EVENT_APP_TX_COMPLETE");
+			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		}
+		else if (PRSEV_u32TickFrNewState(pEv) > 200) {
+			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML expiration");
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
@@ -1556,7 +1570,7 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 						ToCoNet_Event_Process(E_EVENT_APP_SEND_MML, 0, sAppData.prPrsEv);
 					}
 				} else {
-					// sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm); // 送信処理を行う
+					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm); // 送信処理を行う
 				}
 #else
 				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE); // 送信処理を行う
@@ -2845,6 +2859,11 @@ int16 i16TransmitSerMsg(uint8 *p, uint16 u16len, uint32 u32AddrSrc,
 		uint8 u8AddrSrc, uint8 u8AddrDst, uint8 u8RelayLv, uint8 u8Req) {
 	if (IS_APPCONF_ROLE_SILENT_MODE())
 		return -1;
+	DBGOUT(1, LB"i16TransmitSerMsg(p,%d,%x,%x,%x,%d,%d)"LB, u16len, u32AddrSrc, u8AddrSrc, u8AddrDst, u8RelayLv, u8Req);
+	int c;
+	for (c = 0; c < u16len; c++) {
+		DBGOUT(1, "%02X", p[c]);
+	}
 
 	// パケットを分割して送信する。
 	tsTxDataApp sTx;
@@ -2942,9 +2961,7 @@ void vTransmitMmlData(void)
 	src = au8MmlBank[mmlidx];
 #ifdef ENABLE_BICYCLE_FINDER
 	// 自転車発見器のリモコンは子機宛に送信
-	S_OCTET(
-			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN :
-					((sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC && IS_APPCONF_OPT_ON_PRESS_TRANSMIT() && sAppData.u32SleepDur == 0) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT)); // 宛先
+	S_OCTET(LOGICAL_ID_CHILDREN + 4); // 宛先は子機間欠モード
 #else
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
@@ -2955,14 +2972,15 @@ void vTransmitMmlData(void)
 	S_OCTET(0x00);	// 曲インデックス
 	S_OCTET(0xFF);	// MML length (dummy)
 
+	DBGOUT(1, LB"MML ");
 	for (; *src && (q - payload) < 256; src++)
 	{
 		if (*src > 0x20 && *src < 0x7f) {
 			S_OCTET(*src);
+			DBGOUT(1, "%c", *src);
 		}
 	}
 	payload[5] = (q - payload) - 6;	// set MML length
-	S_OCTET('X');
 	i16TransmitSerMsg(payload, (q - payload), ToCoNet_u32GetSerial(),
 			sAppData.u8AppLogicalId, payload[0], FALSE,
 			sAppData.u8UartReqNum++);
