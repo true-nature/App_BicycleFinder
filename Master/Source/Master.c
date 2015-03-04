@@ -561,6 +561,9 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
 			// 対抗のスリープ間隔を跨いで連続送信
 			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
+		} else if (eEvent == E_EVENT_APP_SEND_MML) {
+			// HwEventから発せられたMML書き換え要求
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_SEND_MML);
 		}
 		_C {
 			static uint32 mask, duty;
@@ -575,6 +578,16 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
 		if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
 			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
+			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		}
+		break;
+
+	case E_STATE_APP_SEND_MML:
+		// MML書き換え要求
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vTransmitMmlData();
+		}
+		else if (eEvent == E_EVENT_APP_TX_COMPLETE || PRSEV_u32TickFrNewState(pEv) > 32) {
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
 		break;
@@ -1536,9 +1549,12 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 						u8bm |= (sAppData.sIOData_now.au8Input[i] & 1) ? (1 << i) : 0;
 					}
 				}
+				DBGOUT(1, "vHwEven u8bm:%x", u8bm);
 				if (u8bm == 0x09) {
-					// タクトスイッチ押しながらリードスイッチ作動なら選曲変更
-					vTransmitMmlData();
+					// イベント処理部分にイベントを送信
+					if (sAppData.prPrsEv) {
+						ToCoNet_Event_Process(E_EVENT_APP_SEND_MML, 0, sAppData.prPrsEv);
+					}
 				} else {
 					// sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm); // 送信処理を行う
 				}
@@ -2917,13 +2933,13 @@ void vTransmitMmlData(void)
 {
 	static int mmlidx;
 	uint8 payload[256];
-	uint16 dstlength = 0;
-	const uint8 *src = au8MmlBank[mmlidx];
+	const uint8 *src;
 	uint8 *q = payload;
-	if (src == NULL) {
+
+	if (mmlidx > sizeof(au8MmlBank) / sizeof(uint8*)) {
 		mmlidx = 0;
-		src = au8MmlBank[0];
 	}
+	src = au8MmlBank[mmlidx];
 #ifdef ENABLE_BICYCLE_FINDER
 	// 自転車発見器のリモコンは子機宛に送信
 	S_OCTET(
@@ -2939,17 +2955,15 @@ void vTransmitMmlData(void)
 	S_OCTET(0x00);	// 曲インデックス
 	S_OCTET(0xFF);	// MML length (dummy)
 
-	for (dstlength = (q - payload); *src && dstlength < 256; src++)
+	for (; *src && (q - payload) < 256; src++)
 	{
 		if (*src > 0x20 && *src < 0x7f) {
 			S_OCTET(*src);
-			dstlength++;
 		}
 	}
-	payload[5] = dstlength - 6;	// set MML length
+	payload[5] = (q - payload) - 6;	// set MML length
 	S_OCTET('X');
-	dstlength++;
-	i16TransmitSerMsg(payload, dstlength, ToCoNet_u32GetSerial(),
+	i16TransmitSerMsg(payload, (q - payload), ToCoNet_u32GetSerial(),
 			sAppData.u8AppLogicalId, payload[0], FALSE,
 			sAppData.u8UartReqNum++);
 	mmlidx++;

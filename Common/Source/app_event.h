@@ -30,7 +30,8 @@ typedef enum
 	E_EVENT_APP_BASE = ToCoNet_EVENT_APP_BASE,//!< ToCoNet 組み込みイベントと重複させないため
     E_EVENT_APP_TICK_A,                    //!< 64FPS のタイマーイベント
     E_EVENT_APP_ADC_COMPLETE,              //!< ADC完了
-    E_EVENT_APP_TX_COMPLETE                //!< TX完了
+    E_EVENT_APP_TX_COMPLETE,               //!< TX完了
+	E_EVENT_APP_SEND_MML                   //!< MML書き換え要求
 } teEventApp;
 
 /** @ingroup MASTER
@@ -44,6 +45,7 @@ typedef enum
 #ifdef USE_RX_ON_SLP
 	E_STATE_APP_WAIT_RX_IDLE,                 //!< 連続送信を見逃さない程度の受信時間を確保する
 	E_STATE_APP_WAIT_PLAY_MML,                //!< MML再生完了を待つ
+	E_STATE_APP_SEND_MML,                     //!< MML書き換えコマンドを送信する
 #endif
 	E_STATE_APP_SLEEPING                      //!< スリープ処理
 } teStateApp;
