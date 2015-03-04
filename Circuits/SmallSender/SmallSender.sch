@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "2 mar 2015"
+Date "4 mar 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -271,7 +271,7 @@ $EndComp
 Text Label 8600 2850 0    60   ~ 0
 LED
 Text Label 4950 1550 3    60   ~ 0
-3V3
+ExVcc
 Wire Wire Line
 	1100 3150 1400 3150
 Wire Wire Line
