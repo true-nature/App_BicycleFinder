@@ -106,26 +106,26 @@ const uint8 au8MML[4][256] = {
 };
 
 // ちょうちょ
-const uint8 u8MmlBank_0[] =
+const uint8 au8Mml_Butterfly[] =
 		"O6T96 GEE2 FDD2 CDEF GGG2 GEEE FDDD CEGG EE2";
 // Happy Birthday
-const uint8 u8MmlBank_1[] =
+const uint8 au8Mml_HappyBirthday[] =
 		"O6T96 C8.C16D8.D16C4 F4E4.R8 C8.C16D8.D16C4 G4F4.R8 C8.C16>C8.C16<A4 F8.F16E16.E16.E16.D2 R2 B-8.B-16A8.A16F4 G4F4.R8";
 // Canon (Johann Pachelbel)
-const uint8 u8MmlBank_2[] =
+const uint8 au8Mml_Canon[] =
 		"O5T180L8"
 		"A4F#GA4F#G R<AB>C#DEF#G F#4DEF#4<F#G RBAGAF#GA G4BAG4F#E REDEF#GAB G4BAB4>C#D R<B>C#DEF#GA"
 		"A4F#GA4F#G  A<AB>C#DEF#G F#4DEF#4<F#G ABAGA>DC#D <B4>DC#<B4AG AGF#GAB >C#D <B4>DC#D4C#<B >C#DEDC#D<B>C#";
 // Jingle Bells
-const uint8 u8MmlBank_3[] =
+const uint8 au8Mml_JingleBells[] =
 		"O5T220L4 G G>EDC <G2.G G>EDC <A2.A A>FED <B2B2 >GGFD E2.<G G>EDC <G2.G G>EDC <A2.A A>FED"
 		"GGGG8G8 AGFD C1 EEE2 EEE2 EGC.D8 E1 FFFF8F8 FEEE EDDE D2G2 EEE2 EEE2 EGC.D8 E1 FFFF FEEE GGFD C1";
 
 const uint8 *au8MmlBank[MMLBANK_COUNT] = {
-		u8MmlBank_0,
-		u8MmlBank_1,
-		u8MmlBank_2,
-		u8MmlBank_3,
+		au8Mml_Butterfly,
+		au8Mml_HappyBirthday,
+		au8Mml_Canon,
+		au8Mml_JingleBells,
 };
 
 tsUserMML sUserMMLData;
