@@ -52,4 +52,6 @@ void Config_vSetDefaults(tsFlashApp *p) {
 #endif
 
 	p->u32Opt2 = 0;
+
+	p->u8MML_idx = 0;
 }

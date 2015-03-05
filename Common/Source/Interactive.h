@@ -140,6 +140,7 @@ enum {
 	E_APPCONF_BAUD_SAFE, //!< BPS ピンをGにしたときのボーレート
 	E_APPCONF_BAUD_PARITY, //!< BPS ピンをGにしたときのパリティ設定 (0:None, 1:Odd, 2:Even)
 	E_APPCONF_OPT2,      //!< オプション設定２
+	E_APPCONF_MML_IDX,   //!< MML選曲インデックス
 	E_APPCONF_TEST
 };
 

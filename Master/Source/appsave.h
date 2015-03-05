@@ -48,6 +48,8 @@ typedef struct _tsFlashApp {
 
 	uint32 u32Opt;			//!< 色々オプション
 	uint32 u32Opt2;		//!< プルアップ設定 bit0:3->DI1-4, bit4-8:DO5-7
+
+	uint8 u8MML_idx;		//!< MML選曲インデックス
 } tsFlashApp;
 
 

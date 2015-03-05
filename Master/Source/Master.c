@@ -484,6 +484,16 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 
 #ifdef USE_RX_ON_SLP
 
+void vUpdateMmlIndex() {
+	// 次の選曲インデックスを更新
+	sAppData.sFlash.sData.u8MML_idx++;
+	if (sAppData.sFlash.sData.u8MML_idx >= MMLBANK_COUNT) {
+		sAppData.sFlash.sData.u8MML_idx = 0;
+	}
+	bool_t bRet = bFlash_Write(&sAppData.sFlash, FLASH_SECTOR_NUMBER - 1, 0);
+	V_PRINT("!INF FlashWrite %s"LB, bRet ? "Success" : "Failed");
+}
+
 /**  @ingroup MASTER
  * アプリケーション制御（自転車発見器モード、リモコン側）\n
   * @param pEv
@@ -596,11 +606,15 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_APP_WAIT_TX_MML:
 		// MML書き換え要求
-		if (eEvent == E_EVENT_APP_TX_COMPLETE ) {
+		if (eEvent == E_EVENT_NEW_STATE) {
+			// 次の選曲インデックスを更新
+			vUpdateMmlIndex();
+		}
+		else if (eEvent == E_EVENT_APP_TX_COMPLETE ) {
 			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML E_EVENT_APP_TX_COMPLETE");
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
-		else if (PRSEV_u32TickFrNewState(pEv) > 200) {
+		else if (E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 500) {
 			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML expiration");
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 		}
@@ -608,24 +622,13 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_FINISHED:
 		_C {
-			static uint8 u8GoSleep = 0;
 			if (eEvent == E_EVENT_NEW_STATE) {
-				u8GoSleep = sAppData.bWakeupByButton ? 0 : 1;
-
 				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
 				vPortSetHi(PORT_OUT4);
 			}
-
-			// ボタンでウェイクアップしたときはチャタリングが落ち着くのを待つのにしばらく停滞する
-			if (PRSEV_u32TickFrNewState(pEv) > 20) {
-				u8GoSleep = 1;
-			}
-
-			if (u8GoSleep == 1) {
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
-			}
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
 		}
 		break;
 
@@ -2950,15 +2953,11 @@ int16 i16TransmitSerMsg(uint8 *p, uint16 u16len, uint32 u32AddrSrc,
  */
 void vTransmitMmlData(void)
 {
-	static int mmlidx;
 	uint8 payload[256];
 	const uint8 *src;
 	uint8 *q = payload;
 
-	if (mmlidx > sizeof(au8MmlBank) / sizeof(uint8*)) {
-		mmlidx = 0;
-	}
-	src = au8MmlBank[mmlidx];
+	src = au8MmlBank[sAppData.sFlash.sData.u8MML_idx];
 #ifdef ENABLE_BICYCLE_FINDER
 	// 自転車発見器のリモコンは子機宛に送信
 	S_OCTET(LOGICAL_ID_CHILDREN + 4); // 宛先は子機間欠モード
@@ -2984,7 +2983,6 @@ void vTransmitMmlData(void)
 	i16TransmitSerMsg(payload, (q - payload), ToCoNet_u32GetSerial(),
 			sAppData.u8AppLogicalId, payload[0], FALSE,
 			sAppData.u8UartReqNum++);
-	mmlidx++;
 }
 
 

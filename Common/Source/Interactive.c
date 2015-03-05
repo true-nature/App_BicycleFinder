@@ -390,6 +390,12 @@ static void vProcessInputByte(uint8 u8Byte) {
 				E_APPCONF_OPT2);
 		break;
 
+	case 'm': // MML選曲インデックスの変更
+		V_PRINT("MML index (0[min]-%d[max]): ", (MMLBANK_COUNT - 1));
+		INPSTR_vStart(&sSerInpStr, E_INPUTSTRING_DATATYPE_DEC, 1,
+				E_APPCONF_MML_IDX);
+		break;
+
 	case 'S':
 		// フラッシュへのデータ保存
 		if (u8lastbyte == 'R') {
@@ -773,6 +779,20 @@ static void vProcessInputString(tsInpStr_Context *pContext) {
 		}
 		break;
 
+	case E_APPCONF_MML_IDX:
+		_C {
+			uint32 u32val = u32string2dec(pu8str, u8idx);
+			V_PRINT(LB"-> ");
+			if (u32val >= 0 && u32val < MMLBANK_COUNT) {
+				sConfig_UnSaved.u8MML_idx = u32val;
+				V_PRINT("%d"LB, u32val);
+			} else {
+				V_PRINT("(ignored)"LB);
+			}
+
+		}
+		break;
+
 #ifdef MML
 	// MMLデバッグ再生用
 	case E_APPCONF_TEST:
@@ -877,6 +897,9 @@ static void vConfig_SaveAndReset() {
 	if (sConfig_UnSaved.u32Opt2 != 0xFFFFFFFF) {
 		sFlash.sData.u32Opt2 = sConfig_UnSaved.u32Opt2;
 	}
+	if (sConfig_UnSaved.u8MML_idx != 0xFF) {
+		sFlash.sData.u8MML_idx = sConfig_UnSaved.u8MML_idx;
+	}
 
 	sFlash.sData.u32appkey = APP_ID;
 	sFlash.sData.u32ver = VERSION_U32;
@@ -977,6 +1000,10 @@ void vSerUpdateScreen() {
 	V_PRINT(" O: set Option Bits #2 (0x%08X)%c" LB,
 			FL_IS_MODIFIED_u32(Opt2) ? FL_UNSAVE_u32(Opt2) : FL_MASTER_u32(Opt2),
 			FL_IS_MODIFIED_u32(Opt2) ? '*' : ' ');
+
+	V_PRINT(" m: set MML index (%d)%c" LB,
+			FL_IS_MODIFIED_u8(MML_idx) ? FL_UNSAVE_u8(MML_idx) : FL_MASTER_u8(MML_idx),
+			FL_IS_MODIFIED_u8(MML_idx) ? '*' : ' ');
 
 	{
 		uint32 u32baud =
