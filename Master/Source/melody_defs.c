@@ -114,18 +114,32 @@ const uint8 au8Mml_HappyBirthday[] =
 // Canon (Johann Pachelbel)
 const uint8 au8Mml_Canon[] =
 		"O5T180L8"
+		"A4F#GA4F#G A<AB>C#DEF#G F#4DEF#4<F#G ABAGAF#GA G4BAG4F#E F#EDEF#GAB G4BAB4>C#D C#<B>C#DEF#GA"
+		"A4F#GA4F#G A<AB>C#DEF#G F#4DEF#4<F#G ABAGA>DC#D <B4>DC#<B4AG AGF#GAB >C#D <B4>DC#D4C#<B >C#DEDC#D<B>C#";
+// Canon (arranged)
+const uint8 au8Mml_Canon2[] =
+		"O5T180L8"
 		"A4F#GA4F#G R<AB>C#DEF#G F#4DEF#4<F#G RBAGAF#GA G4BAG4F#E REDEF#GAB G4BAB4>C#D R<B>C#DEF#GA"
-		"A4F#GA4F#G  A<AB>C#DEF#G F#4DEF#4<F#G ABAGA>DC#D <B4>DC#<B4AG AGF#GAB >C#D <B4>DC#D4C#<B >C#DEDC#D<B>C#";
+		"A4F#GA4F#G A<AB>C#DEF#G F#4DEF#4<F#G ABAGA>DC#D <B4>DC#<B4AG AGF#GAB >C#D <B4>DC#D4C#<B >C#DEDC#D<B>C# ";
 // Jingle Bells
 const uint8 au8Mml_JingleBells[] =
 		"O5T220L4 G G>EDC <G2.G G>EDC <A2.A A>FED <B2B2 >GGFD E2.<G G>EDC <G2.G G>EDC <A2.A A>FED"
 		"GGGG8G8 AGFD C1 EEE2 EEE2 EGC.D8 E1 FFFF8F8 FEEE EDDE D2G2 EEE2 EEE2 EGC.D8 E1 FFFF FEEE GGFD C1";
+// Twinkle Twinkle Little Star
+const uint8 au8Mml_TwincleStar[] =
+		"O6T120L4 CCGGAAG2 FFEEDDC2 GGFFEED2 GGFFEED2 CCGGAAG2 FFEEDDC2";
+// When The Saints Go Marching In
+const uint8 au8Mml_SaintsMarch[] =
+		"O6T200L4 CEFG1&G CEFG1&G CEFG2E2C2E2 D1&D EEDC2.C E2G2 GF2.&F2 EFG2E2C2D2C1";
 
 const uint8 *au8MmlBank[MMLBANK_COUNT] = {
 		au8Mml_Butterfly,
 		au8Mml_HappyBirthday,
 		au8Mml_Canon,
+		au8Mml_Canon2,
 		au8Mml_JingleBells,
+		au8Mml_TwincleStar,
+		au8Mml_SaintsMarch,
 };
 
 tsUserMML sUserMMLData;

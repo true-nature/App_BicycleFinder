@@ -29,7 +29,7 @@
  * メロディの定義
  */
 const uint8 au8MML[4][256];
-#define MMLBANK_COUNT 4
+#define MMLBANK_COUNT 7
 const uint8 *au8MmlBank[MMLBANK_COUNT];
 
 /** @ingroup FLASH
