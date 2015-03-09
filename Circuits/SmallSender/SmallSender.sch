@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "5 mar 2015"
+Date "9 mar 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -140,7 +140,7 @@ L R R2
 U 1 1 54AE44D9
 P 8550 2550
 F 0 "R2" V 8630 2550 40  0000 C CNN
-F 1 "680" V 8557 2551 40  0000 C CNN
+F 1 "1k" V 8557 2551 40  0000 C CNN
 F 2 "~" V 8480 2550 30  0000 C CNN
 F 3 "~" H 8550 2550 30  0000 C CNN
 	1    8550 2550
@@ -161,17 +161,6 @@ Text Label 6500 2200 0    60   ~ 0
 Vcc
 Text Label 2050 2450 0    60   ~ 0
 CHG
-$Comp
-L CONN_2 JP1
-U 1 1 54B7E0F7
-P 1750 2800
-F 0 "JP1" V 1700 2800 40  0000 C CNN
-F 1 "BYPASS" V 1800 2800 40  0000 C CNN
-F 2 "~" H 1750 2800 60  0000 C CNN
-F 3 "~" H 1750 2800 60  0000 C CNN
-	1    1750 2800
-	-1   0    0    -1  
-$EndComp
 $Comp
 L SW_PUSH SW2
 U 1 1 54E4493A
@@ -239,7 +228,7 @@ F 3 "" H 9250 2050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 NoConn ~ 6300 3500
-Text Label 8650 3500 0    60   ~ 0
+Text Label 8200 3500 0    60   ~ 0
 DO4
 Text Label 5050 1550 3    60   ~ 0
 RST
@@ -287,7 +276,7 @@ Wire Wire Line
 Wire Wire Line
 	1100 2450 1200 2450
 Wire Wire Line
-	2100 2700 2300 2700
+	2150 2700 2300 2700
 Wire Wire Line
 	2150 2450 2150 2700
 Connection ~ 2150 2450
@@ -346,13 +335,11 @@ Wire Wire Line
 Wire Wire Line
 	5050 1500 5050 3400
 Wire Wire Line
-	4700 3400 6300 3400
+	5050 3400 6300 3400
 Wire Wire Line
 	5550 1500 5550 2800
 Wire Wire Line
 	5550 2800 6300 2800
-Wire Wire Line
-	3300 2900 2100 2900
 Connection ~ 3300 2700
 Wire Wire Line
 	5450 1500 5450 4300
@@ -395,7 +382,6 @@ Wire Wire Line
 Wire Wire Line
 	2250 1850 4950 1850
 Connection ~ 6150 2200
-Connection ~ 2150 2700
 Wire Wire Line
 	3100 2450 3300 2450
 Wire Wire Line
@@ -411,26 +397,12 @@ F 3 "" H 4200 2900 60  0000 C CNN
 	1    4200 2900
 	1    0    0    -1  
 $EndComp
-$Comp
-L R R3
-U 1 1 54F31CC8
-P 3650 2550
-F 0 "R3" V 3730 2550 40  0000 C CNN
-F 1 "10M" V 3657 2551 40  0000 C CNN
-F 2 "~" V 3580 2550 30  0000 C CNN
-F 3 "~" H 3650 2550 30  0000 C CNN
-	1    3650 2550
-	1    0    0    -1  
-$EndComp
 Connection ~ 3300 2200
-Wire Wire Line
-	3650 2300 3650 2200
-Connection ~ 3650 2200
 Wire Wire Line
 	3850 2850 3850 2200
 Connection ~ 3850 2200
 Wire Wire Line
-	3650 2800 3650 4700
+	3650 3600 3650 4700
 Wire Wire Line
 	3650 3600 3900 3600
 Wire Wire Line
@@ -458,14 +430,12 @@ Wire Wire Line
 	7950 3200 7950 4700
 Wire Wire Line
 	7950 4700 3650 4700
-Connection ~ 3650 3600
-Connection ~ 3300 2900
 $Comp
 L MOS_N Q1
 U 1 1 54F31D53
 P 4100 3600
 F 0 "Q1" H 4110 3770 60  0000 R CNN
-F 1 "RUE002N02" H 4110 3450 60  0000 R CNN
+F 1 "RUE002N02" H 4750 3600 60  0000 R CNN
 F 2 "~" H 4100 3600 60  0000 C CNN
 F 3 "~" H 4100 3600 60  0000 C CNN
 	1    4100 3600
@@ -498,26 +468,6 @@ F 3 "" H 3300 4300 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R4
-U 1 1 54F3E04D
-P 4700 2500
-F 0 "R4" V 4780 2500 40  0000 C CNN
-F 1 "10M" V 4707 2501 40  0000 C CNN
-F 2 "~" V 4630 2500 30  0000 C CNN
-F 3 "~" H 4700 2500 30  0000 C CNN
-	1    4700 2500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	4700 2250 4700 2200
-Connection ~ 4700 2200
-Wire Wire Line
-	4550 2850 4700 2850
-Wire Wire Line
-	4700 2750 4700 3400
-Connection ~ 5050 3400
-Connection ~ 4700 2850
-$Comp
 L GND #PWR09
 U 1 1 54F3E256
 P 4200 4300
@@ -534,4 +484,7 @@ Text Label 4200 3300 0    60   ~ 0
 QGND
 Text Label 3850 4700 0    60   ~ 0
 DO1
+Wire Wire Line
+	4550 2850 5050 2850
+Connection ~ 5050 2850
 $EndSCHEMATC

@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/03/04 11:15:42
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/03/09 20:51:47
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -12,13 +12,6 @@ TimeStamp = /549BC5A8;
 Reference = C1;
 ValeurCmp = 1F;
 IdModule  = SE-5R5-D105VYV;
-EndCmp
-
-BeginCmp
-TimeStamp = /54B7E0F7;
-Reference = JP1;
-ValeurCmp = BYPASS;
-IdModule  = JUMPER;
 EndCmp
 
 BeginCmp
@@ -60,20 +53,6 @@ BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
 ValeurCmp = 680;
-IdModule  = SM0603_Resistor;
-EndCmp
-
-BeginCmp
-TimeStamp = /54F31CC8;
-Reference = R3;
-ValeurCmp = 10M;
-IdModule  = SM0603_Resistor;
-EndCmp
-
-BeginCmp
-TimeStamp = /54F3E04D;
-Reference = R4;
-ValeurCmp = 10M;
 IdModule  = SM0603_Resistor;
 EndCmp
 
