@@ -37,7 +37,7 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "9 mar 2015"
+Date "10 mar 2015"
 Rev ""
 Comp ""
 Comment1 ""
@@ -72,7 +72,7 @@ L SW_PUSH SW1
 U 1 1 549BC4AC
 P 5800 5100
 F 0 "SW1" H 5950 5210 50  0000 C CNN
-F 1 "JB-15FBP2" H 5800 5020 50  0000 C CNN
+F 1 "SPST" H 5800 5020 50  0000 C CNN
 F 2 "~" H 5800 5100 60  0000 C CNN
 F 3 "~" H 5800 5100 60  0000 C CNN
 	1    5800 5100
@@ -246,19 +246,6 @@ Text Label 5850 4100 0    60   ~ 0
 DI1
 Text Label 6100 4400 0    60   ~ 0
 DI4
-$Comp
-L LED LD2
-U 1 1 54E737C6
-P 8900 3100
-F 0 "LD2" H 8900 3200 50  0000 C CNN
-F 1 "LED" H 8900 3000 50  0000 C CNN
-F 2 "~" H 8900 3100 60  0000 C CNN
-F 3 "~" H 8900 3100 60  0000 C CNN
-	1    8900 3100
-	0    1    1    0   
-$EndComp
-Text Label 8600 2850 0    60   ~ 0
-LED
 Text Label 4950 1550 3    60   ~ 0
 ExVcc
 Wire Wire Line
@@ -299,7 +286,7 @@ Connection ~ 8550 2200
 Wire Wire Line
 	8550 3300 8550 3500
 Wire Wire Line
-	7800 3500 8900 3500
+	8550 3500 7800 3500
 Wire Wire Line
 	5150 3150 6300 3150
 Wire Wire Line
@@ -351,15 +338,7 @@ Wire Wire Line
 	8200 4100 8200 4900
 Connection ~ 8200 4500
 Wire Wire Line
-	8900 3500 8900 3300
-Connection ~ 8550 3500
-Wire Wire Line
 	8550 2800 8550 2900
-Wire Wire Line
-	8900 2900 8900 2850
-Wire Wire Line
-	8900 2850 8550 2850
-Connection ~ 8550 2850
 Wire Wire Line
 	6300 3650 6150 3650
 Wire Wire Line
@@ -487,4 +466,6 @@ DO1
 Wire Wire Line
 	4550 2850 5050 2850
 Connection ~ 5050 2850
+Text Label 8550 2900 0    60   ~ 0
+LED
 $EndSCHEMATC
