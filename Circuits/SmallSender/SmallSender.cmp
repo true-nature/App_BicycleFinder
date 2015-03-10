@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2015/03/09 20:51:47
+Cmp-Mod V01 Created by PcbNew date = 2015/03/10 16:57:20
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -19,13 +19,6 @@ TimeStamp = /54AD1F8E;
 Reference = LD1;
 ValeurCmp = SML-012WT;
 IdModule  = LED-1206;
-EndCmp
-
-BeginCmp
-TimeStamp = /54E737C6;
-Reference = LD2;
-ValeurCmp = LED;
-IdModule  = LED-3MM;
 EndCmp
 
 BeginCmp
@@ -52,15 +45,15 @@ EndCmp
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
-ValeurCmp = 680;
+ValeurCmp = 1k;
 IdModule  = SM0603_Resistor;
 EndCmp
 
 BeginCmp
 TimeStamp = /549BC4AC;
 Reference = SW1;
-ValeurCmp = JB-15FBP2;
-IdModule  = JB-15HFBP2;
+ValeurCmp = SPST;
+IdModule  = B3FS-4002P;
 EndCmp
 
 BeginCmp
@@ -74,7 +67,7 @@ BeginCmp
 TimeStamp = /54E4765F;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
-IdModule  = TWE-001L-NC7;
+IdModule  = TWE-001L-SMD-noNTH;
 EndCmp
 
 BeginCmp
