@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <AppHardwareApi.h>
 
-#include "Master.h"
+#include "Slave.h"
 
 #include "ccitt8.h"
 #include "Interrupt.h"

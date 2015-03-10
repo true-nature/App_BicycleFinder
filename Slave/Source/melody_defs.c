@@ -25,7 +25,7 @@
 # define USE_EEPROM //!< JN516x でフラッシュを使用する
 #endif
 
-#include "Master.h"
+#include "Slave.h"
 
 #include "ccitt8.h"
 #include "mml.h"

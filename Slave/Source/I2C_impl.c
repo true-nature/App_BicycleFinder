@@ -23,7 +23,7 @@
 #include <string.h>
 #include <AppHardwareApi.h>
 
-#include "Master.h"
+#include "Slave.h"
 
 #include "common.h"
 #include "config.h"
