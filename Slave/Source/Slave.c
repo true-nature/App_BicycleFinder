@@ -46,7 +46,7 @@
 #include "I2C_impl.h"
 
 // MML 対応
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 #include "mml.h"
 #include "melody_defs.h"
 #endif
@@ -154,7 +154,7 @@ uint8 au8SerOutBuff[128]; //!< シリアルの出力書式のための暫定バ�
 tsDupChk_Context sDupChk_IoData; //!< 重複チェック(IO関連のデータ転送)  @ingroup MASTER
 tsDupChk_Context sDupChk_SerMsg; //!< 重複チェック(シリアル関連のデータ転送)  @ingroup MASTER
 
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 tsMML sMML; //!< MML 関連 @ingroup MASTER
 
 // 以下の定義は melody_defs.[ch] に移動しました。
@@ -359,7 +359,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 #endif
 
-#if defined(MML) && defined(USE_DO4_AS_STATUS_LED)
+#if defined(USE_DO4_AS_STATUS_LED)
 		static uint32 period;
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
@@ -996,10 +996,6 @@ void cbAppColdStart(bool_t bStart) {
 		memset(&sAppData.sIOData_reserve, 0xFF, sizeof(tsIOData));
 		Interactive_vInit();
 
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-		memset(&sPwmSpe_Context, 0, sizeof(sPwmSpe_Context));
-#endif
-
 		// デフォルトのネットワーク指定値
 		sToCoNet_AppContext.u8TxMacRetry = 3; // MAC再送回数（JN516x では変更できない）
 		sToCoNet_AppContext.u32AppId = APP_ID; // アプリケーションID
@@ -1592,36 +1588,6 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		_C {
 			uint32 bmPorts, bmChanged, i;
 			if (bBTM_GetState(&bmPorts, &bmChanged)) {
-#ifdef USE_I2C_PORT_AS_OTHER_FUNCTION
-				{
-					static uint8 u8LastPort;
-					static uint32 u32LastChange;
-
-					uint8 u8PortRead = ((bmPorts & (1UL << 15)) ? 2 : 0)
-							+ ((bmPorts & (1UL << 14)) ? 1 : 0);
-					// uint8 u8PortChg = ((bmChanged & (1UL << 15)) ? 2 : 0) + ((bmChanged & (1UL << 14)) ? 1 : 0); // 動かん(何故？)
-
-					if (u8PortRead != u8LastPort
-							&& !(u32TickCount_ms - u32LastChange < 100)) {
-# if defined(USE_I2C_PORT_AS_CHANNEL_SET)
-						if (u8PortRead != u8ChPreSet) {
-							vChangeChannelPreset(u8PortRead);
-							u8ChPreSet = u8PortRead;
-						}
-# endif
-# if defined(USE_I2C_PORT_AS_PWM_SPECIAL)
-						u8PwmSpe_TxMode = u8PortRead;
-# endif
-						bmPorts &= ~((1UL << 15) | (1UL << 14));
-						bmChanged &= ~((1UL << 15) | (1UL << 14));
-
-						u32LastChange = u32TickCount_ms;
-						u8LastPort = u8PortRead;
-
-						DBGOUT(5, "Port14,15 = %d" LB, u8PortRead);
-					}
-				}
-#endif
 
 				// 読み出し値を格納する
 				for (i = 0; i < 4; i++) {
@@ -1758,67 +1724,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	switch (u32DeviceId) {
 	case E_AHI_DEVICE_TIMER0:
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-		switch (u8PwmSpe_RxMode) {
-		case 1:
-			_C {
-				int i;
-				for (i = 0; i < 4; i++) {
-					if (sAppData.sIOData_now.au16OutputPWMDuty[i] != 0xFFFF) {
-						if (sPwmSpe_Context.u16Ct_Total[i] == 0) {
-							sTimerPWM[i].u16duty = _PWM(1024); // 消灯
-						} else if (sPwmSpe_Context.u16Ct_Now[i]
-								> sPwmSpe_Context.u16Ct_Active[i]) {
-							sTimerPWM[i].u16duty = _PWM(0);
-						} else {
-							sTimerPWM[i].u16duty = _PWM(1024);
-						}
-						vTimerStart(&sTimerPWM[i]); // DUTY比だけ変更する
-					}
-
-					sPwmSpe_Context.u16Ct_Now[i]++;
-					if (sPwmSpe_Context.u16Ct_Now[i]
-							> sPwmSpe_Context.u16Ct_Total[i]) {
-						sPwmSpe_Context.u16Ct_Now[i] = 0;
-					}
-				}
-			}
-			break;
-		case 2:
-		case 3:
-			_C {
-				int i;
-				for (i = 0; i < 4; i++) {
-					if (sAppData.sIOData_now.au16OutputPWMDuty[i] != 0xFFFF) {
-						if (sPwmSpe_Context.u16Ct_Total[i] == 0) {
-							sTimerPWM[i].u16duty = _PWM(1024); // 消灯
-						} else {
-							uint16 u16idx = sPwmSpe_Context.u16Ct_Now[i] * 100
-									/ sPwmSpe_Context.u16Ct_Total[i];
-
-							sTimerPWM[i].u16duty = (u8PwmSpe_RxMode == 2) ?
-									  u16PwmSpe_SinTbl[u16idx] // サインカーブ
-									: u16PwmSpe_fuwa[u16idx];  // フワッカーブ
-							sTimerPWM[i].u16duty = _PWM(sTimerPWM[i].u16duty);
-						}
-						vTimerStart(&sTimerPWM[i]); // DUTY比だけ変更する
-					}
-
-					sPwmSpe_Context.u16Ct_Now[i]++;
-
-					if (sPwmSpe_Context.u16Ct_Now[i]
-							> sPwmSpe_Context.u16Ct_Total[i]) {
-						sPwmSpe_Context.u16Ct_Now[i] = 0;
-					}
-				}
-			}
-			break;
-
-		default:
-			break;
-		}
-#endif
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 		// MML の割り込み処理
 		MML_vInt(&sMML);
 #endif
@@ -2073,13 +1979,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	vTimerStart(&sTimerApp);
 
 	// button Manager (for Input)
-#ifdef USE_I2C_PORT_AS_OTHER_FUNCTION
-	sAppData.sBTM_Config.bmPortMask = (1UL << PORT_INPUT1)
-			| (1UL << PORT_INPUT2) | (1UL << PORT_INPUT3) | (1UL << PORT_INPUT4)
-			| (1UL << 14) | (1UL << 15);
-#else
 	sAppData.sBTM_Config.bmPortMask = (1UL << PORT_INPUT1) | (1UL << PORT_INPUT2) | (1UL << PORT_INPUT3) | (1UL << PORT_INPUT4);
-#endif
 
 	if (sAppData.sFlash.sData.u32Opt & E_APPCONF_OPT_LOW_LATENCY_INPUT) {
 		sAppData.sBTM_Config.u16Tick_ms = 1;
@@ -2112,7 +2012,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	// PWM
 	uint16 u16PWM_Hz = sAppData.sFlash.sData.u32PWM_Hz; // PWM周波数
 	uint8 u8PWM_prescale = 0; // prescaleの設定
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
      u8PWM_prescale = 1; // 130Hz 位まで使用したいので。
 #else
 	if (u16PWM_Hz < 10)
@@ -2159,38 +2059,14 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 #endif
 
 	// I2C
-#ifdef USE_I2C_PORT_AS_OTHER_FUNCTION
-	vPortAsInput(14);
-	vPortAsInput(15);
-#else
 	vSMBusInit();
-#endif
 
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
     // PWM1 を使用する。
     MML_vInit(&sMML, &sTimerPWM[0]); // sTimerPWM[0] 構造体は、sMML 構造体中にコピーされる。
     sTimerPWM[0].bStarted = FALSE; // 本ルーチンから制御されないように、稼働フラグを FALSE にする。（実際は稼働している）
 #endif
 }
-
-#ifdef USE_I2C_PORT_AS_CHANNEL_SET
-/** @ingroup MASTER
- * チャネル設定を行う。
- * - EI1,EI2 の設定に基づきチャネルを変更する
- * @param u8preset
- */
-static void vChangeChannelPreset(uint8 u8preset) {
-	if (u8preset == 0) {
-		// デフォルト値またはフラッシュ格納値を採用する
-		sToCoNet_AppContext.u32ChMask = sAppData.sFlash.sData.u32chmask;
-	} else {
-		sToCoNet_AppContext.u32ChMask = au32ChMask_Preset[u8preset];
-	}
-
-	// 設定を反映する
-	ToCoNet_vRfConfig();
-}
-#endif
 
 /** @ingroup MASTER
  * UART を初期化する
@@ -2288,9 +2164,7 @@ void vProcessSerialCmd(tsSerCmd_Context *pSer) {
 			break;
 
 		case SERCMD_ID_I2C_COMMAND:
-#ifndef USE_I2C_PORT_AS_OTHER_FUNCTION
 			vProcessI2CCommand(pSer->au8data, pSer->u16len, SERCMD_ADDR_TO_MODULE);
-#endif
 			break;
 
 #if 0 // 各種設定コマンド(未実装)
@@ -2495,11 +2369,7 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	S_BE_WORD(sAppData.sIOData_now.u16Volt); // 電圧
 
 	// チップ内温度センサーの予定だったが・・・
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-	S_OCTET(u8PwmSpe_TxMode); //温度だがやめ
-#else
 	S_OCTET((uint8)((sAppData.sIOData_now.i16Temp + 50)/100)); //チップ内温度センサー(TWE-Liteでは正しく動作しない)
-#endif
 
 	// ボタンのビットマップ
 	{
@@ -2617,11 +2487,7 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
 	S_BE_WORD(sAppData.sIOData_now.u16Volt); // 電圧
 
 	// チップ内温度センサーの予定だったが・・・
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-	S_OCTET(u8PwmSpe_TxMode); //温度だがやめ
-#else
 	S_OCTET((uint8)((sAppData.sIOData_now.i16Temp + 50)/100)); //チップ内温度センサー(TWE-Liteでは正しく動作しない)
-#endif
 
 	// ボタンのビットマップ
 	if (*bm != 0)
@@ -3071,12 +2937,8 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 #endif
 
 	/* 温度 */
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-	u8PwmSpe_RxMode = G_OCTET();
-#else
 	int8 i8Temp = (int8)G_OCTET();
 	(void)i8Temp;
-#endif
 
 	/* BUTTON */
 	uint8 u8ButtonState = G_OCTET();
@@ -3085,7 +2947,7 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 	// ポートの値を設定する（変更フラグのあるものだけ）
 	for (i = 0, j = 1; i < 4; i++, j <<= 1) {
 		if (u8ButtonChanged & j) {
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 			// 子機1秒間欠モードでリモコンのボタンが押し下げられた時に、再生を開始する
 			// 注：このコードだけでは以下の振る舞いを行います
 			//   送り側のボタンが複数押された場合、一番最後のボタン指定が有効になります
@@ -3098,13 +2960,6 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 			}
 #endif
 			vPortSet_TrueAsLo(au8PortTbl_DOut[i], u8ButtonState & j);
-#ifdef USE_I2C_LCD_TEST_CODE
-			if ((u8ButtonState & j) && sAppData.sIOData_now.au8Output[i] == 0) {
-				// 押し下げ時に限って処理する
-				bDraw2LinesLcd_ACM1602(astrLcdMsgs[i][0], astrLcdMsgs[i][1]);
-				bDraw2LinesLcd_AQM0802A(astrLcdMsgs[i][0], astrLcdMsgs[i][1]);
-			}
-#endif
 			sAppData.sIOData_now.au8Output[i] = u8ButtonState & j;
 		}
 	}
@@ -3138,16 +2993,6 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 			sAppData.sIOData_now.au16OutputPWMDuty[i] = 0xFFFF;
 		} else {
 			// 10bit+1 スケール正規化
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-			int32 iR = (uint32) u16Adc * 2 * 1125 / u16Volt; // スケールは 0～Vcc/2 なので 2倍する
-
-			// CカーブをBに戻す
-			if (iR > 1024)
-				iR = 1024;
-			iR = au16_AtoBcurve[iR];
-
-			sAppData.sIOData_now.au16OutputPWMDuty[i] = iR;
-#else
 			int32 iR = (uint32) u16Adc * 2 * 1024 / u16Volt; // スケールは 0～Vcc/2 なので 2倍する
 			// y = 1.15x - 0.05 の線形変換
 			//   = (115x-5)/100 = (23x-1)/20 = 1024*(23x-1)/20/1024 = 51.2*(23x-1)/1024 ~= 51*(23x-1)/1024
@@ -3164,15 +3009,10 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 			}
 
 			sAppData.sIOData_now.au16OutputPWMDuty[i] = iS;
-#endif
-
 		}
 	}
 
 	// PWM の再設定
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-	if (!u8PwmSpe_RxMode) {
-#endif
 		for (i = 0; i < 4; i++) {
 			if (sAppData.sIOData_now.au16OutputPWMDuty[i] != 0xFFFF) {
 				sTimerPWM[i].u16duty =
@@ -3188,33 +3028,6 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 #endif
 			}
 		}
-#ifdef USE_I2C_PORT_AS_PWM_SPECIAL
-	} else {
-		if (u8PwmSpe_RxMode >= 1 && u8PwmSpe_TxMode == u8PwmSpe_RxMode) {
-			for (i = 0; i < 4; i++) {
-				if (sAppData.sIOData_now.au16OutputPWMDuty[i] != 0xFFFF) {
-					if (sAppData.sIOData_now.au16OutputPWMDuty[i] >= 1024) {
-						sPwmSpe_Context.u16Ct_Total[i] = 0;
-					} else {
-						if (u8PwmSpe_RxMode == 1) {
-							sPwmSpe_Context.u16Ct_Total[i] =
-									(sAppData.sIOData_now.au16OutputPWMDuty[i])
-											/ 16 + 4;
-							sPwmSpe_Context.u16Ct_Active[i] =
-									sPwmSpe_Context.u16Ct_Total[i] / 2;
-						} else {
-							sPwmSpe_Context.u16Ct_Total[i] =
-									(sAppData.sIOData_now.au16OutputPWMDuty[i])
-											/ 8 + 8;
-							sPwmSpe_Context.u16Ct_Active[i] =
-									sPwmSpe_Context.u16Ct_Total[i] / 2;
-						}
-					}
-				}
-			}
-		}
-	}
-#endif
 
 	// DAC の出力を行う
 #if defined(JN514x)
@@ -3547,11 +3360,9 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
 			if (sAppData.u8Mode != E_IO_MODE_ROUTER) { // 中継機は処理しない
 				if (au8SerBuffRx[1] == SERCMD_ID_I2C_COMMAND) {
 					// I2C の処理
-#ifndef USE_I2C_PORT_AS_OTHER_FUNCTION
 					vProcessI2CCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
-#endif
 				} else if (au8SerBuffRx[1] == SERCMD_ID_MML_UPDATE_CMD) {
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 					vProcessMmlCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
 #endif
 				} else {

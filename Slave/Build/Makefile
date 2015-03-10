@@ -85,6 +85,7 @@ include ../../../../MkFiles/toconet.mk
 #   通常は指定不要です。
 #
 CFLAGS += -DDEBUG_OUTPUT
+CFLAGS += -DBICYCLEFINDER_SLAVE
 
 ### Build Options
 # プラットフォーム別のビルドをしたり、デバッグ用のビルドのファイル名を変更

@@ -32,21 +32,4 @@ const uint8 au8MML[4][256];
 #define MMLBANK_COUNT 7
 const uint8 *au8MmlBank[MMLBANK_COUNT];
 
-/** @ingroup FLASH
- * フラッシュデータ構造体
- * - u32Magic と u8CRC により、書き込みデータが有為かどうか判定する
- * - u8CRC は データ中の CRC8 チェックサム
- */
-typedef struct {
-	uint32 u32Magic;
-	uint8 u8Data[251];
-	uint8 u8CRC;
-} tsUserMML;
-
-extern tsUserMML sUserMMLData;
-
-bool MML_bLoad(tsUserMML *p);
-bool MML_bSave(tsUserMML *psMml);
-void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc);
-
 #endif
