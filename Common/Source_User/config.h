@@ -33,9 +33,7 @@ extern "C" {
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
-#if defined(BICYCLEFINDER_MASTER)
 #define DIO_VOLTAGE_CHECKER (PORT_OUT1)  // DO1: 始動後速やかに LO になる
-#endif
 
 #define ENABLE_BICYCLE_FINDER
 #ifdef ENABLE_BICYCLE_FINDER

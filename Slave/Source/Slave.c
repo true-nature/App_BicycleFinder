@@ -675,7 +675,7 @@ void cbAppColdStart(bool_t bStart) {
 				FALSE,	// bVboIntEnFalling, bVboIntEnRising
 				FALSE);
 
-#ifdef ENABLE_BICYCLE_FINDER
+#ifdef BICYCLEFINDER_MASTER
 		// リセットICの無効化
 		vPortSetLo(DIO_VOLTAGE_CHECKER);
 		vPortAsOutput(DIO_VOLTAGE_CHECKER);

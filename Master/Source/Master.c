@@ -2081,20 +2081,11 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
 	S_OCTET(APP_PROTOCOL_VERSION);
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
-#ifdef BICYCLEFINDER_MASTER
 	// 自転車発見器のリモコンは子機宛に送信
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN :
 					((sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC && IS_APPCONF_OPT_ON_PRESS_TRANSMIT() && sAppData.u32SleepDur == 0) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT)); // 宛先
-#else
-	S_OCTET(
-			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
-#endif
-#ifdef USE_SLOW_TX
-	S_BE_WORD(sAppData.u32CtTimer0 & 0x7FFF); // タイムスタンプ
-#else
 	S_BE_WORD((sAppData.u32CtTimer0 & 0x7FFF) + (bQuick == TRUE ? 0x8000 : 0)); // タイムスタンプ
-#endif
 	// bQuick 転送する場合は MSB をセットし、優先パケットである処理を行う
 	S_OCTET(0); // 中継フラグ
 
@@ -2597,7 +2588,6 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 			}
 
 			sAppData.sIOData_now.au16OutputPWMDuty[i] = iS;
-#endif
 
 		}
 	}
