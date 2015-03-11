@@ -45,8 +45,11 @@
 // MML 対応
 #ifdef BICYCLEFINDER_SLAVE
 #include "mml.h"
-#endif
 #include "melody_defs.h"
+#endif
+#ifdef BICYCLEFINDER_MASTER
+#include "melodies.h"
+#endif
 
 #include "sercmd_gen.h"
 #include "sercmd_plus3.h"
