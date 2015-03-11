@@ -37,7 +37,7 @@
 # include "eeprom_6x.h"
 #endif
 
-#include "melody_defs.h"
+#include "melodies.h"
 
 #define FLASH_MAGIC_NUMBER (0xA501EF5A ^ APP_ID) //!< フラッシュ書き込み時のマジック番号  @ingroup FLASH
 

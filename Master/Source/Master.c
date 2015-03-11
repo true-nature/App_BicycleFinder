@@ -49,7 +49,7 @@
 #ifdef BICYCLEFINDER_SLAVE
 #include "mml.h"
 #endif
-#include "melody_defs.h"
+#include "melodies.h"
 
 // 重複チェッカ
 #include "duplicate_checker.h"
