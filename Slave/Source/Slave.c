@@ -67,7 +67,6 @@
 /****************************************************************************/
 // Select Modules (define befor include "ToCoNet.h")
 #define ToCoNet_USE_MOD_TXRXQUEUE_BIG
-#define ToCoNet_USE_MOD_CHANNEL_MGR
 
 // includes
 #include "ToCoNet.h"
@@ -92,12 +91,7 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
-#ifdef USE_RX_ON_SLP
-static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
-#else
-static void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
-#endif
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 
 static void vInitHardware(int f_warm_start);
@@ -120,7 +114,6 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular);
 static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm);
 static int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq);
 static int16 i16TransmitRepeat(tsRxDataApp *pRx);
-static void vTransmitMmlData(void);
 
 static uint16 u16GetAve(uint16 *pu16k, uint8 u8Scale);
 static bool_t bUpdateAdcValues();
@@ -482,8 +475,6 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	}
 }
 
-#ifdef USE_RX_ON_SLP
-
 void vUpdateMmlIndex() {
 	// 次の選曲インデックスを更新
 	sAppData.sFlash.sData.u8MML_idx++;
@@ -492,156 +483,6 @@ void vUpdateMmlIndex() {
 	}
 	bool_t bRet = bFlash_Write(&sAppData.sFlash, FLASH_SECTOR_NUMBER - 1, 0);
 	V_PRINT("!INF FlashWrite %s"LB, bRet ? "Success" : "Failed");
-}
-
-/**  @ingroup MASTER
- * アプリケーション制御（自転車発見器モード、リモコン側）\n
-  * @param pEv
- * @param eEvent
- * @param u32evarg
- */
-static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
-	static uint8 u8bm;
-	switch (pEv->eState) {
-	case E_STATE_IDLE:
-		if (eEvent == E_EVENT_START_UP) {
-			// vfPrintf(&sSerStream, "START_UP eEvent=%X, evarg=%X, button=%X"LB, eEvent, u32evarg, sAppData.bWakeupByButton);
-			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
-				// スリープからの復帰時の場合
-				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
-						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
-			}
-			sAppData.u8AdcState = 0; // ADC の開始
-			sAppData.u32AdcLastTick = u32TickCount_ms;
-			u8bm = 0;	// ボタン状態をクリア
-
-			ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
-		}
-		break;
-
-	case E_STATE_RUNNING:
-		DBGOUT(3, "%d", sAppData.u8IOFixState);
-
-		// IO状態の確定後、チャタリングが落ち着くのを待って送信する。
-		if (sAppData.u8IOFixState == 0x3 && PRSEV_u32TickFrNewState(pEv) > 20) {
-			if (sAppData.sIOData_now.u32BtmBitmap != 0) {
-				vfPrintf(&sSerStream,
-						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
-						sAppData.sIOData_now.au8Input[0] & 1,
-						sAppData.sIOData_now.au8Input[1] & 1,
-						sAppData.sIOData_now.au8Input[2] & 1,
-						sAppData.sIOData_now.au8Input[3] & 1,
-						sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
-								9999 : sAppData.sIOData_now.au16InputADC[0],
-						sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
-								9999 : sAppData.sIOData_now.au16InputADC[1],
-						sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
-								9999 : sAppData.sIOData_now.au16InputADC[2],
-						sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-								9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
-
-				// クイックで送信
-				if (IS_APPCONF_OPT_ON_PRESS_TRANSMIT()
-					&& sAppData.u32SleepDur == 0) {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
-				} else {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
-				}
-				// 完了待ちをするため CbId を保存する。
-				// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
-			} else {
-				// ボタンが押されていなければチャタリングとみなす
-				vfPrintf(&sSerStream, "!Detected bounce. @%dms"LB, u32TickCount_ms);
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-			}
-		}
-		break;
-	case E_STATE_WAIT_TX:
-		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			if (sAppData.u32SleepDur == 0					// ボタンで起床
-				&& IS_APPCONF_OPT_ON_PRESS_TRANSMIT()			// 連続送信フラグ
-				&& sAppData.sIOData_now.u16Volt >= BATTERY_REPEAT_TX_VOLT) {
-				// 電圧が低い(==EDLC充電不足)ならば連続送信しない。
-				// stay this state
-			} else {
-				// 点灯を抑止
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-			}
-		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
-			// 対抗のスリープ間隔を跨いで連続送信
-			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
-		} else if (eEvent == E_EVENT_APP_SEND_MML) {
-			// HwEventから発せられたMML書き換え要求
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_SEND_MML);
-		}
-		_C {
-			static uint32 mask, duty;
-			if (eEvent == E_EVENT_NEW_STATE) {
-				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV"LB, sAppData.sIOData_now.u16Volt, u32TickCount_ms);
-				// 送信中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
-				mask = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 8 : 10)) - 1;
-				duty = mask >> 2;
-			}
-			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
-		}
-		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
-		if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
-			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-		break;
-
-	case E_STATE_APP_SEND_MML:
-		// MML書き換え要求
-		if (eEvent == E_EVENT_NEW_STATE) {
-			DBGOUT(1, LB"E_STATE_APP_SEND_MML E_EVENT_NEW_STATE");
-		}
-		else if (eEvent == E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 100) {
-			DBGOUT(1, LB"E_STATE_APP_SEND_MML vTransmitMmlData()");
-			vTransmitMmlData();
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_TX_MML);
-		}
-		break;
-
-	case E_STATE_APP_WAIT_TX_MML:
-		// MML書き換え要求
-		if (eEvent == E_EVENT_NEW_STATE) {
-			// 次の選曲インデックスを更新
-			vUpdateMmlIndex();
-		}
-		else if (eEvent == E_EVENT_APP_TX_COMPLETE ) {
-			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML E_EVENT_APP_TX_COMPLETE");
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-		else if (E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 500) {
-			DBGOUT(1, LB"E_STATE_APP_WAIT_TX_MML expiration");
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-		break;
-
-	case E_STATE_FINISHED:
-		_C {
-			if (eEvent == E_EVENT_NEW_STATE) {
-				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
-						sAppData.u32SleepDur, u32TickCount_ms);
-				SERIAL_vFlush(sSerStream.u8Device);
-				vPortSetHi(PORT_OUT4);
-			}
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
-		}
-		break;
-
-	case E_STATE_APP_SLEEPING:
-		if (eEvent == E_EVENT_NEW_STATE) {
-			vSleep(sAppData.u32SleepDur, TRUE, (sAppData.u32SleepDur == 0));
-		}
-
-		break;
-
-	default:
-		break;
-	}
 }
 
 /**  @ingroup MASTER
@@ -708,13 +549,8 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
 							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
-#ifdef USE_SLOW_TX
-			// スローで送信
-			sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(0x10, FALSE);
-#else
 			// クイックで送信
 			sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
-#endif
 			// 完了待ちをするため CbId を保存する。
 			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
 			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
@@ -798,151 +634,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		break;
 	}
 }
-#else
-/**  @ingroup MASTER
- * アプリケーション制御（スリープ稼動モード）\n
- * 本状態遷移マシンは、mode=4, mode=7 で起動したときに登録され、測定完了待ち⇒送信⇒
- * 送信完了待ちを実施し、その後、再びスリープを実行する。
- *
- * - 機能概要
- *   - ADやDIの状態が確定するまで待つ。
- *   - 送信する。
- *   - 送信完了を待つ。
- *   - スリープする。
- *
- * - 状態一覧
- *   - E_STATE_IDLE\n
- *     起動直後またはスリープ復帰後の状態。UARTにメッセージを表示し、最初の TickTimer で
- *     E_STATE_RUNNING に遷移する。
- *   - E_STATE_RUNNING\n
- *     IO状態の確定を待って、無線送信要求、E_STATE_WAIT_TX へ遷移。
- *   - E_STATE_WAIT_TX\n
- *     送信完了イベントを待つ。実際は cbToCoNet_TxEvent() よりコールされる。
- *   - E_STATE_FINISHED\n
- *     スリープ条件が成立するまでの待ちを行う。具体的にはボタン駆動した時にチャタリングの
- *     影響が去るまでの時間待ちである。
- *   - E_STATE_APP_SLEEPING\n
- *     スリープ処理を行う。
- *
- * @param pEv
- * @param eEvent
- * @param u32evarg
- */
-void vProcessEvCoreSlp(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
-	switch (pEv->eState) {
-	case E_STATE_IDLE:
-		if (eEvent == E_EVENT_START_UP) {
 
-			// vfPrintf(&sSerStream, "START_UP"LB, eEvent);
-			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
-				// スリープからの復帰時の場合
-				vfPrintf(&sSerStream, "!INF %s WAKE UP."LB,
-						sAppData.bWakeupByButton ? "DI" : "TIMER");
-			} else {
-#ifdef SET_DO_ON_SLEEP
-				// 初回起動時の処理
-				if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC || sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
-					vSleep(100, FALSE, FALSE); // 初回起動時は 100ms 寝る
-				}
-#endif
-			}
-		}
-
-		if (eEvent == E_EVENT_TICK_TIMER) { // 何故 TickTiemr を待っていたのか不明だが、このままとする。
-			sAppData.u8AdcState = 0; // ADC の開始
-			sAppData.u32AdcLastTick = u32TickCount_ms;
-
-			ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
-		}
-		break;
-
-	case E_STATE_RUNNING:
-		DBGOUT(3, "%d", sAppData.u8IOFixState);
-
-		// IO状態が確定すれば送信する。
-		if (sAppData.u8IOFixState == 0x3) {
-			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d"LB,
-					sAppData.sIOData_now.au8Input[0] & 1,
-					sAppData.sIOData_now.au8Input[1] & 1,
-					sAppData.sIOData_now.au8Input[2] & 1,
-					sAppData.sIOData_now.au8Input[3] & 1,
-					sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[0],
-					sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[1],
-					sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[2],
-					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[3]);
-
-#ifdef USE_SLOW_TX
-			// スローで送信
-			sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(0x10, FALSE);
-#else
-			// クイックで送信
-			sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
-#endif
-			// 完了待ちをするため CbId を保存する。
-			// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-
-			ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
-		}
-		break;
-
-	case E_STATE_WAIT_TX:
-		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-#ifdef USE_SLOW_TX
-		if (PRSEV_u32TickFrNewState(pEv) > 200) {
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-#else
-		if (PRSEV_u32TickFrNewState(pEv) > 100) {
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-		}
-#endif
-		break;
-
-	case E_STATE_FINISHED:
-		_C {
-			static uint8 u8GoSleep = 0;
-			if (eEvent == E_EVENT_NEW_STATE) {
-				u8GoSleep = sAppData.bWakeupByButton ? 0 : 1;
-
-				vfPrintf(&sSerStream, "!INF SLEEP %dms."LB,
-						sAppData.u32SleepDur);
-				SERIAL_vFlush(sSerStream.u8Device);
-			}
-
-			// ボタンでウェイクアップしたときはチャタリングが落ち着くのを待つのにしばらく停滞する
-			if (PRSEV_u32TickFrNewState(pEv) > 20) {
-				u8GoSleep = 1;
-			}
-
-			if (u8GoSleep == 1) {
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
-			}
-		}
-		break;
-
-	case E_STATE_APP_SLEEPING:
-		if (eEvent == E_EVENT_NEW_STATE) {
-#ifdef SET_DO_ON_SLEEP
-			vPortSetHi(PORT_OUT1);
-			vPortSetHi(PORT_OUT2);
-#endif
-			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
-		}
-
-		break;
-
-	default:
-		break;
-	}
-}
-#endif
 
 
 
@@ -1224,24 +916,14 @@ void cbAppColdStart(bool_t bStart) {
 				sAppData.prPrsEv = (void*) vProcessEvCorePwr;
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
 				break;
-#ifndef USE_RX_ON_SLP
 			case E_IO_MODE_CHILD_SLP_1SEC:
 			case E_IO_MODE_CHILD_SLP_10SEC:
-				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlp); // スリープ用の処理
-				sAppData.prPrsEv = (void*) vProcessEvCoreSlp;
-				break;
-#else
-			case E_IO_MODE_CHILD_SLP_1SEC:
 				// 間欠モードで受信を有効にする
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
 				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpBeacon); // スリープ用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCoreSlpBeacon;
 				break;
-			case E_IO_MODE_CHILD_SLP_10SEC:
-				ToCoNet_Event_Register_State_Machine(vProcessEvCoreSlpSender); // スリープ用の処理
-				sAppData.prPrsEv = (void*) vProcessEvCoreSlpSender;
 				break;
-#endif
 			default: // 未定義機能なので、SILENT モードにする。
 				sToCoNet_AppContext.bRxOnIdle = FALSE;
 				break;
@@ -1368,10 +1050,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 			// SILENTでは受信処理はしない。
 			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
 			// 10秒スリープでは受信処理はしない。
-#ifndef USE_RX_ON_SLP
-			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC
-			// 1秒スリープでは受信処理はしない。
-#endif
+			// 1秒スリープでは受信する。
 			) {
 		return;
 	}
@@ -2352,17 +2031,13 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
 
-#ifndef USE_CHILD_TO_CHILD_COMM
+#ifdef USE_CHILD_TO_CHILD_COMM
 	S_OCTET(LOGICAL_ID_CHILDREN); // 宛先は常に子機
 #else
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
 #endif
-#ifdef USE_SLOW_TX
-	S_BE_WORD(sAppData.u32CtTimer0 & 0x7FFF); // タイムスタンプ
-#else
 	S_BE_WORD((sAppData.u32CtTimer0 & 0x7FFF) + (bQuick == TRUE ? 0x8000 : 0)); // タイムスタンプ
-#endif
 	// bQuick 転送する場合は MSB をセットし、優先パケットである処理を行う
 	S_OCTET(0); // 中継フラグ
 
@@ -2430,16 +2105,6 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 		sTx.u16RetryDur = bQuick ? 0 : 4; // 再送間隔
 		sTx.u16DelayMax = bQuick ? 0 : 16; // 衝突を抑制するため送信タイミングにブレを作る(最大16ms)
 
-#ifdef USE_SLOW_TX
-	    //ここから
-	    if (bQuick == 0x10) {
-	      sTx.u8Retry = 0x83; // 再送回数を３回とする
-	      sTx.u16DelayMax = 100; // 初回送信は送信要求発行時～100ms の間（ランダムで決まる）
-	      sTx.u16RetryDur = 20; // 20ms おきに再送する
-	    }
-	    //ここまで
-#endif
-
 		// 送信API
 		if (ToCoNet_bMacTxReq(&sTx)) {
 			i16Ret = sTx.u8CbId;
@@ -2476,11 +2141,7 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
 #endif
-#ifdef USE_SLOW_TX
-	S_BE_WORD(sAppData.u32CtTimer0 & 0x7FFF); // タイムスタンプ
-#else
 	S_BE_WORD((sAppData.u32CtTimer0 & 0x7FFF) + (bQuick == TRUE ? 0x8000 : 0)); // タイムスタンプ
-#endif
 	// bQuick 転送する場合は MSB をセットし、優先パケットである処理を行う
 	S_OCTET(0); // 中継フラグ
 
@@ -2555,16 +2216,6 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
 		sTx.u32SrcAddr = sToCoNet_AppContext.u16ShortAddress;
 		sTx.u16RetryDur = bQuick ? 0 : 4; // 再送間隔
 		sTx.u16DelayMax = bQuick ? 0 : 16; // 衝突を抑制するため送信タイミングにブレを作る(最大16ms)
-
-#ifdef USE_SLOW_TX
-	    //ここから
-	    if (bQuick == 0x10) {
-	      sTx.u8Retry = 0x83; // 再送回数を３回とする
-	      sTx.u16DelayMax = 100; // 初回送信は送信要求発行時～100ms の間（ランダムで決まる）
-	      sTx.u16RetryDur = 20; // 20ms おきに再送する
-	    }
-	    //ここまで
-#endif
 
 		// 送信API
 		if (ToCoNet_bMacTxReq(&sTx)) {
@@ -2810,45 +2461,6 @@ int16 i16TransmitSerMsg(uint8 *p, uint16 u16len, uint32 u32AddrSrc,
 	}
 
 	return 0;
-}
-
-
-/** @ingroup MASTER
- *  MMLの曲データ更新の送信要求を行います。
- *
- */
-void vTransmitMmlData(void)
-{
-	uint8 payload[256];
-	const uint8 *src;
-	uint8 *q = payload;
-
-	src = au8MmlBank[sAppData.sFlash.sData.u8MML_idx];
-#ifdef ENABLE_BICYCLE_FINDER
-	// 自転車発見器のリモコンは子機宛に送信
-	S_OCTET(LOGICAL_ID_CHILDREN + 4); // 宛先は子機間欠モード
-#else
-	S_OCTET(
-			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
-#endif
-	S_OCTET(SERCMD_ID_MML_UPDATE_CMD);
-	S_OCTET(0x00);	// 要求番号
-	S_OCTET(0x01);	// コマンド (0x1: Write)
-	S_OCTET(0x00);	// 曲インデックス
-	S_OCTET(0xFF);	// MML length (dummy)
-
-	DBGOUT(1, LB"MML ");
-	for (; *src && (q - payload) < 256; src++)
-	{
-		if (*src > 0x20 && *src < 0x7f) {
-			S_OCTET(*src);
-			DBGOUT(1, "%c", *src);
-		}
-	}
-	payload[5] = (q - payload) - 6;	// set MML length
-	i16TransmitSerMsg(payload, (q - payload), ToCoNet_u32GetSerial(),
-			sAppData.u8AppLogicalId, payload[0], FALSE,
-			sAppData.u8UartReqNum++);
 }
 
 

@@ -82,21 +82,6 @@
  *
  */
 
-const uint8 au8MML[4][256] = {
-		// ちょうちょ
-		"O6T96 GEE2 FDD2 CDEF GGG2 GEEE FDDD CEGG EE2",
-
-		// トロイメライ
-		"O5T88L8 C4F2&F(EFA>C)FF2(EDC)F(GAB-)>D<(FGA)>C<G2",
-
-		// 春の海
-		"O6T96L16 >(DE<B>D< ABGA EGDE <B>D<A)B (EGAB >DEG)A <(B>DEG AB>D)E <"
-		"R1 (D8E4. G8.E32D32<B8A8) B1 E2. (>DEGA B4.&BA) B. R2.",
-
-		// 停止
-		"R"
-};
-
 // ちょうちょ
 const uint8 au8Mml_Butterfly[] =
 		"O6T96 GEE2 FDD2 CDEF GGG2 GEEE FDDD CEGG EE2";

@@ -46,9 +46,6 @@
 #include "I2C_impl.h"
 
 // MML 対応
-#ifdef BICYCLEFINDER_SLAVE
-#include "mml.h"
-#endif
 #include "melodies.h"
 
 // 重複チェッカ
@@ -67,7 +64,6 @@
 /****************************************************************************/
 // Select Modules (define befor include "ToCoNet.h")
 #define ToCoNet_USE_MOD_TXRXQUEUE_BIG
-#define ToCoNet_USE_MOD_CHANNEL_MGR
 
 // includes
 #include "ToCoNet.h"
@@ -92,7 +88,6 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
-#ifdef USE_RX_ON_SLP
 static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 
@@ -149,13 +144,6 @@ uint8 au8SerOutBuff[128]; //!< シリアルの出力書式のための暫定バ�
 
 tsDupChk_Context sDupChk_IoData; //!< 重複チェック(IO関連のデータ転送)  @ingroup MASTER
 tsDupChk_Context sDupChk_SerMsg; //!< 重複チェック(シリアル関連のデータ転送)  @ingroup MASTER
-
-#ifdef BICYCLEFINDER_SLAVE
-tsMML sMML; //!< MML 関連 @ingroup MASTER
-
-// 以下の定義は melody_defs.[ch] に移動しました。
-// const uint8 au8MML[4][256] = { ... }
-#endif
 
 static bool_t bWakeupByButton;
 
@@ -1378,10 +1366,6 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	switch (u32DeviceId) {
 	case E_AHI_DEVICE_TIMER0:
-#ifdef BICYCLEFINDER_SLAVE
-		// MML の割り込み処理
-		MML_vInt(&sMML);
-#endif
 		break;
 
 	case E_AHI_DEVICE_ANALOGUE:
@@ -1666,9 +1650,6 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	// PWM
 	uint16 u16PWM_Hz = sAppData.sFlash.sData.u32PWM_Hz; // PWM周波数
 	uint8 u8PWM_prescale = 0; // prescaleの設定
-#ifdef BICYCLEFINDER_SLAVE
-     u8PWM_prescale = 1; // 130Hz 位まで使用したいので。
-#else
 	if (u16PWM_Hz < 10)
 		u8PWM_prescale = 9;
 	else if (u16PWM_Hz < 100)
@@ -1677,7 +1658,6 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		u8PWM_prescale = 3;
 	else
 		u8PWM_prescale = 0;
-#endif
 
 	uint16 u16pwm_duty_default = IS_APPCONF_OPT_PWM_INIT_LOW() ? 0 : 1024; // 起動時のデフォルト
 	for (i = 0; i < 4; i++) {
@@ -1714,12 +1694,6 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	// I2C
 	vSMBusInit();
-
-#ifdef BICYCLEFINDER_SLAVE
-    // PWM1 を使用する。
-    MML_vInit(&sMML, &sTimerPWM[0]); // sTimerPWM[0] 構造体は、sMML 構造体中にコピーされる。
-    sTimerPWM[0].bStarted = FALSE; // 本ルーチンから制御されないように、稼働フラグを FALSE にする。（実際は稼働している）
-#endif
 }
 
 /** @ingroup MASTER
@@ -2006,17 +1980,13 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
 
-#ifndef USE_CHILD_TO_CHILD_COMM
+#ifdef USE_CHILD_TO_CHILD_COMM
 	S_OCTET(LOGICAL_ID_CHILDREN); // 宛先は常に子機
 #else
 	S_OCTET(
 			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
 #endif
-#ifdef USE_SLOW_TX
-	S_BE_WORD(sAppData.u32CtTimer0 & 0x7FFF); // タイムスタンプ
-#else
 	S_BE_WORD((sAppData.u32CtTimer0 & 0x7FFF) + (bQuick == TRUE ? 0x8000 : 0)); // タイムスタンプ
-#endif
 	// bQuick 転送する場合は MSB をセットし、優先パケットである処理を行う
 	S_OCTET(0); // 中継フラグ
 
@@ -2083,16 +2053,6 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 		sTx.u32SrcAddr = sToCoNet_AppContext.u16ShortAddress;
 		sTx.u16RetryDur = bQuick ? 0 : 4; // 再送間隔
 		sTx.u16DelayMax = bQuick ? 0 : 16; // 衝突を抑制するため送信タイミングにブレを作る(最大16ms)
-
-#ifdef USE_SLOW_TX
-	    //ここから
-	    if (bQuick == 0x10) {
-	      sTx.u8Retry = 0x83; // 再送回数を３回とする
-	      sTx.u16DelayMax = 100; // 初回送信は送信要求発行時～100ms の間（ランダムで決まる）
-	      sTx.u16RetryDur = 20; // 20ms おきに再送する
-	    }
-	    //ここまで
-#endif
 
 		// 送信API
 		if (ToCoNet_bMacTxReq(&sTx)) {
@@ -2991,10 +2951,6 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
 				if (au8SerBuffRx[1] == SERCMD_ID_I2C_COMMAND) {
 					// I2C の処理
 					vProcessI2CCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
-				} else if (au8SerBuffRx[1] == SERCMD_ID_MML_UPDATE_CMD) {
-#ifdef BICYCLEFINDER_SLAVE
-					vProcessMmlCommand(au8SerBuffRx, sSerSeqRx.u16DataLen, sSerSeqRx.u8IdSender);
-#endif
 				} else {
 					// 受信データの出力
 					SerCmdAscii_Output_AdrCmd(&sSerStream,
