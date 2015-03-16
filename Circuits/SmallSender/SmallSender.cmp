@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/03/10 16:57:20
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/17 0:51:29
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -18,7 +18,7 @@ BeginCmp
 TimeStamp = /54AD1F8E;
 Reference = LD1;
 ValeurCmp = SML-012WT;
-IdModule  = LED-1206;
+IdModule  = LEDs:LED-1206;
 EndCmp
 
 BeginCmp
@@ -38,15 +38,22 @@ EndCmp
 BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
-ValeurCmp = 330;
-IdModule  = SM0603_Resistor;
+ValeurCmp = 1k;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
 ValeurCmp = 1k;
-IdModule  = SM0603_Resistor;
+IdModule  = Resistors_SMD:R_0603;
+EndCmp
+
+BeginCmp
+TimeStamp = /5506FF55;
+Reference = R3;
+ValeurCmp = 10M;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp

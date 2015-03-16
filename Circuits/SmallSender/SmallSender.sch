@@ -31,7 +31,7 @@ LIBS:atmel
 LIBS:contrib
 LIBS:valves
 LIBS:SmallSender-cache
-EELAYER 27 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -94,7 +94,7 @@ L R R1
 U 1 1 54ACCB34
 P 1750 2450
 F 0 "R1" V 1830 2450 40  0000 C CNN
-F 1 "330" V 1757 2451 40  0000 C CNN
+F 1 "1k" V 1757 2451 40  0000 C CNN
 F 2 "~" V 1680 2450 30  0000 C CNN
 F 3 "~" H 1750 2450 30  0000 C CNN
 	1    1750 2450
@@ -257,9 +257,9 @@ Wire Wire Line
 	3100 2200 9250 2200
 Connection ~ 1100 2450
 Wire Wire Line
-	2000 2450 2300 2450
+	1900 2450 2300 2450
 Wire Wire Line
-	1150 2450 1500 2450
+	1150 2450 1600 2450
 Wire Wire Line
 	1100 2450 1200 2450
 Wire Wire Line
@@ -268,7 +268,7 @@ Wire Wire Line
 	2150 2450 2150 2700
 Connection ~ 2150 2450
 Wire Wire Line
-	3300 2200 3300 3200
+	3300 2200 3300 3250
 Wire Wire Line
 	3300 2700 3100 2700
 Wire Wire Line
@@ -281,7 +281,7 @@ Wire Wire Line
 	9250 2200 9250 2050
 Connection ~ 7850 2200
 Wire Wire Line
-	8550 2200 8550 2300
+	8550 2200 8550 2400
 Connection ~ 8550 2200
 Wire Wire Line
 	8550 3300 8550 3500
@@ -338,7 +338,7 @@ Wire Wire Line
 	8200 4100 8200 4900
 Connection ~ 8200 4500
 Wire Wire Line
-	8550 2800 8550 2900
+	8550 2700 8550 2900
 Wire Wire Line
 	6300 3650 6150 3650
 Wire Wire Line
@@ -364,7 +364,7 @@ Connection ~ 6150 2200
 Wire Wire Line
 	3100 2450 3300 2450
 Wire Wire Line
-	3300 3600 3300 4300
+	3300 3550 3300 4300
 $Comp
 L TCM809RVNB U3
 U 1 1 54F31C38
@@ -381,7 +381,7 @@ Wire Wire Line
 	3850 2850 3850 2200
 Connection ~ 3850 2200
 Wire Wire Line
-	3650 3600 3650 4700
+	3650 2650 3650 4700
 Wire Wire Line
 	3650 3600 3900 3600
 Wire Wire Line
@@ -468,4 +468,19 @@ Wire Wire Line
 Connection ~ 5050 2850
 Text Label 8550 2900 0    60   ~ 0
 LED
+$Comp
+L R R3
+U 1 1 5506FF55
+P 3650 2500
+F 0 "R3" V 3730 2500 50  0000 C CNN
+F 1 "10M" V 3650 2500 50  0000 C CNN
+F 2 "" V 3580 2500 30  0000 C CNN
+F 3 "" H 3650 2500 30  0000 C CNN
+	1    3650 2500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3650 2350 3650 2200
+Connection ~ 3650 2200
+Connection ~ 3650 3600
 $EndSCHEMATC
