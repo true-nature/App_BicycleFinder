@@ -1487,7 +1487,12 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	} else
 #endif
 	{
-		for (i = 0; i < 4; i++) {
+#ifdef ENABLE_BICYCLE_FINDER
+#define INIT_PORT_OUT_START_IDX 1
+#else
+#define INIT_PORT_OUT_START_IDX 0
+#endif
+		for (i = INIT_PORT_OUT_START_IDX; i < 4; i++) {
 			vPortAsOutput(au8PortTbl_DOut[i]);
 			if (sAppData.sIOData_reserve.au8Output[i] != 0xFF) {
 				vPortSet_TrueAsLo(au8PortTbl_DOut[i],
