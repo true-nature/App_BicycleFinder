@@ -742,6 +742,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		if (!sMML.bHoldPlay) {
 #ifdef USE_DO4_AS_STATUS_LED
 			// 点灯を抑止
+			vPortSetHi(PORT_OUT3);
 			vPortSetHi(PORT_OUT4);
 #endif
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
@@ -757,6 +758,8 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				sAppData.u16CtRndCt = 0;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			// DO3のLEDが先行して点滅
+			vPortSet_TrueAsLo(PORT_OUT3, ((u32TickCount_ms + duty) & mask) <= duty);
 #endif
 			// 60秒以上再生させない
 			if (PRSEV_u32TickFrNewState(pEv) > 60000) {
