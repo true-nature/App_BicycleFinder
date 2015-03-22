@@ -569,7 +569,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		break;
 
 	case E_STATE_APP_WAIT_RX_IDLE:
-		if (PRSEV_u32TickFrNewState(pEv) >= 24) {
+		if (PRSEV_u32TickFrNewState(pEv) >= 32) {
 			// ADCをスキップする場合は受信のための時間を確保する
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
