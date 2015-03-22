@@ -1,87 +1,101 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/03/10 16:57:20
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/21 22:55:46
 
 BeginCmp
 TimeStamp = /5493D0B5;
-Reference = BT1;
+Reference = BATTERY1;
 ValeurCmp = CR1220;
-IdModule  = BK-885;
+IdModule  = favorites:BK-885;
 EndCmp
 
 BeginCmp
 TimeStamp = /549BC5A8;
 Reference = C1;
 ValeurCmp = 1F;
-IdModule  = SE-5R5-D105VYV;
+IdModule  = favorites:SE-5R5-D105VYV;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AD1F8E;
 Reference = LD1;
 ValeurCmp = SML-012WT;
-IdModule  = LED-1206;
+IdModule  = LEDs:LED-1206;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E4785D;
 Reference = P1;
 ValeurCmp = WRITER-VCC;
-IdModule  = WRITE-7P;
-EndCmp
-
-BeginCmp
-TimeStamp = /54F31D53;
-Reference = Q1;
-ValeurCmp = RUE002N02;
-IdModule  = EMT3;
+IdModule  = favorites:WRITE-7P;
 EndCmp
 
 BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
-ValeurCmp = 330;
-IdModule  = SM0603_Resistor;
+ValeurCmp = 1k;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
 ValeurCmp = 1k;
-IdModule  = SM0603_Resistor;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
+EndCmp
+
+BeginCmp
+TimeStamp = /5506FF55;
+Reference = R3;
+ValeurCmp = 10M;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
+EndCmp
+
+BeginCmp
+TimeStamp = /550D0A30;
+Reference = R4;
+ValeurCmp = 10M;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
 EndCmp
 
 BeginCmp
 TimeStamp = /549BC4AC;
 Reference = SW1;
 ValeurCmp = SPST;
-IdModule  = B3FS-4002P;
+IdModule  = favorites:B3FS-4002P;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E4493A;
 Reference = SW2;
-ValeurCmp = MKA-10110;
-IdModule  = REEDSW;
+ValeurCmp = FR2S1015;
+IdModule  = favorites:FR2S1015;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E4765F;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
-IdModule  = TWE-001L-SMD-noNTH;
+IdModule  = favorites:TWE-001L-SMD-noNTH;
 EndCmp
 
 BeginCmp
 TimeStamp = /54B6402D;
 Reference = U2;
 ValeurCmp = HN2S01FU;
-IdModule  = HN2S01FU;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering;
 EndCmp
 
 BeginCmp
-TimeStamp = /54F31C38;
+TimeStamp = /550D6575;
 Reference = U3;
 ValeurCmp = TCM809RVNB;
-IdModule  = SOT23;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SOT-23_Handsoldering;
+EndCmp
+
+BeginCmp
+TimeStamp = /550DC11E;
+Reference = U4;
+ValeurCmp = 2N7002DW;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering;
 EndCmp
 
 EndListe

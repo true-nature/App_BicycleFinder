@@ -1,73 +1,66 @@
-Cmp-Mod V01 Created by PcbNew date = 2015/02/25 0:15:06
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/22 20:09:55
 
 BeginCmp
 TimeStamp = /54DE9794;
 Reference = BT1;
 ValeurCmp = BATTERY;
-IdModule  = FINDER_RECEIVER;
+IdModule  = favorites:FINDER_RECEIVER;
 EndCmp
 
 BeginCmp
 TimeStamp = /54DE9AF2;
 Reference = D1;
 ValeurCmp = 1N4148W;
-IdModule  = SOD123;
+IdModule  = favorites:SOD123;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E33E98;
 Reference = LD1;
 ValeurCmp = LED;
-IdModule  = LED-3MM;
+IdModule  = LEDs:LED-3MM;
 EndCmp
 
 BeginCmp
 TimeStamp = /54DE99E0;
 Reference = LD2;
 ValeurCmp = LED;
-IdModule  = LED-3MM;
+IdModule  = LEDs:LED-3MM;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE9BCC;
+TimeStamp = /550EA9F6;
 Reference = P1;
-ValeurCmp = WRITER;
-IdModule  = WRITER-6P;
+ValeurCmp = WRITER-VCC;
+IdModule  = favorites:WRITE-7P;
 EndCmp
 
 BeginCmp
 TimeStamp = /54DE9A28;
 Reference = R1;
 ValeurCmp = 680;
-IdModule  = SM0603_Resistor;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
 EndCmp
 
 BeginCmp
 TimeStamp = /54DE9B06;
 Reference = R2;
 ValeurCmp = 1k;
-IdModule  = SM0603_Resistor;
+IdModule  = Resistors_SMD:R_0603_HandSoldering;
 EndCmp
 
 BeginCmp
 TimeStamp = /54E33E0C;
 Reference = SP1;
 ValeurCmp = PIEZO SP;
-IdModule  = PIEZOSPK;
-EndCmp
-
-BeginCmp
-TimeStamp = /54DE9911;
-Reference = SP2;
-ValeurCmp = PIEZO SP;
-IdModule  = PIEZOSPK;
+IdModule  = favorites:PIEZOSPK;
 EndCmp
 
 BeginCmp
 TimeStamp = /54DE9748;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
-IdModule  = TWE-001L-NC7;
+IdModule  = favorites:TWE-001L-NC7;
 EndCmp
 
 EndListe
