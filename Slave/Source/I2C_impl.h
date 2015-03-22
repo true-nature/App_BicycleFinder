@@ -17,47 +17,28 @@
  *
  ****************************************************************************/
 
-#ifndef EXPERIMENTAL_H_
-#define EXPERIMENTAL_H_
+#ifndef I2C_IMPL_H_
+#define I2C_IMPL_H_
 
 /****************************************************************************/
-/***        実験的な実装定義                                              ***/
+/***        INCLUDES                                                      ***/
 /****************************************************************************/
+#include <jendefs.h>
+#include <AppHardwareApi.h>
 
-/** @ingroup MASTER
- * Sleep 中に IO の出力状態を設定する
- *   DO0,1を Sleep 中は Hi, 稼働中は Lo
- */
-#undef SET_DO_ON_SLEEP
-#ifdef SET_DO_ON_SLEEP
-#warning "EXPERIMENTAL: SET_DO_ON_SLEEP"
-static uint8 u8SleepControl = 0; //!< 0:事前Sleep, 1:通常
-#define PRE_SLEEP_ms 50
+/****************************************************************************/
+/***        PROTOTYPE DEFS                                                ***/
+/****************************************************************************/
+void vProcessI2CCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc);
+#ifdef USE_I2C_ACM1620
+bool_t bDraw2LinesLcd_ACM1602(const char *puUpperRow,
+		const char *puLowerRow);
+#endif
+#ifdef USE_I2C_AQM0802A
+bool_t bDraw2LinesLcd_AQM0802A(const char *puUpperRow,
+		const char *puLowerRow);
 #endif
 
-/** @ingroup MASTER
- * BROWNOUT 検出時にリセットする。
- */
-#undef USE_BROWN_OUT_DETECT
-#ifdef USE_BROWN_OUT_DETECT
-# warning "#define USE_BROWN_OUT_DETECT"
-#endif
 
-/** @ingroup MASTER
- * AI4 の変わりに電源電圧を読み出して送信する。
- *
- * 2.5V 以上 (PWM=0%) 2.5V 以下 (PWM=50%), 2.3V以下 (PWM=100%)
- */
-#undef USE_PWM4_AS_BAT_MONITOR
-#ifdef USE_PWM4_AS_BAT_MONITOR
-#warning "EXPERIMENTAL: USE_PWM4_AS_BAT_MONITOR"
-#endif
 
-/** @ingroup MASTER
- * 間欠モード時にゆっくり送信する
- */
-#undef USE_SLOW_TX
-#ifdef USE_SLOW_TX
-#warning "EXPERIMENTAL: USE_SLOW_TX"
-#endif
-#endif /* EXPERIMENTAL_H_ */
+#endif /* I2C_H_ */

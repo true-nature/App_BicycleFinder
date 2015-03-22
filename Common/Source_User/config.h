@@ -33,15 +33,15 @@ extern "C" {
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 
+#define DIO_VOLTAGE_CHECKER (PORT_OUT1)  // DO1: 始動後速やかに LO になる
+
 #define ENABLE_BICYCLE_FINDER
 #ifdef ENABLE_BICYCLE_FINDER
-#define DIO_VOLTAGE_CHECKER (PORT_OUT1)  // DO1: 始動後速やかに LO になる
 /**
  * MML 言語の対応
  */
 #define MML
 #define INCREASE_ADC_INTERVAL_ms 30000 //!< 子機ADCの間隔を長くする
-#define USE_RX_ON_SLP         //!< 子機間欠モードで受信を有効にする
 #define USE_DO4_AS_STATUS_LED //!< DO4を状態表示のLEDで使用。MML再生中点滅。
 #define USE_CHILD_TO_CHILD_COMM //!< 子機から子機への通信を無視しない
 #endif
@@ -96,13 +96,8 @@ extern "C" {
 #endif
 
 // スリープ間隔
-#if defined(ENABLE_BICYCLE_FINDER)
 #define MODE4_SLEEP_DUR_ms 4000UL
 #define MODE7_SLEEP_DUR_ms 0UL
-#else
-#define MODE4_SLEEP_DUR_ms 1000UL
-#define MODE7_SLEEP_DUR_ms 10000UL
-#endif
 
 /**
  * ボタン押し下げ時連続送信モード

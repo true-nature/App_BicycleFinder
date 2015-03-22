@@ -43,9 +43,12 @@
 #include "config.h"
 
 // MML 対応
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 #include "mml.h"
 #include "melody_defs.h"
+#endif
+#ifdef BICYCLEFINDER_MASTER
+#include "melodies.h"
 #endif
 
 #include "sercmd_gen.h"
@@ -64,7 +67,7 @@ extern tsSerialPortSetup sSerPort;
 
 extern tsAppData sAppData; //!< アプリケーションデータ  @ingroup MASTER
 
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 extern tsMML sMML; //!< MML 関連 @ingroup MASTER
 #endif
 
@@ -475,22 +478,7 @@ static void vProcessInputByte(uint8 u8Byte) {
 		V_PRINT(""LB);
 		break;
 
-#ifdef USE_I2C_LCD_TEST_CODE
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		_C {
-			bool_t bRes;
-			bRes = bDraw2LinesLcd_ACM1602(astrLcdMsgs[u8Byte-'1'][0], astrLcdMsgs[u8Byte-'1'][1]);
-			bRes = bDraw2LinesLcd_AQM0802A(astrLcdMsgs[u8Byte-'1'][0], astrLcdMsgs[u8Byte-'1'][1]);
-			V_PRINT("I2C LCD = %d: %s,%s"LB, bRes, astrLcdMsgs[u8Byte-'1'][0], astrLcdMsgs[u8Byte-'1'][1]);
-		}
-
-		break;
-#endif
-
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 	case '1':
 		// テスト再生
 		MML_vPlay(&sMML, sUserMMLData.u8Data);
@@ -793,7 +781,7 @@ static void vProcessInputString(tsInpStr_Context *pContext) {
 		}
 		break;
 
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 	// MMLデバッグ再生用
 	case E_APPCONF_TEST:
 		_C {
@@ -1029,7 +1017,7 @@ void vSerUpdateScreen() {
 
 	V_PRINT(" S: save Configuration" LB " R: reset to Defaults" LB LB);
 
-#ifdef MML
+#ifdef BICYCLEFINDER_SLAVE
 	V_PRINT("---"LB);
 	V_PRINT(" M: try MML play." LB);
 #endif

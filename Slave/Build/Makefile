@@ -57,7 +57,8 @@ APPSRC += I2C_impl.c
 APPSRC += sercmd_plus3.c
 APPSRC += sercmd_ascii.c
 APPSRC += modbus_ascii.c
-APPSRC += melodies.c
+APPSRC += mml.c
+APPSRC += melody_defs.c
 
 ### Target type
 # アプリケーション(.bin)をビルドするか、ライブラリ(.a)にするか指定します。
@@ -84,7 +85,7 @@ include ../../../../MkFiles/toconet.mk
 #   通常は指定不要です。
 #
 CFLAGS += -DDEBUG_OUTPUT
-CFLAGS += -DBICYCLEFINDER_MASTER
+CFLAGS += -DBICYCLEFINDER_SLAVE
 
 ### Build Options
 # プラットフォーム別のビルドをしたり、デバッグ用のビルドのファイル名を変更
