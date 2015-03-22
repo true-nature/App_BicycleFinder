@@ -225,7 +225,7 @@ DI4
 Text Label 4950 1550 3    60   ~ 0
 ExVcc
 Text Label 1100 3850 1    60   ~ 0
-BAT_GND
+GND
 $Comp
 L GND #PWR04
 U 1 1 54F3DF41

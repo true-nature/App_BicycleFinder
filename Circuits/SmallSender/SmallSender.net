@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:/TWESDK/Wks_ToCoNet/App_BicycleFinder/Circuits/SmallSender/SmallSender.sch)
-    (date "2015/03/21 22:55:36")
+    (date "2015/03/22 8:25:52")
     (tool "Eeschema (after 2015-mar-04 BZR unknown)-product")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -101,6 +101,38 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 550DC11E)))
   (libparts
+    (libpart (lib device) (part CP1)
+      (description "Polarised capacitor")
+      (footprints
+        (fp SMD*_Pol)
+        (fp c_elec*)
+        (fp C*elec)
+        (fp TantalC*)
+        (fp Elko*)
+        (fp CP*))
+      (fields
+        (field (name Reference) C)
+        (field (name Value) CP1))
+      (pins
+        (pin (num 1) (name ~) (type passive))
+        (pin (num 2) (name ~) (type passive))))
+    (libpart (lib TWE-Lite) (part 2N7002DW)
+      (description "2N7002DW, 60V Vds, 0.115A Id, N-Channel MOSFET, SOT-363")
+      (docs https://www.fairchildsemi.com/datasheets/2N/2N7002DW.pdf)
+      (footprints
+        (fp SOT-363*)
+        (fp SC70-6))
+      (fields
+        (field (name Reference) U)
+        (field (name Value) 2N7002DW)
+        (field (name Footprint) "SC70-6(SOT-363)"))
+      (pins
+        (pin (num 1) (name S2) (type passive))
+        (pin (num 2) (name G2) (type passive))
+        (pin (num 3) (name D1) (type passive))
+        (pin (num 4) (name S1) (type passive))
+        (pin (num 5) (name G1) (type passive))
+        (pin (num 6) (name D2) (type passive))))
     (libpart (lib TWE-Lite) (part HN2S01FU)
       (fields
         (field (name Reference) U)
@@ -173,36 +205,6 @@
         (pin (num 4) (name TXD) (type passive))
         (pin (num 5) (name GND) (type passive))
         (pin (num 6) (name CFG) (type passive))))
-    (libpart (lib device) (part CP1)
-      (description "Polarised capacitor")
-      (footprints
-        (fp SMD*_Pol)
-        (fp c_elec*)
-        (fp C*elec)
-        (fp TantalC*)
-        (fp Elko*)
-        (fp CP*))
-      (fields
-        (field (name Reference) C)
-        (field (name Value) CP1))
-      (pins
-        (pin (num 1) (name ~) (type passive))
-        (pin (num 2) (name ~) (type passive))))
-    (libpart (lib device) (part LED)
-      (footprints
-        (fp LED-3MM)
-        (fp LED-5MM)
-        (fp LED-10MM)
-        (fp LED-0603)
-        (fp LED-0805)
-        (fp LED-1206)
-        (fp LEDV))
-      (fields
-        (field (name Reference) D)
-        (field (name Value) LED))
-      (pins
-        (pin (num 1) (name A) (type passive))
-        (pin (num 2) (name K) (type passive))))
     (libpart (lib device) (part R)
       (description Resistor)
       (footprints
@@ -222,30 +224,28 @@
       (pins
         (pin (num 1) (name 1) (type passive))
         (pin (num 2) (name 2) (type passive))))
+    (libpart (lib device) (part LED)
+      (footprints
+        (fp LED-3MM)
+        (fp LED-5MM)
+        (fp LED-10MM)
+        (fp LED-0603)
+        (fp LED-0805)
+        (fp LED-1206)
+        (fp LEDV))
+      (fields
+        (field (name Reference) D)
+        (field (name Value) LED))
+      (pins
+        (pin (num 1) (name A) (type passive))
+        (pin (num 2) (name K) (type passive))))
     (libpart (lib SmallSender-cache) (part BATTERY)
       (fields
         (field (name Reference) BT)
         (field (name Value) BATTERY))
       (pins
         (pin (num 1) (name +) (type passive))
-        (pin (num 2) (name -) (type passive))))
-    (libpart (lib TWE-Lite) (part 2N7002DW)
-      (description "2N7002DW, 60V Vds, 0.115A Id, N-Channel MOSFET, SOT-363")
-      (docs https://www.fairchildsemi.com/datasheets/2N/2N7002DW.pdf)
-      (footprints
-        (fp SOT-363*)
-        (fp SC70-6))
-      (fields
-        (field (name Reference) U)
-        (field (name Value) 2N7002DW)
-        (field (name Footprint) "SC70-6(SOT-363)"))
-      (pins
-        (pin (num 1) (name S2) (type passive))
-        (pin (num 2) (name G2) (type passive))
-        (pin (num 3) (name D1) (type passive))
-        (pin (num 4) (name S1) (type passive))
-        (pin (num 5) (name G1) (type passive))
-        (pin (num 6) (name D2) (type passive)))))
+        (pin (num 2) (name -) (type passive)))))
   (libraries
     (library (logical TWE-Lite)
       (uri C:\TWESDK\Wks_ToCoNet\kicad-lib\library\TWE-Lite.lib))
