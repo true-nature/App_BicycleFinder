@@ -364,6 +364,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 				vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
 			} else {
 				// 点灯を抑止
+				vPortSetHi(PORT_OUT3);
 				vPortSetHi(PORT_OUT4);
 			}
 		}
@@ -578,6 +579,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		if (!sMML.bHoldPlay) {
 #ifdef USE_DO4_AS_STATUS_LED
 			// 点灯を抑止
+			vPortSetHi(PORT_OUT3);
 			vPortSetHi(PORT_OUT4);
 #endif
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
@@ -593,6 +595,8 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				sAppData.u16CtRndCt = 0;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			// DO3のLEDが先行して点滅
+			vPortSet_TrueAsLo(PORT_OUT3, ((u32TickCount_ms + duty) & mask) <= duty);
 #endif
 			// 60秒以上再生させない
 			if (PRSEV_u32TickFrNewState(pEv) > 60000) {
@@ -603,21 +607,13 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 	case E_STATE_FINISHED:
 		_C {
-			static uint8 u8GoSleep = 0;
 			if (eEvent == E_EVENT_NEW_STATE) {
-				u8GoSleep = sAppData.bWakeupByButton ? 0 : 1;
-
 				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
-			}
-
-			// ボタンでウェイクアップしたときはチャタリングが落ち着くのを待つのにしばらく停滞する
-			if (PRSEV_u32TickFrNewState(pEv) > 20) {
-				u8GoSleep = 1;
-			}
-
-			if (u8GoSleep == 1) {
+				// 点灯を抑止
+				vPortSetHi(PORT_OUT3);
+				vPortSetHi(PORT_OUT4);
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
 			}
 		}
@@ -1518,25 +1514,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	memset(&sTimerPWM[2], 0, sizeof(tsTimerContext));
 	memset(&sTimerPWM[3], 0, sizeof(tsTimerContext));
 
-	// 出力の設定
-
-#ifdef SET_DO_ON_SLEEP
-	if (sAppData.u8Mode == E_IO_MODE_CHILD_SLP_1SEC || sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC) {
-		for (i = 0; i < 4; i++) {
-			vPortAsOutput(au8PortTbl_DOut[i]);
-		}
-	} else
-#endif
-	{
-		for (i = 0; i < 4; i++) {
-			vPortAsOutput(au8PortTbl_DOut[i]);
-			if (sAppData.sIOData_reserve.au8Output[i] != 0xFF) {
-				vPortSet_TrueAsLo(au8PortTbl_DOut[i],
-						sAppData.sIOData_reserve.au8Output[i]);
-			} else {
-				vPortSetHi(au8PortTbl_DOut[i]);
-			}
-		}
+	// 出力の設定 DOは全てHigh(LED消灯)
+	for (i = 0; i < 4; i++) {
+		vPortAsOutput(au8PortTbl_DOut[i]);
+		vPortSetHi(au8PortTbl_DOut[i]);
 	}
 
 	// 入力の設定
