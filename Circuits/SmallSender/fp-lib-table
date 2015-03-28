@@ -1,4 +1,3 @@
 (fp_lib_table
   (lib (name favorites)(type KiCad)(uri ${KIPRJMOD}/../../../kicad-lib/favorites.pretty)(options "")(descr ""))
-  (lib (name TWE-Lite)(type Legacy)(uri ${KIPRJMOD}/../../../kicad-lib/modules/TWE-Lite.mod)(options "")(descr ""))
 )

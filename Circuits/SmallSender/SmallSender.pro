@@ -1,4 +1,4 @@
-update=2015/03/17 7:18:46
+update=2015/03/28 19:22:39
 version=1
 last_client=kicad
 [pcbnew]
@@ -21,7 +21,7 @@ DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [pcbnew/libraries]
-LibName1=TWE-Lite
+LibName1=favorites
 LibName2=sockets
 LibName3=connect
 LibName4=discret
@@ -50,7 +50,7 @@ EquName1=devcms
 version=1
 LibDir=../../../kicad-lib/library
 [eeschema/libraries]
-LibName1=TWE-Lite
+LibName1=favorites
 LibName2=power
 LibName3=device
 LibName4=transistors
