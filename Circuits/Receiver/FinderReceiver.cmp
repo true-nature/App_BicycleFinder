@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2015-03-21 BZR 5528)-product   date = 2015/03/24 22:26:55
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/28 23:25:48
 
 BeginCmp
 TimeStamp = /54DE9794;
@@ -8,10 +8,10 @@ IdModule  = favorites:FINDER_RECEIVER;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE9AF2;
-Reference = D1;
-ValeurCmp = 1N4148W;
-IdModule  = favorites:SOD123;
+TimeStamp = /5516BB61;
+Reference = JP1;
+ValeurCmp = Jumper_NO_Small;
+IdModule  = favorites:JUMPER;
 EndCmp
 
 BeginCmp
@@ -43,13 +43,6 @@ IdModule  = Resistors_SMD:R_0603_HandSoldering;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE9B06;
-Reference = R2;
-ValeurCmp = 1k;
-IdModule  = Resistors_SMD:R_0603_HandSoldering;
-EndCmp
-
-BeginCmp
 TimeStamp = /54E33E0C;
 Reference = SP1;
 ValeurCmp = PIEZO SP;
@@ -61,6 +54,13 @@ TimeStamp = /54DE9748;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
 IdModule  = favorites:TWE-001L-NC7;
+EndCmp
+
+BeginCmp
+TimeStamp = /5516B540;
+Reference = U2;
+ValeurCmp = NJU72501MJE;
+IdModule  = SMD_Packages:DIP-8_SMD;
 EndCmp
 
 EndListe

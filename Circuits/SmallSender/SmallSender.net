@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:/TWESDK/Wks_ToCoNet/App_BicycleFinder/Circuits/SmallSender/SmallSender.sch)
-    (date "2015/03/22 8:25:52")
+    (date "2015/03/29 0:37:15")
     (tool "Eeschema (after 2015-mar-04 BZR unknown)-product")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -54,7 +54,7 @@
     (comp (ref U2)
       (value HN2S01FU)
       (footprint Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering)
-      (libsource (lib TWE-Lite) (part HN2S01FU))
+      (libsource (lib favorites) (part HN2S01FU))
       (sheetpath (names /) (tstamps /))
       (tstamp 54B6402D))
     (comp (ref SW2)
@@ -67,13 +67,13 @@
       (value TWE_LITE_SMD)
       (footprint favorites:TWE-001L-SMD-noNTH)
       (datasheet DOCUMENTATION)
-      (libsource (lib TWE-Lite) (part TWE_LITE_SMD))
+      (libsource (lib favorites) (part TWE_LITE_SMD))
       (sheetpath (names /) (tstamps /))
       (tstamp 54E4765F))
     (comp (ref P1)
       (value WRITER-VCC)
       (footprint favorites:WRITE-7P)
-      (libsource (lib TWE-Lite) (part WRITER-VCC))
+      (libsource (lib favorites) (part WRITER-VCC))
       (sheetpath (names /) (tstamps /))
       (tstamp 54E4785D))
     (comp (ref R3)
@@ -91,32 +91,17 @@
     (comp (ref U3)
       (value TCM809RVNB)
       (footprint Housings_SOT-23_SOT-143_TSOT-6:SOT-23_Handsoldering)
-      (libsource (lib TWE-Lite) (part TCM809RVNB))
+      (libsource (lib favorites) (part TCM809RVNB))
       (sheetpath (names /) (tstamps /))
       (tstamp 550D6575))
     (comp (ref U4)
       (value 2N7002DW)
       (footprint Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering)
-      (libsource (lib TWE-Lite) (part 2N7002DW))
+      (libsource (lib favorites) (part 2N7002DW))
       (sheetpath (names /) (tstamps /))
       (tstamp 550DC11E)))
   (libparts
-    (libpart (lib device) (part CP1)
-      (description "Polarised capacitor")
-      (footprints
-        (fp SMD*_Pol)
-        (fp c_elec*)
-        (fp C*elec)
-        (fp TantalC*)
-        (fp Elko*)
-        (fp CP*))
-      (fields
-        (field (name Reference) C)
-        (field (name Value) CP1))
-      (pins
-        (pin (num 1) (name ~) (type passive))
-        (pin (num 2) (name ~) (type passive))))
-    (libpart (lib TWE-Lite) (part 2N7002DW)
+    (libpart (lib favorites) (part 2N7002DW)
       (description "2N7002DW, 60V Vds, 0.115A Id, N-Channel MOSFET, SOT-363")
       (docs https://www.fairchildsemi.com/datasheets/2N/2N7002DW.pdf)
       (footprints
@@ -133,7 +118,7 @@
         (pin (num 4) (name S1) (type passive))
         (pin (num 5) (name G1) (type passive))
         (pin (num 6) (name D2) (type passive))))
-    (libpart (lib TWE-Lite) (part HN2S01FU)
+    (libpart (lib favorites) (part HN2S01FU)
       (fields
         (field (name Reference) U)
         (field (name Value) HN2S01FU))
@@ -144,7 +129,7 @@
         (pin (num 4) (name A) (type passive))
         (pin (num 5) (name A) (type passive))
         (pin (num 6) (name A) (type passive))))
-    (libpart (lib TWE-Lite) (part TCM809RVNB)
+    (libpart (lib favorites) (part TCM809RVNB)
       (aliases
         (alias MC33064P))
       (fields
@@ -154,7 +139,7 @@
         (pin (num 1) (name GND) (type input))
         (pin (num 2) (name RESET#) (type openCol))
         (pin (num 3) (name Vdd) (type input))))
-    (libpart (lib TWE-Lite) (part TWE_LITE_SMD)
+    (libpart (lib favorites) (part TWE_LITE_SMD)
       (fields
         (field (name Reference) U)
         (field (name Value) TWE_LITE_SMD)
@@ -193,7 +178,7 @@
         (pin (num 30) (name GND) (type power_in))
         (pin (num 31) (name GND) (type power_in))
         (pin (num 32) (name GND) (type power_in))))
-    (libpart (lib TWE-Lite) (part WRITER-VCC)
+    (libpart (lib favorites) (part WRITER-VCC)
       (fields
         (field (name Reference) P)
         (field (name Value) WRITER-VCC))
@@ -205,6 +190,36 @@
         (pin (num 4) (name TXD) (type passive))
         (pin (num 5) (name GND) (type passive))
         (pin (num 6) (name CFG) (type passive))))
+    (libpart (lib device) (part CP1)
+      (description "Polarised capacitor")
+      (footprints
+        (fp SMD*_Pol)
+        (fp c_elec*)
+        (fp C*elec)
+        (fp TantalC*)
+        (fp Elko*)
+        (fp CP*))
+      (fields
+        (field (name Reference) C)
+        (field (name Value) CP1))
+      (pins
+        (pin (num 1) (name ~) (type passive))
+        (pin (num 2) (name ~) (type passive))))
+    (libpart (lib device) (part LED)
+      (footprints
+        (fp LED-3MM)
+        (fp LED-5MM)
+        (fp LED-10MM)
+        (fp LED-0603)
+        (fp LED-0805)
+        (fp LED-1206)
+        (fp LEDV))
+      (fields
+        (field (name Reference) D)
+        (field (name Value) LED))
+      (pins
+        (pin (num 1) (name A) (type passive))
+        (pin (num 2) (name K) (type passive))))
     (libpart (lib device) (part R)
       (description Resistor)
       (footprints
@@ -224,21 +239,6 @@
       (pins
         (pin (num 1) (name 1) (type passive))
         (pin (num 2) (name 2) (type passive))))
-    (libpart (lib device) (part LED)
-      (footprints
-        (fp LED-3MM)
-        (fp LED-5MM)
-        (fp LED-10MM)
-        (fp LED-0603)
-        (fp LED-0805)
-        (fp LED-1206)
-        (fp LEDV))
-      (fields
-        (field (name Reference) D)
-        (field (name Value) LED))
-      (pins
-        (pin (num 1) (name A) (type passive))
-        (pin (num 2) (name K) (type passive))))
     (libpart (lib SmallSender-cache) (part BATTERY)
       (fields
         (field (name Reference) BT)
@@ -247,10 +247,10 @@
         (pin (num 1) (name +) (type passive))
         (pin (num 2) (name -) (type passive)))))
   (libraries
-    (library (logical TWE-Lite)
-      (uri C:\TWESDK\Wks_ToCoNet\kicad-lib\library\TWE-Lite.lib))
+    (library (logical favorites)
+      (uri C:\TWESDK\Wks_ToCoNet\kicad-lib\library\favorites.lib))
     (library (logical device)
-      (uri C:\opt\KiCad\share\kicad\library\device.lib))
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\device.lib"))
     (library (logical SmallSender-cache)
       (uri C:\TWESDK\Wks_ToCoNet\App_BicycleFinder\Circuits\SmallSender\SmallSender-cache.lib)))
   (nets
