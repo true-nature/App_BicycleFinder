@@ -1,17 +1,10 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/28 23:25:48
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/29 11:18:02
 
 BeginCmp
 TimeStamp = /54DE9794;
 Reference = BT1;
-ValeurCmp = BATTERY;
+ValeurCmp = 2x AAA/LR03;
 IdModule  = favorites:FINDER_RECEIVER;
-EndCmp
-
-BeginCmp
-TimeStamp = /5516BB61;
-Reference = JP1;
-ValeurCmp = Jumper_NO_Small;
-IdModule  = favorites:JUMPER;
 EndCmp
 
 BeginCmp
@@ -60,7 +53,7 @@ BeginCmp
 TimeStamp = /5516B540;
 Reference = U2;
 ValeurCmp = NJU72501MJE;
-IdModule  = SMD_Packages:DIP-8_SMD;
+IdModule  = favorites:AE-NJU72501MJE;
 EndCmp
 
 EndListe
