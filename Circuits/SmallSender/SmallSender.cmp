@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/21 22:55:46
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/29 11:38:05
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -18,7 +18,7 @@ BeginCmp
 TimeStamp = /54AD1F8E;
 Reference = LD1;
 ValeurCmp = SML-012WT;
-IdModule  = LEDs:LED-1206;
+IdModule  = favorites:LED-1206;
 EndCmp
 
 BeginCmp
@@ -74,7 +74,7 @@ BeginCmp
 TimeStamp = /54E4765F;
 Reference = U1;
 ValeurCmp = TWE_LITE_SMD;
-IdModule  = favorites:TWE-001L-SMD-noNTH;
+IdModule  = favorites:TWE-001L-NC7;
 EndCmp
 
 BeginCmp
