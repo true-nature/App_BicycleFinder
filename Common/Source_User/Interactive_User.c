@@ -46,9 +46,15 @@ void Config_vSetDefaults(tsFlashApp *p) {
 #ifdef USE_TOCOSTICK
 	p->u32Opt = E_APPCONF_OPT_DISABLE_ADC;  // ToCoStick では AI 入力は未接続なので無効化しておく
 	p->u8id = 121; // ToCoStick では親機をデフォルトにする
+#elif BICYCLEFINDER_MASTER
+	p->u8id = 127;
+	p->u32Opt = 0x00000120;	// DISABLE_ADC
+#elif BICYCLEFINDER_SLAVE
+	p->u8id = 124;
+	p->u32Opt = 0x00040020;	// LOUDNESS_EN2,DISABLE_ADC
 #else
 	p->u8id = 0;
-	p->u32Opt = 0x00000120;
+	p->u32Opt = 0x00000020;	// ON_PRESS_TRANSMIT,DISABLE_ADC
 #endif
 
 	p->u32Opt2 = 0;

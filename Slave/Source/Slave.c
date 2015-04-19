@@ -610,6 +610,10 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
+				vPortSetLo(PORT_OUT2);
+				vPortSetLo(5);
+				vfPrintf(&sSerStream, "!Set OUT2 Low %dms @%dms."LB,
+						sAppData.u32SleepDur, u32TickCount_ms);
 				// 点灯を抑止
 				vPortSetHi(PORT_OUT3);
 				vPortSetHi(PORT_OUT4);
@@ -1513,11 +1517,15 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	memset(&sTimerPWM[2], 0, sizeof(tsTimerContext));
 	memset(&sTimerPWM[3], 0, sizeof(tsTimerContext));
 
-	// 出力の設定 DOは全てHigh(LED消灯)
+	// 出力の設定
 	for (i = 0; i < 4; i++) {
 		vPortAsOutput(au8PortTbl_DOut[i]);
-		vPortSetHi(au8PortTbl_DOut[i]);
 	}
+	vPortSetHi(PORT_OUT1);
+	vPortSetLo(PORT_OUT2);	// EN2はLow
+	// DO3,DO4はHigh(LED消灯)
+	vPortSetHi(PORT_OUT3);
+	vPortSetHi(PORT_OUT4);
 
 	// 入力の設定
 	for (i = 0; i < 4; i++) {
@@ -1713,18 +1721,18 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	for (i = 0; i < 4; i++) {
 		vTimerConfig(&sTimerPWM[i]);
-		vTimerStart(&sTimerPWM[i]);
+		vTimerStop(&sTimerPWM[i]);
 	}
 #endif
-
-	// I2C
-	vSMBusInit();
 
 #ifdef BICYCLEFINDER_SLAVE
     // PWM1 を使用する。
     MML_vInit(&sMML, &sTimerPWM[0]); // sTimerPWM[0] 構造体は、sMML 構造体中にコピーされる。
     sTimerPWM[0].bStarted = FALSE; // 本ルーチンから制御されないように、稼働フラグを FALSE にする。（実際は稼働している）
 #endif
+
+	// I2C
+	vSMBusInit();
 }
 
 /** @ingroup MASTER
@@ -2547,11 +2555,13 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 				// ボタンの出力状態が Hi の場合のみ処理を行う。
 				// Lo が継続している場合(ボタン長押し時)は無視。
 				if (sAppData.sIOData_now.au8Output[i] == 0 || sAppData.sIOData_now.au8Output[i] == 0xFF) {
+					vPortSet_TrueAsLo(PORT_OUT2, !IS_APPCONF_OPT_LOUDNESS_EN2());	// 昇圧設定
 					MML_vPlay(&sMML, i == 0 ? sUserMMLData.u8Data : au8MML[i]);
 				}
 			}
-#endif
+#else
 			vPortSet_TrueAsLo(au8PortTbl_DOut[i], u8ButtonState & j);
+#endif
 			sAppData.sIOData_now.au8Output[i] = u8ButtonState & j;
 		}
 	}
