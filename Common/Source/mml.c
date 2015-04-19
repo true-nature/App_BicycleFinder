@@ -194,7 +194,7 @@ static uint8 u8GetLenIdx(tsMML *psMML) {
  */
 static inline void MML_vMute(tsMML *psMML) {
 	psMML->sTimer.u16duty = 0;
-	vTimerChangeHz(&psMML->sTimer);
+	vTimerChangeDuty(&psMML->sTimer);
 }
 
 /**
@@ -229,6 +229,7 @@ void MML_vInt(tsMML *psMML) {
 			} else {
 				// 音を止めて return
 				MML_vMute(psMML);
+				vTimerStop(&psMML->sTimer);
 				// 再生を終了
 				psMML->bHoldPlay = FALSE;
 				return; // なにもしない
@@ -441,6 +442,7 @@ void MML_vPlay(tsMML *psMML, const uint8 *pu8Lang) {
 	psMML->u8_octave = 4;
 	psMML->bLegart = FALSE;
 
+	vTimerStart(&psMML->sTimer);
 	MML_vTempo(psMML, 60); // デフォルトのテンポに戻す
 
 	psMML->bHoldPlay = TRUE;
