@@ -406,7 +406,7 @@ Wire Wire Line
 	8200 4400 7800 4400
 Connection ~ 8200 4300
 Wire Wire Line
-	8200 4300 7800 4300
+	7800 4300 8400 4300
 Connection ~ 8200 4200
 Wire Wire Line
 	7800 4200 8200 4200
@@ -463,7 +463,7 @@ Wire Wire Line
 	1100 2250 1100 2550
 Wire Wire Line
 	1100 3150 1400 3150
-Text Label 4750 3150 0    60   ~ 0
+Text Label 4750 3200 1    60   ~ 0
 RESET#
 Text Label 4300 3750 1    60   ~ 0
 TCM_GND
@@ -477,4 +477,34 @@ Wire Wire Line
 Connection ~ 4800 4100
 Text Label 5450 1750 1    60   ~ 0
 GND
+$Comp
+L SW_PUSH SW3
+U 1 1 5533A166
+P 5200 5100
+F 0 "SW3" H 5350 5210 50  0000 C CNN
+F 1 "SPST" H 5200 5020 50  0000 C CNN
+F 2 "favorites:B3FS-4002P" H 5200 5100 60  0001 C CNN
+F 3 "~" H 5200 5100 60  0000 C CNN
+	1    5200 5100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	5200 5400 5200 5500
+Connection ~ 5200 5500
+Wire Wire Line
+	5200 4800 5200 3400
+Connection ~ 5200 3400
+$Comp
+L PWR_FLAG #FLG05
+U 1 1 5533B378
+P 8400 4150
+F 0 "#FLG05" H 8400 4245 50  0001 C CNN
+F 1 "PWR_FLAG" H 8400 4330 50  0000 C CNN
+F 2 "" H 8400 4150 60  0000 C CNN
+F 3 "" H 8400 4150 60  0000 C CNN
+	1    8400 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8400 4300 8400 4150
 $EndSCHEMATC
