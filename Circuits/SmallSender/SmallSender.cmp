@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/04/21 12:51:04
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/04/21 23:28:05
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -32,28 +32,28 @@ BeginCmp
 TimeStamp = /54ACCB34;
 Reference = R1;
 ValeurCmp = 1k;
-IdModule  = Resistors_SMD:R_0603_HandSoldering;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
 TimeStamp = /54AE44D9;
 Reference = R2;
 ValeurCmp = 1k;
-IdModule  = Resistors_SMD:R_0603_HandSoldering;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
 TimeStamp = /5506FF55;
 Reference = R3;
 ValeurCmp = 10M;
-IdModule  = Resistors_SMD:R_0603_HandSoldering;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
 TimeStamp = /550D0A30;
 Reference = R4;
 ValeurCmp = 10M;
-IdModule  = Resistors_SMD:R_0603_HandSoldering;
+IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
@@ -73,7 +73,7 @@ EndCmp
 BeginCmp
 TimeStamp = /5533A166;
 Reference = SW3;
-ValeurCmp = SPST;
+ValeurCmp = SKRPACE010;
 IdModule  = favorites:SKRPACE010;
 EndCmp
 
@@ -88,21 +88,21 @@ BeginCmp
 TimeStamp = /54B6402D;
 Reference = U2;
 ValeurCmp = HN2S01FU;
-IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6;
 EndCmp
 
 BeginCmp
 TimeStamp = /550D6575;
 Reference = U3;
 ValeurCmp = TCM809RVNB;
-IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SOT-23_Handsoldering;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SOT-23;
 EndCmp
 
 BeginCmp
 TimeStamp = /550DC11E;
 Reference = U4;
 ValeurCmp = 2N7002DW;
-IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6_Handsoldering;
+IdModule  = Housings_SOT-23_SOT-143_TSOT-6:SC-70-6;
 EndCmp
 
 EndListe
