@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/29 11:38:05
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/04/21 12:51:04
 
 BeginCmp
 TimeStamp = /5493D0B5;
@@ -68,6 +68,13 @@ TimeStamp = /54E4493A;
 Reference = SW2;
 ValeurCmp = FR2S1015;
 IdModule  = favorites:FR2S1015;
+EndCmp
+
+BeginCmp
+TimeStamp = /5533A166;
+Reference = SW3;
+ValeurCmp = SPST;
+IdModule  = favorites:SKRPACE010;
 EndCmp
 
 BeginCmp
