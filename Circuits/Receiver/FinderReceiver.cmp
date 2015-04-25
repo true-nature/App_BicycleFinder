@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/03/29 11:18:02
+Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/04/25 15:51:18
 
 BeginCmp
 TimeStamp = /54DE9794;
@@ -40,6 +40,13 @@ TimeStamp = /54E33E0C;
 Reference = SP1;
 ValeurCmp = PIEZO SP;
 IdModule  = favorites:PIEZOSPK;
+EndCmp
+
+BeginCmp
+TimeStamp = /553B3A5B;
+Reference = SW1;
+ValeurCmp = SW_PUSH;
+IdModule  = favorites:RUBBER_SWITCH;
 EndCmp
 
 BeginCmp
