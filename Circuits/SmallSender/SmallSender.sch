@@ -11,7 +11,6 @@ LIBS:cmos4000
 LIBS:adc-dac
 LIBS:memory
 LIBS:xilinx
-LIBS:special
 LIBS:microcontrollers
 LIBS:dsp
 LIBS:microchip
@@ -83,7 +82,7 @@ L R R1
 U 1 1 54ACCB34
 P 1750 2450
 F 0 "R1" V 1830 2450 40  0000 C CNN
-F 1 "1k" V 1757 2451 40  0000 C CNN
+F 1 "680" V 1757 2451 40  0000 C CNN
 F 2 "Resistors_SMD:R_0603" V 1680 2450 30  0000 C CNN
 F 3 "~" H 1750 2450 30  0000 C CNN
 	1    1750 2450
@@ -112,7 +111,7 @@ F 3 "" H 1400 3150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED LD1
+L Led_Small LD1
 U 1 1 54AD1F8E
 P 8550 3100
 F 0 "LD1" H 8550 3200 50  0000 C CNN
@@ -120,7 +119,7 @@ F 1 "SML-012WT" H 8550 3000 50  0000 C CNN
 F 2 "favorites:LED-1206" H 8550 3100 60  0001 C CNN
 F 3 "~" H 8550 3100 60  0000 C CNN
 	1    8550 3100
-	0    1    1    0   
+	0    1    -1   0   
 $EndComp
 Text Label 1150 2450 0    60   ~ 0
 3V
@@ -129,7 +128,7 @@ L R R2
 U 1 1 54AE44D9
 P 8550 2550
 F 0 "R2" V 8630 2550 40  0000 C CNN
-F 1 "1k" V 8557 2551 40  0000 C CNN
+F 1 "680" V 8557 2551 40  0000 C CNN
 F 2 "Resistors_SMD:R_0603" V 8480 2550 30  0001 C CNN
 F 3 "~" H 8550 2550 30  0000 C CNN
 	1    8550 2550
@@ -376,7 +375,7 @@ Wire Wire Line
 Wire Wire Line
 	6300 3650 6150 3650
 Wire Wire Line
-	8550 2700 8550 2900
+	8550 2700 8550 3000
 Connection ~ 8200 4500
 Wire Wire Line
 	8200 5500 8200 4100
@@ -427,7 +426,7 @@ Wire Wire Line
 Wire Wire Line
 	8550 3500 7800 3500
 Wire Wire Line
-	8550 3300 8550 3500
+	8550 3200 8550 3500
 Connection ~ 8550 2200
 Wire Wire Line
 	8550 2200 8550 2400
