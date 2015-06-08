@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:FinderReceiver-rescue
 LIBS:favorites
 LIBS:power
 LIBS:device
@@ -11,7 +12,6 @@ LIBS:cmos4000
 LIBS:adc-dac
 LIBS:memory
 LIBS:xilinx
-LIBS:special
 LIBS:microcontrollers
 LIBS:dsp
 LIBS:microchip
@@ -112,7 +112,7 @@ F 3 "" H 6100 3950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED LD2
+L Led_Small LD2
 U 1 1 54DE99E0
 P 7000 2250
 F 0 "LD2" H 7000 2350 50  0000 C CNN
@@ -120,7 +120,7 @@ F 1 "LED" H 7000 2150 50  0000 C CNN
 F 2 "favorites:LED-3MM" H 7000 2100 60  0001 C CNN
 F 3 "~" H 7000 2250 60  0000 C CNN
 	1    7000 2250
-	0    1    1    0   
+	0    -1   -1   0   
 $EndComp
 $Comp
 L R R1
@@ -158,7 +158,6 @@ $EndComp
 NoConn ~ 4300 2000
 NoConn ~ 4300 2100
 NoConn ~ 4300 2600
-NoConn ~ 4300 3200
 NoConn ~ 4300 3300
 NoConn ~ 4300 3400
 NoConn ~ 4300 3500
@@ -216,7 +215,7 @@ F 3 "~" H 9250 2750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED LD1
+L Led_Small LD1
 U 1 1 54E33E98
 P 6400 2250
 F 0 "LD1" H 6400 2350 50  0000 C CNN
@@ -224,7 +223,7 @@ F 1 "LED" H 6400 2150 50  0000 C CNN
 F 2 "LEDs:LED-3MM" H 6400 2100 60  0001 C CNN
 F 3 "~" H 6400 2250 60  0000 C CNN
 	1    6400 2250
-	0    1    1    0   
+	0    -1   -1   0   
 $EndComp
 Text Label 6050 2500 0    60   ~ 0
 DO3
@@ -350,7 +349,7 @@ Wire Wire Line
 	1550 1750 1200 1750
 Connection ~ 1200 1750
 Wire Wire Line
-	3550 1900 3550 2600
+	3550 1900 3550 2500
 Wire Wire Line
 	7350 2450 7400 2450
 Wire Wire Line
@@ -401,13 +400,13 @@ Wire Wire Line
 Text Label 6900 3000 0    60   ~ 0
 EN2
 Wire Wire Line
-	7000 2600 7000 2450
+	7000 2600 7000 2350
 Wire Wire Line
-	6400 2500 6400 2450
+	6400 2500 6400 2350
 Wire Wire Line
-	7000 1900 7000 2050
+	7000 1900 7000 2150
 Wire Wire Line
-	6400 2050 6400 1950
+	6400 2150 6400 1950
 Wire Wire Line
 	6400 1950 7000 1950
 Connection ~ 7000 1950
@@ -424,26 +423,29 @@ Connection ~ 6100 3600
 $Comp
 L SW_PUSH SW1
 U 1 1 553B3A5B
-P 3550 2900
-F 0 "SW1" H 3700 3010 50  0000 C CNN
-F 1 "SW_PUSH" H 3550 2820 50  0000 C CNN
-F 2 "favorites:RUBBER_SWITCH" H 3550 2900 60  0001 C CNN
-F 3 "" H 3550 2900 60  0000 C CNN
-	1    3550 2900
+P 3550 3600
+F 0 "SW1" H 3700 3710 50  0000 C CNN
+F 1 "SW_PUSH" H 3550 3520 50  0000 C CNN
+F 2 "favorites:RUBBER_SWITCH" H 3550 3600 60  0001 C CNN
+F 3 "" H 3550 3600 60  0000 C CNN
+	1    3550 3600
 	0    1    1    0   
 $EndComp
-Connection ~ 3550 2500
 $Comp
 L GND #PWR011
 U 1 1 553B3BEC
-P 3550 3400
-F 0 "#PWR011" H 3550 3150 50  0001 C CNN
-F 1 "GND" H 3550 3250 50  0000 C CNN
-F 2 "" H 3550 3400 60  0000 C CNN
-F 3 "" H 3550 3400 60  0000 C CNN
-	1    3550 3400
+P 3550 4000
+F 0 "#PWR011" H 3550 3750 50  0001 C CNN
+F 1 "GND" H 3550 3850 50  0000 C CNN
+F 2 "" H 3550 4000 60  0000 C CNN
+F 3 "" H 3550 4000 60  0000 C CNN
+	1    3550 4000
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3550 3400 3550 3200
+	3550 4000 3550 3900
+Wire Wire Line
+	4300 3200 3550 3200
+Wire Wire Line
+	3550 3200 3550 3300
 $EndSCHEMATC
