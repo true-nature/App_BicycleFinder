@@ -1,5 +1,4 @@
 EESchema Schematic File Version 2
-LIBS:FinderReceiver-rescue
 LIBS:favorites
 LIBS:power
 LIBS:device
@@ -12,6 +11,7 @@ LIBS:cmos4000
 LIBS:adc-dac
 LIBS:memory
 LIBS:xilinx
+LIBS:special
 LIBS:microcontrollers
 LIBS:dsp
 LIBS:microchip
@@ -30,7 +30,6 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
-LIBS:FinderReceiver-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
@@ -57,15 +56,15 @@ F 3 "DOCUMENTATION" H 5400 1300 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L BATTERY BT1
+L Battery BT1
 U 1 1 54DE9794
 P 1200 1400
-F 0 "BT1" H 1200 1600 50  0000 C CNN
-F 1 "2x AAA/LR03" H 1200 1210 50  0000 C CNN
+F 0 "BT1" H 1400 1450 50  0000 C CNN
+F 1 "2x AAA/LR03" V 1050 1400 50  0000 C CNN
 F 2 "favorites:FINDER_RECEIVER" H 1200 1400 60  0001 C CNN
 F 3 "~" H 1200 1400 60  0000 C CNN
 	1    1200 1400
-	0    1    1    0   
+	1    0    0    -1  
 $EndComp
 $Comp
 L VCC #PWR01
@@ -112,7 +111,7 @@ F 3 "" H 6100 3950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Led_Small LD2
+L LED LD2
 U 1 1 54DE99E0
 P 7000 2250
 F 0 "LD2" H 7000 2350 50  0000 C CNN
@@ -123,12 +122,12 @@ F 3 "~" H 7000 2250 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L R R1
+L R R2
 U 1 1 54DE9A28
 P 7000 1750
-F 0 "R1" V 7080 1750 40  0000 C CNN
+F 0 "R2" V 7080 1750 40  0000 C CNN
 F 1 "680" V 7007 1751 40  0000 C CNN
-F 2 "Resistors_SMD:R_0603_HandSoldering" V 6930 1750 30  0001 C CNN
+F 2 "Resistors_SMD:R_0603" V 6930 1750 30  0001 C CNN
 F 3 "~" H 7000 1750 30  0000 C CNN
 	1    7000 1750
 	1    0    0    -1  
@@ -201,8 +200,6 @@ Text Label 6050 2600 0    60   ~ 0
 DO4
 Text Label 6150 2750 0    60   ~ 0
 SOUND
-Text Label 6450 1950 0    60   ~ 0
-LED
 $Comp
 L SPEAKER SP1
 U 1 1 54E33E0C
@@ -215,7 +212,7 @@ F 3 "~" H 9250 2750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Led_Small LD1
+L LED LD1
 U 1 1 54E33E98
 P 6400 2250
 F 0 "LD1" H 6400 2350 50  0000 C CNN
@@ -278,9 +275,9 @@ VO1
 Text Label 8750 2850 0    60   ~ 0
 VO2
 Wire Wire Line
-	1200 950  1200 1100
+	1200 950  1200 1250
 Wire Wire Line
-	1200 1700 1200 1850
+	1200 1550 1200 1850
 Wire Wire Line
 	5800 1900 6000 1900
 Wire Wire Line
@@ -294,7 +291,7 @@ Wire Wire Line
 Wire Wire Line
 	7000 1300 7000 1600
 Wire Wire Line
-	7000 1500 8500 1500
+	6400 1500 8500 1500
 Wire Wire Line
 	7350 1500 7350 2450
 Wire Wire Line
@@ -400,16 +397,11 @@ Wire Wire Line
 Text Label 6900 3000 0    60   ~ 0
 EN2
 Wire Wire Line
-	7000 2600 7000 2350
+	7000 2600 7000 2450
 Wire Wire Line
-	6400 2500 6400 2350
+	6400 2500 6400 2450
 Wire Wire Line
-	7000 1900 7000 2150
-Wire Wire Line
-	6400 2150 6400 1950
-Wire Wire Line
-	6400 1950 7000 1950
-Connection ~ 7000 1950
+	7000 1900 7000 2050
 Connection ~ 7000 1500
 Wire Wire Line
 	5800 3400 6100 3400
@@ -448,4 +440,25 @@ Wire Wire Line
 	4300 3200 3550 3200
 Wire Wire Line
 	3550 3200 3550 3300
+Text Label 3700 3200 0    60   ~ 0
+DI1
+$Comp
+L R R1
+U 1 1 5576694C
+P 6400 1750
+F 0 "R1" V 6480 1750 40  0000 C CNN
+F 1 "680" V 6407 1751 40  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 6330 1750 30  0001 C CNN
+F 3 "~" H 6400 1750 30  0000 C CNN
+	1    6400 1750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6400 2050 6400 1900
+Wire Wire Line
+	6400 1600 6400 1500
+Text Label 6400 2000 0    60   ~ 0
+LED1
+Text Label 7000 2000 0    60   ~ 0
+LED2
 $EndSCHEMATC
