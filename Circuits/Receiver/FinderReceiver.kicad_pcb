@@ -3,7 +3,7 @@
   (general
     (links 31)
     (no_connects 31)
-    (area 13.670999 15.246 73.329001 51.435)
+    (area 0 0 0 0)
     (thickness 1)
     (drawings 3)
     (tracks 0)
@@ -323,7 +323,7 @@
   )
 
   (module Resistors_SMD:R_0603 (layer F.Cu) (tedit 5415CC62) (tstamp 550EB682)
-    (at 27 24 270)
+    (at 28.5 25.5 270)
     (descr "Resistor SMD 0603, reflow soldering, Vishay (see dcrcw.pdf)")
     (tags "resistor 0603")
     (path /5576694C)
@@ -352,7 +352,7 @@
   )
 
   (module favorites:TWE-001L-NC7 (layer F.Cu) (tedit 550D6B73) (tstamp 54E5AD5F)
-    (at 52.5 32 90)
+    (at 52.451 31.75 90)
     (descr http://www.tocos-wireless.com/files/datasheet/TWD-PDS-TWE001L-JP-1.30.pdf)
     (path /54DE9748)
     (fp_text reference U1 (at 0 -8.255 90) (layer F.SilkS)
@@ -583,6 +583,42 @@
       (pts
         (xy 21.85 33.328) (xy 20.326 33.328) (xy 20.326 34.852) (xy 13.976 34.852) (xy 13.976 25.2)
         (xy 21.85 25.2)
+      )
+    )
+  )
+  (zone (net 0) (net_name "") (layer F.Cu) (tstamp 55770985) (hatch edge 0.508)
+    (connect_pads (clearance 0.508))
+    (min_thickness 0.254)
+    (keepout (tracks allowed) (vias not_allowed) (copperpour allowed))
+    (fill (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
+    (polygon
+      (pts
+        (xy 45.466 24.765) (xy 45.466 26.543) (xy 46.736 26.543) (xy 46.736 33.02) (xy 49.149 33.02)
+        (xy 49.149 37.465) (xy 57.658 37.465) (xy 57.658 38.735) (xy 59.436 38.735) (xy 59.436 36.957)
+        (xy 58.166 36.957) (xy 58.166 26.543) (xy 59.436 26.543) (xy 59.436 24.765) (xy 57.658 24.765)
+        (xy 57.658 26.035) (xy 47.244 26.035) (xy 47.244 24.765)
+      )
+    )
+  )
+  (zone (net 0) (net_name "") (layer F.Cu) (tstamp 557709D1) (hatch edge 0.508)
+    (connect_pads (clearance 0.508))
+    (min_thickness 0.254)
+    (keepout (tracks not_allowed) (vias not_allowed) (copperpour allowed))
+    (fill (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
+    (polygon
+      (pts
+        (xy 28.3 28.3) (xy 31.7 28.3) (xy 31.7 31.8) (xy 28.3 31.8)
+      )
+    )
+  )
+  (zone (net 0) (net_name "") (layer B.Cu) (tstamp 557709F2) (hatch edge 0.508)
+    (connect_pads (clearance 0.508))
+    (min_thickness 0.254)
+    (keepout (tracks not_allowed) (vias not_allowed) (copperpour allowed))
+    (fill (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
+    (polygon
+      (pts
+        (xy 28.3 28.3) (xy 28.3 31.8) (xy 31.7 31.8) (xy 31.7 28.3)
       )
     )
   )
