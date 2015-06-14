@@ -136,7 +136,9 @@ typedef struct {
 	uint32 u32DIO_startup; //!< 電源投入時のIO状態
 
 	// config mode
-	uint8 u8Mode; //!< 動作モード(IO M1,M2,M3 から設定される)
+	uint8 u8Mode; //!< 動作モード(E_IO_MODE_CHILD_SLP_1SEC)
+	bool_t bConfigMode; // 設定モード
+	bool_t bSafetyLightMode;	// 保安ライトモード
 
 	// button manager
 	tsBTM_Config sBTM_Config; //!< ボタン入力（連照により状態確定する）管理構造体
