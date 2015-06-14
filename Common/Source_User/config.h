@@ -108,11 +108,6 @@ extern "C" {
 #define ON_PRESS_TRANSMIT
 
 /**
- * ボタン押し下げ時連続送信モード時の、無受信時に DO=H に戻すまでの時間[ms]
- */
-#define ON_PRESS_TRANSMIT_RESET_ms 500
-
-/**
  * ボタン押し下げ時連続送信モード時の、DI=H に戻った後に継続送信する時間 [ms]
  */
 #define ON_PRESS_TRANSMIT_KEEP_TX_ms 1000

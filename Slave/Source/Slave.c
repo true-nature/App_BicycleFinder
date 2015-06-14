@@ -90,6 +90,7 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
+static void vProcessEvCoreFlasher(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 
@@ -149,7 +150,8 @@ tsDupChk_Context sDupChk_SerMsg; //!< 重複チェック(シリアル関連の�
 tsMML sMML; //!< MML 関連 @ingroup MASTER
 
 // 以下の定義は melody_defs.[ch] に移動しました。
-// const uint8 au8MML[4][256] = { ... }
+static const uint8 cu8FlasherPattern[] = {4, 0, 4, 0, 0, 8, 0, 8, 0, 0};
+static uint8 su8FlasherIndex;
 #endif
 
 /****************************************************************************/
@@ -212,6 +214,81 @@ static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	}
 }
 
+
+/** @ingroup MASTER
+ * アプリケーション制御（LEDテールライト モード）
+ * - 機能概要
+ *   - DO3,DO4に接続されたLEDを周期的に点滅させる。
+ *   - 無線処理は行わない。
+ *
+ * - 状態一覧
+ *   - E_STATE_IDLE\n
+ *     起動直後に呼び出される状態。
+ *   - E_STATE_RUNNING
+ *     LEDを点滅させる。
+ *
+ * @param pEv
+ * @param eEvent
+ * @param u32evarg
+ */
+static void vProcessEvCoreFlasher(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
+	switch (pEv->eState) {
+	case E_STATE_IDLE:
+		if (eEvent == E_EVENT_START_UP) {
+
+			if (IS_APPCONF_ROLE_SILENT_MODE()) {
+				vfPrintf(&sSerStream, LB"!Note: launch silent mode."LB);
+				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
+			} else {
+				// LayerNetwork で無ければ、特別な動作は不要。
+				// run as default...
+
+				// 始動メッセージの表示
+				if (!(u32evarg & EVARG_START_UP_WAKEUP_MASK)) {
+					vSerInitMessage();
+				}
+
+				// RUNNING 状態へ遷移
+				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
+			}
+
+			break;
+		}
+
+		break;
+
+	case E_STATE_RUNNING:
+		if (eEvent == E_EVENT_NEW_STATE) {
+			su8FlasherIndex = su8FlasherIndex++ % sizeof(cu8FlasherPattern);
+			vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex] & 8);
+			vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex] & 4);
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
+		}
+		break;
+
+	case E_STATE_FINISHED:
+		// LEDフラッシャーモードを脱出する状態
+		_C {
+			if (eEvent == E_EVENT_NEW_STATE) {
+				// 点灯を抑止
+				vPortSetHi(PORT_OUT3);
+				vPortSetHi(PORT_OUT4);
+				sAppData.bSafetyLightMode = FALSE;
+				vSleep(sAppData.u32SleepDur, TRUE, TRUE);
+			}
+		}
+		break;
+
+	case E_STATE_APP_SLEEPING:
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
+		}
+
+		break;
+	default:
+		break;
+	}
+}
 /** @ingroup MASTER
  * アプリケーション制御（電源常時 ON モード）
  * - 機能概要
@@ -234,7 +311,7 @@ static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
  * @param eEvent
  * @param u32evarg
  */
-void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
+static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
