@@ -146,6 +146,8 @@ extern const uint8 au8IoModeTbl_To_LogicalID[8]; //!< tePortConf2Mode から論�
 #define LOGICAL_ID_PARENT (0)
 #define LOGICAL_ID_CHILDREN (120)
 #define LOGICAL_ID_REPEATER (254)
+#define LOGICAL_ID_CHILD_SLP_1SEC (124)
+#define LOGICAL_ID_CHILD_SLP_10SEC (127)
 #define LOGICAL_ID_BROADCAST (255)
 
 #define IS_LOGICAL_ID_CHILD(s) (s>0 && s<128) //!< 論理アドレスが子機の場合
