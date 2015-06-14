@@ -888,6 +888,8 @@ void cbAppWarmStart(bool_t bStart) {
 						| (1UL << PORT_INPUT3) | (1UL << PORT_INPUT4))) {
 			// woke up from DIO events
 			sAppData.bWakeupByButton = TRUE;
+			// 無線を使用しないのでCPUクロックを4MHzに下げる
+			sToCoNet_AppContext.u8CPUClk = 0;
 		}
 
 	} else {
