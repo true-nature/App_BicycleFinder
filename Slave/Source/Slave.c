@@ -1844,12 +1844,7 @@ static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular) {
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
 
-#ifdef USE_CHILD_TO_CHILD_COMM
 	S_OCTET(LOGICAL_ID_CHILDREN); // 宛先は常に子機
-#else
-	S_OCTET(
-			IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) ? LOGICAL_ID_CHILDREN : LOGICAL_ID_PARENT); // 宛先
-#endif
 	S_BE_WORD((sAppData.u32CtTimer0 & 0x7FFF) + (bQuick == TRUE ? 0x8000 : 0)); // タイムスタンプ
 	// bQuick 転送する場合は MSB をセットし、優先パケットである処理を行う
 	S_OCTET(0); // 中継フラグ
