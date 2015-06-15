@@ -921,6 +921,8 @@ void cbAppWarmStart(bool_t bStart) {
 		DUPCHK_vInit(&sDupChk_IoData);
 		DUPCHK_vInit(&sDupChk_SerMsg);
 
+		// TODO ボタン起床ならLEDフラッシャーモード
+
 		// MAC の開始
 		ToCoNet_vMacStart();
 	}
@@ -1136,7 +1138,6 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				uint32 u32used = sAppData.sIOData_now.u32BtmUsed; // 関数呼び出し中だけ値を変更する
 				sAppData.sIOData_now.u32BtmUsed = u32ItemBitmap
 						& PORT_INPUT_MASK; // 割り込みでLoになったDINだけ変更対照として送信する
-#ifdef ENABLE_BICYCLE_FINDER
 				int i;
 				uint8 u8bm = 0;
 
@@ -1150,17 +1151,13 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 					}
 				}
 				DBGOUT(1, "vHwEven u8bm:%x", u8bm);
-				if (u8bm == 0x09) {
-					// イベント処理部分にイベントを送信
-					if (sAppData.prPrsEv) {
-						ToCoNet_Event_Process(E_EVENT_APP_SEND_MML, 0, sAppData.prPrsEv);
+				if (u8bm & 0x01) {
+					if (sAppData.bSafetyLightMode) {
+						// TODO LEDフラッシャーを停止
+					} else {
+						// TODO メロディー再生中ならメロディー変更
 					}
-				} else {
-					sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm); // 送信処理を行う
 				}
-#else
-				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE); // 送信処理を行う
-#endif
 				sAppData.sIOData_now.u32BtmUsed = u32used
 						| (u32ItemBitmap & PORT_INPUT_MASK); //値を復元する
 			}
