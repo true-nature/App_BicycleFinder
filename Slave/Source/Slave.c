@@ -149,8 +149,20 @@ tsDupChk_Context sDupChk_SerMsg; //!< 重複チェック(シリアル関連の�
 #ifdef BICYCLEFINDER_SLAVE
 tsMML sMML; //!< MML 関連 @ingroup MASTER
 
-// 以下の定義は melody_defs.[ch] に移動しました。
-static const uint8 cu8FlasherPattern[] = {4, 0, 4, 0, 0, 8, 0, 8, 0, 0};
+static const struct {
+	uint8 led;
+	uint8 sleep;
+} cu8FlasherPattern[] = {
+		{4, 10},
+		{0, 100},
+		{4, 10},
+		{0, 384},
+		{8, 10},
+		{0, 100},
+		{8, 10},
+		{0, 384},
+		{0, 0}	// sentinel
+};
 static uint8 su8FlasherIndex;
 #endif
 
@@ -259,11 +271,19 @@ static void vProcessEvCoreFlasher(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 
 	case E_STATE_RUNNING:
 		if (eEvent == E_EVENT_NEW_STATE) {
-			su8FlasherIndex = su8FlasherIndex++ % sizeof(cu8FlasherPattern);
-			vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex] & 8);
-			vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex] & 4);
+			su8FlasherIndex = su8FlasherIndex++;
+			if (cu8FlasherPattern[su8FlasherIndex].sleep == 0) {su8FlasherIndex = 0;}
+			vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex].led & 8);
+			vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex].led & 4);
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
 		}
+		break;
+
+	case E_STATE_APP_SLEEPING:
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
+		}
+
 		break;
 
 	case E_STATE_FINISHED:
@@ -279,12 +299,6 @@ static void vProcessEvCoreFlasher(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		}
 		break;
 
-	case E_STATE_APP_SLEEPING:
-		if (eEvent == E_EVENT_NEW_STATE) {
-			vSleep(sAppData.u32SleepDur, TRUE, FALSE);
-		}
-
-		break;
 	default:
 		break;
 	}
@@ -633,6 +647,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
+				vPortSetLo(PORT_OUT1);
 				vPortSetLo(PORT_OUT2);
 				vPortSetLo(5);
 				vfPrintf(&sSerStream, "!Set OUT2 Low %dms @%dms."LB,
@@ -1154,8 +1169,10 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				if (u8bm & 0x01) {
 					if (sAppData.bSafetyLightMode) {
 						// TODO LEDフラッシャーを停止
+						ToCoNet_Event_Process(E_EVENT_APP_STOP_FLASHER, 0, sAppData.prPrsEv);
 					} else {
 						// TODO メロディー再生中ならメロディー変更
+						ToCoNet_Event_Process(E_EVENT_APP_CHANGE_MML, 0, sAppData.prPrsEv);
 					}
 				}
 				sAppData.sIOData_now.u32BtmUsed = u32used

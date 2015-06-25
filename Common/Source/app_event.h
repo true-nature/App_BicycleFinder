@@ -31,7 +31,9 @@ typedef enum
     E_EVENT_APP_TICK_A,                    //!< 64FPS のタイマーイベント
     E_EVENT_APP_ADC_COMPLETE,              //!< ADC完了
     E_EVENT_APP_TX_COMPLETE,               //!< TX完了
-	E_EVENT_APP_SEND_MML                   //!< MML書き換え要求
+	E_EVENT_APP_SEND_MML,                   //!< MML書き換えコマンド送信要求
+	E_EVENT_APP_CHANGE_MML,					//!< MML書き換え要求
+	E_EVENT_APP_STOP_FLASHER,				//!< LEDフラッシャー停止
 } teEventApp;
 
 /** @ingroup MASTER
