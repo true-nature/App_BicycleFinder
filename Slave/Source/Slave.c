@@ -90,7 +90,6 @@
 /***        Local Function Prototypes                                     ***/
 /****************************************************************************/
 static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
-static void vProcessEvCoreFlasher(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 
@@ -154,9 +153,9 @@ static const struct {
 } cu8FlasherPattern[] = {
 		{4, 10},
 		{0, 180},
-		{4, 10},
-		{0, 400},
 		{8, 10},
+		{0, 400},
+		{4, 10},
 		{0, 180},
 		{8, 10},
 		{0, 400},
@@ -469,16 +468,13 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			// vfPrintf(&sSerStream, "START_UP"LB, eEvent);
 			if (u32evarg & EVARG_START_UP_WAKEUP_MASK) {
 				// スリープからの復帰時の場合
-				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms Flasher:%d"LB,
-						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms, sAppData.bSafetyLightMode);
+				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
+						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
 			}
 			// flasher用に分岐
 			if (sAppData.bSafetyLightMode) {
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_RUNNING);
 			} else {
-				// 間欠モードで受信を有効にする
-				sToCoNet_AppContext.bRxOnIdle = TRUE;
-				ToCoNet_vRfConfig();
 #if defined(INCREASE_ADC_INTERVAL_ms)
 				if (sAppData.u16CtRndCt == 0) {
 					sAppData.u8AdcState = 0; // ADC の開始
@@ -890,6 +886,11 @@ void cbAppWarmStart(bool_t bStart) {
 			// ボタン起床ならばLEDフラッシャーモードを反転
 			sAppData.bSafetyLightMode = !sAppData.bSafetyLightMode;
 		}
+		if (!sAppData.bSafetyLightMode) {
+			// 間欠モードで受信を有効にする
+			sToCoNet_AppContext.bRxOnIdle = TRUE;
+			//ToCoNet_vRfConfig();
+		}
 
 		// MAC の開始
 		ToCoNet_vMacStart();
@@ -1063,7 +1064,6 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		if (sAppData.u8IOFixState) {
 			int i;
 			bool_t bTransmit = FALSE;
-			sAppData.u8DebugLevel = 2;
 			/* DIの入力ピンの番号を調べる。
 			 *
 			 *  ボタンを猿みたいに押してみたが DIO の割り込みは同時に２ビット報告されることは無く、
@@ -1133,7 +1133,6 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 						| (u32ItemBitmap & PORT_INPUT_MASK); //値を復元する
 			}
 		}
-		sAppData.u8DebugLevel = 0;
 		break;
 
 	case E_AHI_DEVICE_ANALOGUE: //ADC完了時にこのイベントが発生する。
