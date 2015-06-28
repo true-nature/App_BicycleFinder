@@ -190,7 +190,7 @@ bool MML_bSave(tsUserMML *psMml) {
     return bRet;
 }
 
-void cpyMmlData(tsUserMML* psMml, uint8* p, uint8 u8DataSize) {
+void cpyMmlData(tsUserMML* psMml, const uint8* p, uint8 u8DataSize) {
 	uint16 dstlen = sizeof(psMml->u8Data) - 1;
 	uint16 len = (dstlen < u8DataSize ? dstlen : u8DataSize);
 	memset(psMml->u8Data, 0, sizeof(psMml->u8Data));
@@ -203,8 +203,8 @@ void cpyMmlData(tsUserMML* psMml, uint8* p, uint8 u8DataSize) {
  */
 uint8 copyMmlByIndex(uint8 index) {
 	tsUserMML *psMml = &sUserMMLData;
-	uint8 *src = au8MmlBank[index % MMLBANK_COUNT];
-	uint8 len = (0xFF & strlen(src));
+	const uint8 *src = au8MmlBank[index % MMLBANK_COUNT];
+	uint8 len = (0xFF & strlen((const char *)src));
 	cpyMmlData(psMml, src, len);
 	return MML_bSave(psMml);
 }
