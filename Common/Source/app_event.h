@@ -49,8 +49,9 @@ typedef enum
 	E_STATE_APP_WAIT_PLAY_MML,                //!< MML再生完了を待つ
 	E_STATE_APP_SEND_MML,                     //!< MML書き換えコマンドを送信する
 	E_STATE_APP_WAIT_TX_MML,                  //!< MML送信完了を待つ
+	E_STATE_APP_FLASHER_RUNNING,              //!< LEDフラッシャー動作中
 
-	E_STATE_APP_SLEEPING                      //!< スリープ処理
+	E_STATE_APP_SLEEPING,                     //!< スリープ処理
 } teStateApp;
 
 #endif /* EVENT_H_ */

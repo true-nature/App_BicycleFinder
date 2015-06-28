@@ -47,6 +47,7 @@ extern tsUserMML sUserMMLData;
 
 bool MML_bLoad(tsUserMML *p);
 bool MML_bSave(tsUserMML *psMml);
+uint8 copyMmlByIndex(uint8 index);
 void vProcessMmlCommand(uint8 *p, uint16 u16len, uint8 u8AddrSrc);
 
 #endif
