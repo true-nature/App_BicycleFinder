@@ -197,6 +197,18 @@ void cpyMmlData(tsUserMML* psMml, uint8* p, uint8 u8DataSize) {
 	memcpy(psMml->u8Data, p, len);
 }
 
+/**
+ * Copy MML from flash MML bank to eeprom.
+ * @param index
+ */
+uint8 copyMmlByIndex(uint8 index) {
+	tsUserMML *psMml = &sUserMMLData;
+	uint8 *src = au8MmlBank[index % MMLBANK_COUNT];
+	uint8 len = (0xFF & strlen(src));
+	cpyMmlData(psMml, src, len);
+	return MML_bSave(psMml);
+}
+
 /** @ingroup MASTER
  * MML の曲データを更新します。
  * 無線経由ので要求の場合は、応答は送信元へ無線パケットで戻されます。

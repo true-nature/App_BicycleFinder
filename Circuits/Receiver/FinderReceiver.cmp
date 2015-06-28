@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (after 2015-mar-04 BZR unknown)-product   date = 2015/04/26 10:19:55
+Cmp-Mod V01 Created by Cvpcb (after 2015-may-25 BZR unknown)-product   date = 2015/06/10 7:24:05
 
 BeginCmp
 TimeStamp = /54DE9794;
@@ -18,7 +18,7 @@ BeginCmp
 TimeStamp = /54DE99E0;
 Reference = LD2;
 ValeurCmp = LED;
-IdModule  = favorites:LED-3MM;
+IdModule  = LEDs:LED-3MM;
 EndCmp
 
 BeginCmp
@@ -29,7 +29,7 @@ IdModule  = favorites:WRITE-7P;
 EndCmp
 
 BeginCmp
-TimeStamp = /54DE9A28;
+TimeStamp = /5576694C;
 Reference = R1;
 ValeurCmp = 680;
 IdModule  = Resistors_SMD:R_0603;

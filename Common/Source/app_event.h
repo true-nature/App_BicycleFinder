@@ -31,7 +31,9 @@ typedef enum
     E_EVENT_APP_TICK_A,                    //!< 64FPS のタイマーイベント
     E_EVENT_APP_ADC_COMPLETE,              //!< ADC完了
     E_EVENT_APP_TX_COMPLETE,               //!< TX完了
-	E_EVENT_APP_SEND_MML                   //!< MML書き換え要求
+	E_EVENT_APP_SEND_MML,                   //!< MML書き換えコマンド送信要求
+	E_EVENT_APP_CHANGE_MML,					//!< MML書き換え要求
+	E_EVENT_APP_STOP_FLASHER,				//!< LEDフラッシャー停止
 } teEventApp;
 
 /** @ingroup MASTER
@@ -47,8 +49,9 @@ typedef enum
 	E_STATE_APP_WAIT_PLAY_MML,                //!< MML再生完了を待つ
 	E_STATE_APP_SEND_MML,                     //!< MML書き換えコマンドを送信する
 	E_STATE_APP_WAIT_TX_MML,                  //!< MML送信完了を待つ
+	E_STATE_APP_FLASHER_RUNNING,              //!< LEDフラッシャー動作中
 
-	E_STATE_APP_SLEEPING                      //!< スリープ処理
+	E_STATE_APP_SLEEPING,                     //!< スリープ処理
 } teStateApp;
 
 #endif /* EVENT_H_ */
