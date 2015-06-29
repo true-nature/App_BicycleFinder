@@ -339,15 +339,20 @@ static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 	case E_STATE_RUNNING:
 #if defined(USE_DO4_AS_STATUS_LED)
 	{
-		static uint32 period;
+		static uint32 mask, duty;
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV PEER:%dmV"LB, sAppData.sIOData_now.u16Volt, sAppData.sIOData_now.u16Volt_LastRx);
 			// 再生中は約1秒周期でDO3,DO4のLEDを1回ずつ点滅, 自機の電圧が低ければ倍速2回ずつの点滅
-			period = (1 << (sAppData.sIOData_now.u16Volt < BATTERY_LOW_ALARM_VOLT ? 7 : 9));
+			mask = (1 << (sAppData.sIOData_now.u16Volt < 2400 ? 8: 10)) - 1;
+			duty = mask >> 2;
+			vPortSet_TrueAsLo(PORT_OUT1, !IS_APPCONF_OPT_LOUDNESS_EN1());	// 昇圧設定EN1
+			vPortSet_TrueAsLo(PORT_OUT2, !IS_APPCONF_OPT_LOUDNESS_EN2());	// 昇圧設定EN2
 		} else if (eEvent == E_EVENT_APP_TICK_A) {
 			// 再生中でなければ終了
 			if (sMML.bHoldPlay) {
-				vPortSet_TrueAsLo(PORT_OUT4, u32TickCount_ms & period);
+				// DO3のLEDが先行して点滅
+				vPortSet_TrueAsLo(PORT_OUT3, ((u32TickCount_ms + duty) & mask) <= duty);
+				vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 			} else {
 				// 点灯を抑止
 				vPortSetHi(PORT_OUT3);
