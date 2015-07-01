@@ -162,6 +162,8 @@ static const struct {
 		{0, 0}	// sentinel
 };
 static uint8 su8FlasherIndex;
+static const uint32 FLASHER_MAX_CYCLE = 1500;	//!< max cycle of flasher pattern
+static uint32 su32FlasherCycle;	//!< flaasher cycle timeout counter
 #endif
 
 /****************************************************************************/
@@ -579,10 +581,14 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		// LEDフラッシャーとして動作中
 		if (eEvent == E_EVENT_NEW_STATE || eEvent == E_EVENT_START_UP) {
 			su8FlasherIndex++;
-			if (cu8FlasherPattern[su8FlasherIndex].sleep == 0) {su8FlasherIndex = 0;}
+			if (cu8FlasherPattern[su8FlasherIndex].sleep == 0) {
+				su8FlasherIndex = 0;
+				su32FlasherCycle++;
+			}
 			vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex].led & 8);
 			vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex].led & 4);
-			if (sAppData.bSafetyLightMode && PRSEV_u32TickFrNewState(pEv) < (30 * 60000)) {
+			vfPrintf(&sSerStream, "%dms."LB,PRSEV_u32TickFrNewState(pEv));
+			if (sAppData.bSafetyLightMode && su32FlasherCycle < FLASHER_MAX_CYCLE) {
 				// 最大30分間継続
 				ToCoNet_Event_vKeepStateOnRamHoldSleep(pEv); // 次の起床後も同じSTATEで開始
 				vSleep(cu8FlasherPattern[su8FlasherIndex].sleep, TRUE, FALSE);
@@ -890,6 +896,7 @@ void cbAppWarmStart(bool_t bStart) {
 		if (sAppData.bWakeupByButton) {
 			// ボタン起床ならばLEDフラッシャーモードを反転
 			sAppData.bSafetyLightMode = !sAppData.bSafetyLightMode;
+			su32FlasherCycle = 0;
 		}
 		if (!sAppData.bSafetyLightMode) {
 			// 間欠モードで受信を有効にする
