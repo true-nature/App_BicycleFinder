@@ -26,9 +26,9 @@
  * @param p 構造体へのアドレス
  */
 void Config_vSetDefaults(tsFlashApp *p) {
-	p->u32appid = APP_ID;
-	p->u32chmask = CHMASK;
-	p->u8ch = CHANNEL;
+	p->u32appid = ToCoNet_u32GetSerial();
+	p->u8ch = ((p->u32appid - 1) & 0xF) + 11;	// 1..0x10 => 11..26
+	p->u32chmask = (1UL << p->u8ch);
 	p->u8pow = 3;
 
 	p->u8role = E_APPCONF_ROLE_MAC_NODE;
