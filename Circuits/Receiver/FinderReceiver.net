@@ -1,8 +1,8 @@
 (export (version D)
   (design
     (source C:/TWESDK/Wks_ToCoNet/App_BicycleFinder/Circuits/Receiver/FinderReceiver.sch)
-    (date "2015/06/18 0:22:48")
-    (tool "Eeschema (2015-06-16 BZR 5762, Git d3b3131)-product")
+    (date "2015/07/04 8:28:25")
+    (tool "Eeschema (2015-07-02 BZR 5871, Git 766da1e)-product")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
         (title "Bicycle Finder / Remote Commander")
@@ -30,7 +30,7 @@
       (tstamp 54DE9794))
     (comp (ref LD2)
       (value LED)
-      (footprint LEDs:LED-3MM)
+      (footprint LEDs:LED-5MM)
       (libsource (lib device) (part LED))
       (sheetpath (names /) (tstamps /))
       (tstamp 54DE99E0))
@@ -42,7 +42,7 @@
       (tstamp 54E33E0C))
     (comp (ref LD1)
       (value LED)
-      (footprint LEDs:LED-3MM)
+      (footprint LEDs:LED-5MM)
       (libsource (lib device) (part LED))
       (sheetpath (names /) (tstamps /))
       (tstamp 54E33E98))
@@ -96,6 +96,18 @@
         (pin (num 6) (name EN1) (type input))
         (pin (num 7) (name VO2) (type output))
         (pin (num 8) (name VO1) (type output))))
+    (libpart (lib favorites) (part WRITER-VCC)
+      (fields
+        (field (name Reference) P)
+        (field (name Value) WRITER-VCC))
+      (pins
+        (pin (num 0) (name Vcc) (type input))
+        (pin (num 1) (name RST) (type passive))
+        (pin (num 2) (name RXD) (type passive))
+        (pin (num 3) (name PRG) (type passive))
+        (pin (num 4) (name TXD) (type passive))
+        (pin (num 5) (name GND) (type passive))
+        (pin (num 6) (name CFG) (type passive))))
     (libpart (lib favorites) (part TWE_LITE_SMD)
       (fields
         (field (name Reference) U)
@@ -135,25 +147,6 @@
         (pin (num 30) (name GND) (type power_in))
         (pin (num 31) (name GND) (type power_in))
         (pin (num 32) (name GND) (type power_in))))
-    (libpart (lib favorites) (part WRITER-VCC)
-      (fields
-        (field (name Reference) P)
-        (field (name Value) WRITER-VCC))
-      (pins
-        (pin (num 0) (name Vcc) (type input))
-        (pin (num 1) (name RST) (type passive))
-        (pin (num 2) (name RXD) (type passive))
-        (pin (num 3) (name PRG) (type passive))
-        (pin (num 4) (name TXD) (type passive))
-        (pin (num 5) (name GND) (type passive))
-        (pin (num 6) (name CFG) (type passive))))
-    (libpart (lib device) (part Battery)
-      (fields
-        (field (name Reference) BT)
-        (field (name Value) Battery))
-      (pins
-        (pin (num 1) (name ~) (type passive))
-        (pin (num 2) (name ~) (type passive))))
     (libpart (lib device) (part LED)
       (footprints
         (fp LED-3MM)
@@ -169,6 +162,13 @@
       (pins
         (pin (num 1) (name K) (type passive))
         (pin (num 2) (name A) (type passive))))
+    (libpart (lib device) (part Battery)
+      (fields
+        (field (name Reference) BT)
+        (field (name Value) Battery))
+      (pins
+        (pin (num 1) (name ~) (type passive))
+        (pin (num 2) (name ~) (type passive))))
     (libpart (lib device) (part R)
       (description Resistor)
       (footprints
