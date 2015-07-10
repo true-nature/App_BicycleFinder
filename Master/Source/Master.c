@@ -479,7 +479,9 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				// 点灯を抑止
 				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
-		} else if (eEvent == E_EVENT_APP_TICK_A) { // 秒64回のタイマー割り込み
+		} else if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+				&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
+				) {
 			// 対抗のスリープ間隔を跨いで連続送信
 			sAppData.sIOData_now.i16TxCbId = i16TransmitButtonData(TRUE, FALSE, &u8bm);
 		} else if (eEvent == E_EVENT_APP_SEND_MML) {
