@@ -1410,6 +1410,9 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	for (i = 0; i < 4; i++) {
 		vPortAsOutput(au8PortTbl_DOut[i]);
 	}
+	// Let NJU72501MJE sleep.
+	vPortSetLo(PORT_OUT1);	// EN1 is low
+	vPortSetLo(PORT_OUT2);	// EN2 is low
 
 	// 入力の設定
 	for (i = 0; i < 4; i++) {
@@ -1429,9 +1432,6 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	vPortAsInput(PORT_CONF3);
 	sAppData.u8Mode = E_IO_MODE_CHILD_SLP_1SEC;	// 子機は1秒スリープモードに固定
 	if (!f_warm_start) {
-		// Let NJU72501MJE sleep.
-		vPortSetLo(PORT_OUT1);	// EN1 is low
-		vPortSetLo(PORT_OUT2);	// EN2 is low
 		// DO3,DO4はHigh(LED消灯)
 		vPortSetHi(PORT_OUT3);
 		vPortSetHi(PORT_OUT4);
