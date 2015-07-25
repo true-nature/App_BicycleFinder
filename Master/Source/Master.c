@@ -1949,7 +1949,7 @@ static int16 i16TransmitButtonData(bool_t bQuick, bool_t bRegular, uint8 *bm) {
 	S_OCTET(u8LSBs); // 詳細ビット部分を記録
 
 	sTx.u8Len = q - sTx.auData; // パケット長
-	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_IO_DATA; // パケット種別
+	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_IO_DATA_CALL; // パケット種別
 
 	// 送信する
 	sTx.u32DstAddr = TOCONET_MAC_ADDR_BROADCAST; // ブロードキャスト

@@ -950,7 +950,7 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 	case TOCONET_PACKET_CMD_APP_DATA: // シリアルメッセージのパケット
 		vReceiveSerMsg(psRx);
 		break;
-	case TOCONET_PACKET_CMD_APP_USER_IO_DATA: // IO状態の伝送
+	case TOCONET_PACKET_CMD_APP_USER_IO_DATA_CALL: // リモコンからの呼び出し
 		if (PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING) { // 稼動状態でパケット処理をする
 			vReceiveIoData(psRx);
 		}
