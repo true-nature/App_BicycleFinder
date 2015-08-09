@@ -78,7 +78,7 @@
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 #define BATTERY_LOW_ALARM_VOLT 2400
-#define BATTERY_REPEAT_TX_VOLT 2350
+#define BATTERY_REPEAT_TX_VOLT 2100
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -498,7 +498,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 		}
-		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 500));
+		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
 		if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
 			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
