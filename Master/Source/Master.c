@@ -77,7 +77,7 @@
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
-#define BATTERY_LOW_ALARM_VOLT 2400
+#define BATTERY_LOW_ALARM_VOLT 2600
 #define BATTERY_REPEAT_TX_VOLT 2100
 
 /****************************************************************************/
@@ -470,16 +470,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		}
 		break;
 	case E_STATE_WAIT_TX:
-		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
-			if (sAppData.u32SleepDur == 0					// ボタンで起床
-				&& sAppData.sIOData_now.u16Volt >= BATTERY_REPEAT_TX_VOLT) {
-				// 電圧が低い(==EDLC充電不足)ならば連続送信しない。
-				// stay this state
-			} else {
-				// 点灯を抑止
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
-			}
-		} else if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+		if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
 				&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 				) {
 			// 対抗のスリープ間隔を跨いで連続送信
@@ -493,7 +484,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			if (eEvent == E_EVENT_NEW_STATE) {
 				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV"LB, sAppData.sIOData_now.u16Volt, u32TickCount_ms);
 				// 送信中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
-				mask = (1 << (sAppData.sIOData_now.u16Volt < 2500 ? 8 : 10)) - 1;
+				mask = (1 << (sAppData.sIOData_now.u16Volt < BATTERY_LOW_ALARM_VOLT ? 8 : 10)) - 1;
 				duty = mask >> 2;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
