@@ -2648,9 +2648,8 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
 						au8SerBuffRx[1], au8SerBuffRx + 2,
 						sSerSeqRx.u16DataLen - 2);
 			}
+			memset(&sSerSeqRx, 0, sizeof(sSerSeqRx));
 		}
-
-		memset(&sSerSeqRx, 0, sizeof(sSerSeqRx));
 	}
 }
 
