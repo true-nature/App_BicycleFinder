@@ -11,6 +11,7 @@ def mml2hex(f):
         for line in tf:
             txt = txt + re.sub("[\u0000-\u0020\u007f-]", "", line)
     length = len(txt)
+    print("length:" + str(length))
     if length > 250:
         txt = txt[:250]
         length = 250
@@ -20,8 +21,8 @@ def mml2hex(f):
         sum = sum + ord(c)
         pkt.append("{0:02X}".format(ord(c)))
     chksum = (0x100 - (0xff & sum)) & 0xff
-    #pkt.append("{0:02X}".format(chksum))
-    pkt.append("X")
+    pkt.append("{0:02X}".format(chksum))
+    #pkt.append("X")
     print("".join(pkt))
 
 if __name__ == "__main__":
