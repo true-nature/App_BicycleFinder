@@ -81,6 +81,11 @@
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 #define BATTERY_LOW_ALARM_VOLT 2400
+#ifdef INCREASE_ADC_INTERVAL_ms
+#define APPT_TICK_A_MASK ~0
+#else
+#define APPT_TICK_A_MASK 1
+#endif
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -92,6 +97,7 @@
 static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
+static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 
 static void vInitHardware(int f_warm_start);
 
@@ -111,6 +117,7 @@ static bool_t bCheckDupPacket(tsDupChk_Context *pc, uint32 u32Addr,
 
 static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular);
 static int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq);
+static int16 i16TransmitPairingequest();
 
 static uint16 u16GetAve(uint16 *pu16k, uint8 u8Scale);
 static bool_t bUpdateAdcValues();
@@ -363,11 +370,6 @@ static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 		}
 	}
 #endif
-#ifdef INCREASE_ADC_INTERVAL_ms
-#define APPT_TICK_A_MASK ~0
-#else
-#define APPT_TICK_A_MASK 1
-#endif
 		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
 		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
 				) {
@@ -441,6 +443,126 @@ static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xF) + 24;
 			}
 		}
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+/** @ingroup MASTER
+ * アプリケーション制御（AutoPairing モード）
+ * - 機能概要
+ *   - 起動時にランダムで処理を保留する（同時起動による送信パケットの競合回避のため）
+ *   - 初回のDI/AD状態確定まで待つ
+ *   - 実行状態では E_EVENT_APP_TICK_A (64fps タイマーイベント) を起点に処理する。
+ *     - 32fps のタイミングで送信判定を行う
+ *     - 定期パケット送信後は、次回のタイミングを乱数によってブレを作る。
+ *
+ * - 状態一覧
+ *   - E_STATE_IDLE\n
+ *     起動直後に呼び出される状態で、同時起動によるパケット衝突を避けるためランダムなウェイトを置き、次の状態に遷移する。
+ *   - E_STATE_APP_PAIR_SCAN\n
+ *     初回に DI および AI の入力値が確定するまでの待ちを行い、E_STATE_RUNNING に遷移する。
+ *   - E_STATE_RUNNING
+ *     秒６４回のタイマー割り込み (E_EVENT_TICK_A) を受けて、入力状態の変化のチェックを行い、無線パケットの送信要求を
+ *     発行する。各種判定条件があるので、詳細はコード中のコメント参照。
+ *
+ * @param pEv
+ * @param eEvent
+ * @param u32evarg
+ */
+static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
+	switch (pEv->eState) {
+	case E_STATE_IDLE:
+		if (eEvent == E_EVENT_START_UP) {
+			sAppData.u16CtRndCt = 0;
+
+			/* Initialize the Interactive mode */
+			Interactive_vInit();
+		}
+
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (!sAppData.u16CtRndCt) {
+				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xFF) + 10; // 始動時にランダムで少し待つ（同時電源投入でぶつからないように）
+			}
+		}
+
+		// 始動時ランダムな待ちを置く
+		if (sAppData.u16CtRndCt
+				&& PRSEV_u32TickFrNewState(pEv) > sAppData.u16CtRndCt) {
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_SET_INITIAL_ON);
+			sAppData.u16CtRndCt = 32; // この変数は定期送信のタイミング用に再利用する。
+		}
+
+		break;
+
+	case E_STATE_APP_SET_INITIAL_ON:
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vPortSetHi(PORT_OUT1);
+			vPortSetHi(PORT_OUT2);
+			vPortSetHi(PORT_OUT3);
+			vPortSetHi(PORT_OUT4);
+
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_SCAN);
+		}
+		break;
+
+	case E_STATE_APP_PAIR_SCAN:
+		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
+		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
+				) {
+			// 変更が有った場合は送信する
+			int i;
+			bool_t bCond = FALSE;
+
+			if (sAppData.u16CtRndCt)
+				sAppData.u16CtRndCt--; // 定期パケット送信までのカウントダウン
+
+			// レギュラー送信  // TODO レギュラー送信しないオプション
+			if (!bCond && (sAppData.u16CtRndCt == 0)) {
+				bCond = TRUE;
+			}
+
+			// 送信
+			if (bCond) {
+				// デバッグ出力
+				DBGOUT(5,
+						"A(%02d/%04d)%d%d: v=%04d A1=%04d/%04d A2=%04d/%04d B=%d%d%d%d %08x"LB,
+						sAppData.u32CtTimer0, u32TickCount_ms & 8191,
+						sAppData.bUpdatedAdc ? 1 : 0,
+						sAppData.sIOData_now.u32BtmChanged ? 1 : 0,
+						sAppData.sIOData_now.u16Volt,
+						sAppData.sIOData_now.au16InputADC[0],
+						sAppData.sIOData_now.au16InputPWMDuty[0] >> 2,
+						sAppData.sIOData_now.au16InputADC[1],
+						sAppData.sIOData_now.au16InputPWMDuty[1] >> 2,
+						sAppData.sIOData_now.au8Input[0] & 1,
+						sAppData.sIOData_now.au8Input[1] & 1,
+						sAppData.sIOData_now.au8Input[2] & 1,
+						sAppData.sIOData_now.au8Input[3] & 1,
+						sAppData.sIOData_now.u32BtmBitmap);
+
+				// 低遅延送信が必要かどうかの判定
+				bool_t bQuick = FALSE;
+
+				// 送信要求
+				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingequest();
+
+				// 次の定期パケットのタイミングを仕込む
+				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xF) + 24;
+			}
+		}
+		break;
+
+	case E_STATE_APP_PAIR_PROPOSE:
+		break;
+
+	case E_STATE_APP_PAIR_CONFIRM:
+		break;
+
+	case E_STATE_APP_PAIR_COMPLETE:
 		break;
 
 	default:
@@ -815,7 +937,11 @@ void cbAppColdStart(bool_t bStart) {
 
 		if (!(IS_APPCONF_ROLE_SILENT_MODE())) {
 			// 状態遷移マシンの登録
-			if (sAppData.bConfigMode) {
+			if (sAppData.bPairingMode) {
+				ToCoNet_Event_Register_State_Machine(vProcessEvCorePairing); // Auto Pairingの処理
+				sAppData.prPrsEv = (void*) vProcessEvCorePairing;
+				sToCoNet_AppContext.bRxOnIdle = TRUE;
+			} else if (sAppData.bConfigMode) {
 				ToCoNet_Event_Register_State_Machine(vProcessEvCorePwr); // 常時通電用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCorePwr;
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
@@ -1441,6 +1567,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 			// Lo でない場合は、プルアップ停止をするとリーク電流が発生する
 			vPortDisablePullup(PORT_CONF1);
 		}
+		if (bPortRead(PORT_CONF2)) {
+			sAppData.bPairingMode = TRUE;
+			vPortDisablePullup(PORT_CONF2);
+		}
 	}
 
 	// UART 設定
@@ -2014,10 +2144,12 @@ int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq) {
 
 	tsTxDataApp sTx;
 	memset(&sTx, 0, sizeof(sTx));
+	uint32 u32AppId = APP_ID;
 
 	uint8 *q = sTx.auData;
 
-	S_OCTET(sAppData.u8AppIdentifier);
+	S_OCTET( u8CCITT8((uint8*)&u32AppId, 4)); // APP ID の CRC8
+
 	S_OCTET(APP_PROTOCOL_VERSION);
 	S_OCTET(sAppData.u8AppLogicalId); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
@@ -2038,6 +2170,78 @@ int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq) {
 
 	sTx.u8Len = q - sTx.auData; // パケット長
 	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT; // パケット種別
+
+	// 送信する
+	sTx.u32DstAddr = TOCONET_MAC_ADDR_BROADCAST; // ブロードキャスト
+	sTx.u8Retry = 0x81; // 1回再送
+
+	{
+		/* 送信設定 */
+		sTx.bAckReq = FALSE;
+		sTx.u32SrcAddr = sToCoNet_AppContext.u16ShortAddress;
+		sTx.u16RetryDur = 4; // 再送間隔
+		sTx.u16DelayMax = 16; // 衝突を抑制するため送信タイミングにブレを作る(最大16ms)
+
+		// 送信API
+		if (ToCoNet_bMacTxReq(&sTx)) {
+			i16Ret = sTx.u8CbId;
+		}
+	}
+
+	return i16Ret;
+}
+
+/** @ingroup MASTER
+ * pairingを設定する要求コマンドパケットを送信します。
+ *
+ * - Packet 構造
+ *   - OCTET: 識別ヘッダ(APP ID より生成)
+ *   - OCTET: プロトコルバージョン(バージョン間干渉しないための識別子)
+ *   - OCTET: 送信元論理ID
+ *   - BE_DWORD: 送信元のシリアル番号
+ *   - OCTET: 宛先論理ID
+ *   - BE_WORD: 送信タイムスタンプ (64fps カウンタの値の下１６ビット, 約1000秒で１周する)
+ *   - OCTET: 中継フラグ
+ *   - OCTET: 形式 (1固定)
+ *   - BE_WORD: 要求APP ID
+ *   - OCTET: 要求channel
+ *   - BE_WORD: 受諾APP ID
+ *   - OCTET: 受諾channel
+ *
+ * @param u8DstAddr 送信先
+ * @param pReq 設定データ
+ * @return -1:Error, 0..255:CbId
+ */
+static int16 i16TransmitPairingequest()
+{
+	if (IS_APPCONF_ROLE_SILENT_MODE())
+		return -1;
+
+	int16 i16Ret = 0;
+
+	tsTxDataApp sTx;
+	memset(&sTx, 0, sizeof(sTx));
+
+	uint8 *q = sTx.auData;
+
+	S_OCTET(0);
+	S_OCTET(APP_PROTOCOL_VERSION);
+	S_OCTET(0); // アプリケーション論理アドレス
+	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
+	S_OCTET(0); // 宛先
+	S_BE_WORD(sAppData.u32CtTimer0 & 0xFFFF); // タイムスタンプ
+	S_OCTET(0); // 中継フラグ
+
+	S_OCTET(1); // パケット形式
+
+	S_BE_DWORD(0x80000000 | ToCoNet_u32GetSerial());  // 要求APP ID
+	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 要求channel
+
+	S_BE_DWORD(0x80000000 | ToCoNet_u32GetSerial());  // 受諾APP ID
+	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 受諾channel
+
+	sTx.u8Len = q - sTx.auData; // パケット長
+	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_PAIRING; // パケット種別
 
 	// 送信する
 	sTx.u32DstAddr = TOCONET_MAC_ADDR_BROADCAST; // ブロードキャスト

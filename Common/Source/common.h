@@ -188,6 +188,7 @@ extern const uint8 au8IoModeTbl_To_LogicalID[8]; //!< tePortConf2Mode から論�
 #define TOCONET_PACKET_CMD_APP_USER_IO_DATA (TOCONET_PACKET_CMD_APP_USER+0) //!< IO の入出力データ
 #define TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT (TOCONET_PACKET_CMD_APP_USER+1) //!< IO の入出力データ
 #define TOCONET_PACKET_CMD_APP_USER_IO_DATA_CALL (TOCONET_PACKET_CMD_APP_USER+2) //!< IO の入出力データ
+#define TOCONET_PACKET_CMD_APP_USER_PAIRING (TOCONET_PACKET_CMD_APP_USER+3) //!< auto pairing
 
 /* Modbus ASCII output functions */
 void vModbOut_AckNack(tsFILE *pSer, bool_t bAck);

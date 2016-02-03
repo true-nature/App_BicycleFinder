@@ -79,6 +79,11 @@
 /****************************************************************************/
 #define BATTERY_LOW_ALARM_VOLT 2600
 #define BATTERY_REPEAT_TX_VOLT 2100
+#ifdef INCREASE_ADC_INTERVAL_ms
+#define APPT_TICK_A_MASK ~0
+#else
+#define APPT_TICK_A_MASK 1
+#endif
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -317,11 +322,6 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 
 	case E_STATE_RUNNING:
 
-#ifdef INCREASE_ADC_INTERVAL_ms
-#define APPT_TICK_A_MASK ~0
-#else
-#define APPT_TICK_A_MASK 1
-#endif
 		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
 		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
 				) {
@@ -1331,6 +1331,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 			// モード設定ピンで Lo になっているポートはプルアップ停止
 			// Lo でない場合は、プルアップ停止をするとリーク電流が発生する
 			vPortDisablePullup(PORT_CONF1);
+		}
+		if (bPortRead(PORT_CONF2)) {
+			sAppData.bPairingMode = TRUE;
+			vPortDisablePullup(PORT_CONF2);
 		}
 	}
 

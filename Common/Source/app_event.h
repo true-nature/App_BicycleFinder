@@ -52,6 +52,11 @@ typedef enum
 	E_STATE_APP_FLASHER_RUNNING,              //!< LEDフラッシャー動作中
 
 	E_STATE_APP_SLEEPING,                     //!< スリープ処理
+
+	E_STATE_APP_PAIR_SCAN,					//!< Auto Pairing Scan phase
+	E_STATE_APP_PAIR_PROPOSE,				//!< Auto Pairing Propose phase
+	E_STATE_APP_PAIR_CONFIRM,				//!< Auto Pairing Confirm phase
+	E_STATE_APP_PAIR_COMPLETE,				//!< Auto Pairing Complete phase
 } teStateApp;
 
 #endif /* EVENT_H_ */

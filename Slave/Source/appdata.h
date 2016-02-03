@@ -138,6 +138,7 @@ typedef struct {
 	// config mode
 	uint8 u8Mode; //!< 動作モード(E_IO_MODE_CHILD_SLP_1SEC)
 	bool_t bConfigMode; // 設定モード
+	bool_t bPairingMode;	// ペアリングモード
 	bool_t bSafetyLightMode;	// 保安ライトモード
 
 	// button manager
