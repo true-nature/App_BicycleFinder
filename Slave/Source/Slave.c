@@ -941,6 +941,10 @@ void cbAppColdStart(bool_t bStart) {
 				ToCoNet_Event_Register_State_Machine(vProcessEvCorePairing); // Auto Pairingの処理
 				sAppData.prPrsEv = (void*) vProcessEvCorePairing;
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
+				sToCoNet_AppContext.u8TxPower = 0;	// 最小出力
+				sToCoNet_AppContext.u32AppId = APP_ID;
+				sToCoNet_AppContext.u8Channel = CHANNEL; // pairing用に固定
+				sToCoNet_AppContext.u32ChMask = CHMASK;
 			} else if (sAppData.bConfigMode) {
 				ToCoNet_Event_Register_State_Machine(vProcessEvCorePwr); // 常時通電用の処理
 				sAppData.prPrsEv = (void*) vProcessEvCorePwr;
