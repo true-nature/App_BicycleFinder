@@ -111,13 +111,14 @@ extern void vSerUpdateScreen();
 static void vReceiveSerMsg(tsRxDataApp *pRx);
 static void vReceiveIoData(tsRxDataApp *pRx);
 static void vReceiveIoSettingRequest(tsRxDataApp *pRx);
+static void vReceivePairingData(tsRxDataApp *pRx);
 
 static bool_t bCheckDupPacket(tsDupChk_Context *pc, uint32 u32Addr,
 		uint16 u16TimeStamp);
 
 static int16 i16TransmitIoData(bool_t bQuick, bool_t bRegular);
 static int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq);
-static int16 i16TransmitPairingequest();
+static int16 i16TransmitPairingRequest(uint32 u32State);
 
 static uint16 u16GetAve(uint16 *pu16k, uint8 u8Scale);
 static bool_t bUpdateAdcValues();
@@ -548,7 +549,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 				bool_t bQuick = FALSE;
 
 				// 送信要求
-				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingequest();
+				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingRequest(E_STATE_APP_PAIR_SCAN);
 
 				// 次の定期パケットのタイミングを仕込む
 				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xF) + 24;
@@ -560,6 +561,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		break;
 
 	case E_STATE_APP_PAIR_CONFIRM:
+		ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
 		break;
 
 	case E_STATE_APP_PAIR_COMPLETE:
@@ -943,6 +945,8 @@ void cbAppColdStart(bool_t bStart) {
 				sToCoNet_AppContext.bRxOnIdle = TRUE;
 				sToCoNet_AppContext.u8TxPower = 0;	// 最小出力
 				sToCoNet_AppContext.u32AppId = APP_ID;
+				sAppData.u8AppIdentifier = u8CCITT8(
+						(uint8*) &sToCoNet_AppContext.u32AppId, 4); // APP ID の CRC8
 				sToCoNet_AppContext.u8Channel = CHANNEL; // pairing用に固定
 				sToCoNet_AppContext.u32ChMask = CHMASK;
 			} else if (sAppData.bConfigMode) {
@@ -1088,6 +1092,11 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 	case TOCONET_PACKET_CMD_APP_USER_IO_DATA_EXT: // IO状態の伝送(UART経由)
 		if (PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING) { // 稼動状態でパケット処理をする
 			vReceiveIoSettingRequest(psRx);
+		}
+		break;
+	case TOCONET_PACKET_CMD_APP_USER_PAIRING:	// auto pairing
+		if (PRSEV_eGetStateH(sAppData.u8Hnd_vProcessEvCore) == E_STATE_RUNNING) { // 稼動状態でパケット処理をする
+			vReceivePairingData(psRx);
 		}
 		break;
 	}
@@ -1571,9 +1580,9 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 			// Lo でない場合は、プルアップ停止をするとリーク電流が発生する
 			vPortDisablePullup(PORT_CONF1);
 		}
-		if (bPortRead(PORT_CONF2)) {
+		if (bPortRead(PORT_INPUT1)) {
 			sAppData.bPairingMode = TRUE;
-			vPortDisablePullup(PORT_CONF2);
+			//vPortDisablePullup(PORT_INPUT1);
 		}
 	}
 
@@ -2216,7 +2225,7 @@ int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq) {
  * @param pReq 設定データ
  * @return -1:Error, 0..255:CbId
  */
-static int16 i16TransmitPairingequest()
+static int16 i16TransmitPairingRequest(uint32 u32State)
 {
 	if (IS_APPCONF_ROLE_SILENT_MODE())
 		return -1;
@@ -2228,11 +2237,11 @@ static int16 i16TransmitPairingequest()
 
 	uint8 *q = sTx.auData;
 
-	S_OCTET(0);
+	S_OCTET(sAppData.u8AppIdentifier);
 	S_OCTET(APP_PROTOCOL_VERSION);
-	S_OCTET(0); // アプリケーション論理アドレス
+	S_OCTET(LOGICAL_ID_CHILDREN); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
-	S_OCTET(0); // 宛先
+	S_OCTET(LOGICAL_ID_PARENT); // 宛先
 	S_BE_WORD(sAppData.u32CtTimer0 & 0xFFFF); // タイムスタンプ
 	S_OCTET(0); // 中継フラグ
 
@@ -2241,8 +2250,12 @@ static int16 i16TransmitPairingequest()
 	S_BE_DWORD(0x80000000 | ToCoNet_u32GetSerial());  // 要求APP ID
 	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 要求channel
 
-	S_BE_DWORD(0x80000000 | ToCoNet_u32GetSerial());  // 受諾APP ID
-	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 受諾channel
+	switch (u32State) {
+	default:
+		S_BE_DWORD(0);  // 受諾APP ID
+		S_OCTET(0); // 受諾channel
+		break;
+	}
 
 	sTx.u8Len = q - sTx.auData; // パケット長
 	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_PAIRING; // パケット種別
@@ -2857,6 +2870,94 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
 						sSerSeqRx.u16DataLen - 2);
 			}
 			memset(&sSerSeqRx, 0, sizeof(sSerSeqRx));
+		}
+	}
+}
+
+
+/** @ingroup MASTER
+ * ペアリングパケットの受信処理を行います。
+ *
+ * - 受信したデータを UART に出力します。
+ * - 低遅延で送信されてきたパケットの TimeStamp の MSB には１が設定される。
+ *   このパケットは、タイムスタンプによる重複除去アルゴリズムとは独立して
+ *   処理される。
+ *
+ * @param pRx 受信データ
+ */
+static void vReceivePairingData(tsRxDataApp *pRx) {
+	int i, j;
+	uint8 *p = pRx->auData;
+
+	uint8 u8AppIdentifier = G_OCTET();
+	if (u8AppIdentifier != sAppData.u8AppIdentifier)
+		return;
+
+	uint8 u8PtclVersion = G_OCTET();
+	if (u8PtclVersion != APP_PROTOCOL_VERSION)
+		return;
+
+	uint8 u8AppLogicalId = G_OCTET();
+
+	uint32 u32Addr = G_BE_DWORD();
+
+	uint8 u8AppLogicalId_Dest = G_OCTET();
+	(void) u8AppLogicalId_Dest;
+
+	uint16 u16TimeStamp = G_BE_WORD();
+
+	/* 重複の確認を行う */
+	bool_t bQuick = u16TimeStamp & 0x8000 ? TRUE : FALSE; // 優先パケット（全部処理する）
+	u16TimeStamp &= 0x7FFF;
+	if (bQuick == FALSE
+			&& bCheckDupPacket(&sDupChk_IoData, u32Addr, u16TimeStamp)) {
+		return;
+	}
+	static uint32 u32LastQuick;
+	if (bQuick) {
+		if ((u32TickCount_ms - u32LastQuick) < 20) {
+			// Quickパケットを受けて一定期間未満のパケットは無視する
+			return;
+		} else {
+			u32LastQuick = u32TickCount_ms; // タイムスタンプを巻き戻す
+		}
+	}
+
+	// 中継フラグ
+	G_OCTET();
+
+	// 親機子機の判定
+	if ((IS_LOGICAL_ID_PARENT(u8AppLogicalId)
+			&& IS_LOGICAL_ID_CHILD(sAppData.u8AppLogicalId))
+	|| (IS_LOGICAL_ID_CHILD(u8AppLogicalId) && (IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) || IS_LOGICAL_ID_CHILD(u8AppLogicalId_Dest))) ){
+		; // 親機⇒子機、または子機⇒親機への伝送
+	} else {
+		return;
+	}
+
+	// 要求AppId
+	G_BE_DWORD();
+	// 要求ch
+	G_OCTET();
+	// 受諾AppId
+	G_BE_DWORD();
+	// 受諾ch
+	G_OCTET();
+
+	/* タイムスタンプ */
+	sAppData.sIOData_now.u32RxLastTick = u32TickCount_ms;
+
+	/* UART 出力 */
+	if (!Interactive_bGetMode()) {
+		if (IS_APPCONF_OPT_REGULAR_PACKET_NO_DISP()) {
+			; // 通常パケットの場合の出力抑制設定
+		} else {
+			// 以下のようにペイロードを書き換えて UART 出力
+			pRx->auData[0] = pRx->u8Len; // １バイト目はバイト数
+			pRx->auData[2] = pRx->u8Lqi; // ３バイト目(もともとは送信元の LogicalID) は LQI
+
+			SerCmdAscii_Output_AdrCmd(&sSerStream, u8AppLogicalId,
+					SERCMD_ID_INFORM_IO_DATA, pRx->auData, pRx->u8Len);
 		}
 	}
 }
