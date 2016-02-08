@@ -515,7 +515,6 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
 				) {
 			// 変更が有った場合は送信する
-			int i;
 			bool_t bCond = FALSE;
 
 			if (sAppData.u16CtRndCt)
@@ -544,9 +543,6 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 						sAppData.sIOData_now.au8Input[2] & 1,
 						sAppData.sIOData_now.au8Input[3] & 1,
 						sAppData.sIOData_now.u32BtmBitmap);
-
-				// 低遅延送信が必要かどうかの判定
-				bool_t bQuick = FALSE;
 
 				// 送信要求
 				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingRequest(E_STATE_APP_PAIR_SCAN);
@@ -2247,7 +2243,7 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 
 	S_OCTET(1); // パケット形式
 
-	S_BE_DWORD(0x80000000 | ToCoNet_u32GetSerial());  // 要求APP ID
+	S_BE_DWORD(ToCoNet_u32GetSerial());  // 要求APP ID
 	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 要求channel
 
 	switch (u32State) {
@@ -2443,7 +2439,8 @@ static void vReceiveIoData(tsRxDataApp *pRx) {
 	}
 
 	// 中継フラグ
-	G_OCTET();
+	uint8 u8Relay = G_OCTET();
+	(void)u8Relay;
 
 	// 親機子機の判定
 	if ((IS_LOGICAL_ID_PARENT(u8AppLogicalId)
@@ -2623,7 +2620,8 @@ static void vReceiveIoSettingRequest(tsRxDataApp *pRx) {
 	}
 
 	// 中継フラグ
-	G_OCTET();
+	uint8 u8Relay = G_OCTET();
+	(void)u8Relay;
 
 	// 親機子機の判定
 	if (IS_LOGICAL_ID_CHILD(sAppData.u8AppLogicalId)) {
@@ -2886,7 +2884,6 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
  * @param pRx 受信データ
  */
 static void vReceivePairingData(tsRxDataApp *pRx) {
-	int i, j;
 	uint8 *p = pRx->auData;
 
 	uint8 u8AppIdentifier = G_OCTET();
@@ -2924,7 +2921,8 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	}
 
 	// 中継フラグ
-	G_OCTET();
+	uint8 u8Relay = G_OCTET();
+	(void)u8Relay;
 
 	// 親機子機の判定
 	if ((IS_LOGICAL_ID_PARENT(u8AppLogicalId)
@@ -2936,13 +2934,13 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	}
 
 	// 要求AppId
-	G_BE_DWORD();
+	sAppData.u32ReqAppId = G_BE_DWORD();
 	// 要求ch
-	G_OCTET();
+	sAppData.u8ReqCh = G_OCTET();
 	// 受諾AppId
-	G_BE_DWORD();
+	uint32 u32AcceptAppId = G_BE_DWORD();
 	// 受諾ch
-	G_OCTET();
+	uint8 u8AcceptCh = G_OCTET();
 
 	/* タイムスタンプ */
 	sAppData.sIOData_now.u32RxLastTick = u32TickCount_ms;
