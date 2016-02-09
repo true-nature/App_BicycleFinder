@@ -480,6 +480,11 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		if (eEvent == E_EVENT_START_UP) {
 			sAppData.u16CtRndCt = 0;
 
+			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();
+			sAppData.u32CandidateAppId = 0;
+			sAppData.u8CandidateCh = 0;
+			sAppData.u16MatchCount = 0;
+
 			/* Initialize the Interactive mode */
 			Interactive_vInit();
 		}
@@ -527,23 +532,6 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 
 			// 送信
 			if (bCond) {
-				// デバッグ出力
-				DBGOUT(5,
-						"A(%02d/%04d)%d%d: v=%04d A1=%04d/%04d A2=%04d/%04d B=%d%d%d%d %08x"LB,
-						sAppData.u32CtTimer0, u32TickCount_ms & 8191,
-						sAppData.bUpdatedAdc ? 1 : 0,
-						sAppData.sIOData_now.u32BtmChanged ? 1 : 0,
-						sAppData.sIOData_now.u16Volt,
-						sAppData.sIOData_now.au16InputADC[0],
-						sAppData.sIOData_now.au16InputPWMDuty[0] >> 2,
-						sAppData.sIOData_now.au16InputADC[1],
-						sAppData.sIOData_now.au16InputPWMDuty[1] >> 2,
-						sAppData.sIOData_now.au8Input[0] & 1,
-						sAppData.sIOData_now.au8Input[1] & 1,
-						sAppData.sIOData_now.au8Input[2] & 1,
-						sAppData.sIOData_now.au8Input[3] & 1,
-						sAppData.sIOData_now.u32BtmBitmap);
-
 				// 送信要求
 				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingRequest(E_STATE_APP_PAIR_SCAN);
 
@@ -2243,13 +2231,13 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 
 	S_OCTET(1); // パケット形式
 
-	S_BE_DWORD(ToCoNet_u32GetSerial());  // 要求APP ID
-	S_OCTET((((ToCoNet_u32GetSerial() & 0xF) + 10) % 0xF) + 11); // 要求channel
+	S_BE_DWORD(sAppData.u32ReqAppId);  // 要求APP ID
+	S_OCTET((((sAppData.u32ReqAppId & 0xF) + 10) % 0xF) + 11); // 要求channel
 
 	switch (u32State) {
 	default:
-		S_BE_DWORD(0);  // 受諾APP ID
-		S_OCTET(0); // 受諾channel
+		S_BE_DWORD(sAppData.u32CandidateAppId);  // 受諾APP ID
+		S_OCTET(sAppData.u8CandidateCh); // 受諾channel
 		break;
 	}
 
@@ -2934,13 +2922,23 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	}
 
 	// 要求AppId
-	sAppData.u32ReqAppId = G_BE_DWORD();
+	uint32 u32ReqAppId = G_BE_DWORD();
 	// 要求ch
-	sAppData.u8ReqCh = G_OCTET();
+	uint8 u8ReqCh = G_OCTET();
 	// 受諾AppId
 	uint32 u32AcceptAppId = G_BE_DWORD();
 	// 受諾ch
 	uint8 u8AcceptCh = G_OCTET();
+	if (u32AcceptAppId == 0) {
+		// ignore
+	} else if (u32AcceptAppId == sAppData.u32CandidateAppId) {
+		sAppData.u16MatchCount++;
+	} else {
+		if (u32ReqAppId < sAppData.u32ReqAppId) {
+
+		}
+
+	}
 
 	/* タイムスタンプ */
 	sAppData.sIOData_now.u32RxLastTick = u32TickCount_ms;
