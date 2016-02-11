@@ -154,6 +154,8 @@ extern const uint8 au8IoModeTbl_To_LogicalID[8]; //!< tePortConf2Mode から論�
 #define IS_LOGICAL_ID_PARENT(s) (s == 0) //!< 論理アドレスが親機の場合
 #define IS_LOGICAL_ID_REPEATER(s) (s == 254) //!< 論理アドレスがリピータの場合
 
+#define AUTO_PAIR_COUNT_MIN (2)	//!< 自動ペアリング確認の最低カウント
+
 /*
  * シリアルコマンドの定義
  */

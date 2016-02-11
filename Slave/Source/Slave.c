@@ -81,11 +81,7 @@
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
 #define BATTERY_LOW_ALARM_VOLT 2400
-#ifdef INCREASE_ADC_INTERVAL_ms
-#define APPT_TICK_A_MASK ~0
-#else
 #define APPT_TICK_A_MASK 1
-#endif
 
 /****************************************************************************/
 /***        Type Definitions                                              ***/
@@ -98,6 +94,7 @@ static void vProcessEvCore(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
 static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg);
+static void vSendPairingRequest(uint32 u32State);
 
 static void vInitHardware(int f_warm_start);
 
@@ -456,19 +453,23 @@ static void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
  * アプリケーション制御（AutoPairing モード）
  * - 機能概要
  *   - 起動時にランダムで処理を保留する（同時起動による送信パケットの競合回避のため）
- *   - 初回のDI/AD状態確定まで待つ
  *   - 実行状態では E_EVENT_APP_TICK_A (64fps タイマーイベント) を起点に処理する。
- *     - 32fps のタイミングで送信判定を行う
- *     - 定期パケット送信後は、次回のタイミングを乱数によってブレを作る。
+  *     - 定期パケット送信後は、次回のタイミングを乱数によってブレを作る。
  *
  * - 状態一覧
  *   - E_STATE_IDLE\n
  *     起動直後に呼び出される状態で、同時起動によるパケット衝突を避けるためランダムなウェイトを置き、次の状態に遷移する。
  *   - E_STATE_APP_PAIR_SCAN\n
- *     初回に DI および AI の入力値が確定するまでの待ちを行い、E_STATE_RUNNING に遷移する。
- *   - E_STATE_RUNNING
- *     秒６４回のタイマー割り込み (E_EVENT_TICK_A) を受けて、入力状態の変化のチェックを行い、無線パケットの送信要求を
- *     発行する。各種判定条件があるので、詳細はコード中のコメント参照。
+ *     ペアリング相手が現れるのを待つ。
+ *   - E_STATE_APP_PAIR_PROPOSE\n
+ *     送受信を1秒間継続し、AppIdとChannelの合意を形成する。
+ *   - E_STATE_APP_PAIR_CONFIRM\n
+ *     合意したAppIdとChannelにRF設定を切り替える。
+ *     送受信を1秒間継続し、AppIdとChannelの合意を確認する。
+ *   - E_STATE_APP_PAIR_COMPLETE\n
+ *     合意したAppIdとChannelをflashに保存する。
+ *   - E_STATE_APP_PAIR_FAILED\n
+ *     リセットする。
  *
  * @param pEv
  * @param eEvent
@@ -478,12 +479,19 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
+			vPortSetHi(PORT_OUT1);
+			vPortSetHi(PORT_OUT2);
+			vPortSetHi(PORT_OUT3);
+			vPortSetHi(PORT_OUT4);
+
 			sAppData.u16CtRndCt = 0;
 
-			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();
+			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();  // 要求APP ID
+			sAppData.u8ReqCh = ((sAppData.u32ReqAppId & 0xF) + 11); // 要求channel
 			sAppData.u32CandidateAppId = 0;
 			sAppData.u8CandidateCh = 0;
 			sAppData.u16MatchCount = 0;
+			sAppData.u16PeerMatched = 0;
 
 			/* Initialize the Interactive mode */
 			Interactive_vInit();
@@ -498,61 +506,115 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		// 始動時ランダムな待ちを置く
 		if (sAppData.u16CtRndCt
 				&& PRSEV_u32TickFrNewState(pEv) > sAppData.u16CtRndCt) {
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_SET_INITIAL_ON);
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_SCAN);
 			sAppData.u16CtRndCt = 32; // この変数は定期送信のタイミング用に再利用する。
 		}
 
 		break;
 
-	case E_STATE_APP_SET_INITIAL_ON:
-		if (eEvent == E_EVENT_NEW_STATE) {
-			vPortSetHi(PORT_OUT1);
-			vPortSetHi(PORT_OUT2);
-			vPortSetHi(PORT_OUT3);
-			vPortSetHi(PORT_OUT4);
-
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_SCAN);
-		}
-		break;
-
 	case E_STATE_APP_PAIR_SCAN:
 		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
-		&& (sAppData.u32CtTimer0 & APPT_TICK_A_MASK) // 秒32回にする
 				) {
-			// 変更が有った場合は送信する
-			bool_t bCond = FALSE;
-
-			if (sAppData.u16CtRndCt)
-				sAppData.u16CtRndCt--; // 定期パケット送信までのカウントダウン
-
-			// レギュラー送信  // TODO レギュラー送信しないオプション
-			if (!bCond && (sAppData.u16CtRndCt == 0)) {
-				bCond = TRUE;
-			}
-
-			// 送信
-			if (bCond) {
-				// 送信要求
-				sAppData.sIOData_now.i16TxCbId = i16TransmitPairingRequest(E_STATE_APP_PAIR_SCAN);
-
-				// 次の定期パケットのタイミングを仕込む
-				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xF) + 24;
-			}
+			vSendPairingRequest(pEv->eState);
+		}
+		// ペアリング相手が現れたら提案確認フェーズ
+		if (0 < sAppData.u16MatchCount) {
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_PROPOSE);
+		}
+		else if (10000 <= PRSEV_u32TickFrNewState(pEv)) {
+			// 10秒待って相手が現れなければ諦める
+			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
 		}
 		break;
 
 	case E_STATE_APP_PAIR_PROPOSE:
+		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
+				) {
+			vSendPairingRequest(pEv->eState);
+		}
+		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
+			// 1秒待ってから判断
+			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
+					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_CONFIRM);
+			} else {
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+			}
+		}
 		break;
 
 	case E_STATE_APP_PAIR_CONFIRM:
-		ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
+		if (eEvent == E_EVENT_NEW_STATE) {
+			sToCoNet_AppContext.u32AppId = sAppData.u32CandidateAppId;
+			sAppData.u8AppIdentifier = u8CCITT8(
+					(uint8*) &sAppData.u32CandidateAppId, 4); // APP ID の CRC8
+			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh; // pairing用に固定
+			sToCoNet_AppContext.u32ChMask = (1UL << sAppData.u8CandidateCh);
+			ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
+			// 次の定期パケットのタイミングを仕込む
+			sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
+			sAppData.u32CandidateAppId = 0;
+			sAppData.u8CandidateCh = 0;
+			sAppData.u16MatchCount = 0;
+			sAppData.u16PeerMatched = 0;
+		}
+		else if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
+				) {
+			vSendPairingRequest(pEv->eState);
+		}
+		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
+			// 1秒待ってから判断
+			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
+					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_COMPLETE);
+			} else {
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+			}
+		}
 		break;
 
 	case E_STATE_APP_PAIR_COMPLETE:
+		// AppId,Chを書き換えて保存
+	{
+		tsFlash sFlash = sAppData.sFlash;
+		sFlash.sData.u32appid = sAppData.u32CandidateAppId;
+		sFlash.sData.u8ch = sAppData.u8CandidateCh;
+		sFlash.sData.u32chmask = (1UL << sAppData.u8CandidateCh);
+		sFlash.sData.u32appkey = APP_ID;
+		sFlash.sData.u32ver = VERSION_U32;
+		bool_t bRet = bFlash_Write(&sFlash, FLASH_SECTOR_NUMBER - 1, 0);
+		V_PRINT("!INF FlashWrite %s"LB, bRet ? "Success" : "Failed");
+		vWait(100000);
+	}
+		// no break
+
+	case E_STATE_APP_PAIR_FAILED:
+		// 諦めてリセット
+		V_PRINT("!INF RESET SYSTEM.");
+		vWait(1000000);
+		vAHI_SwReset();
 		break;
 
 	default:
 		break;
+	}
+}
+
+/**
+ * ペアリング要求を間歇的に送信
+ * @param pEv
+ */
+void vSendPairingRequest(uint32 u32State) {
+	if (sAppData.u16CtRndCt)
+		sAppData.u16CtRndCt--;
+	// 定期パケット送信までのカウントダウン
+	// レギュラー送信
+	if (sAppData.u16CtRndCt == 0) {
+		// 送信要求
+		sAppData.sIOData_now.i16TxCbId = i16TransmitPairingRequest(u32State);
+
+		// 次の定期パケットのタイミングを仕込む
+		sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
 	}
 }
 
@@ -2200,10 +2262,11 @@ int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq) {
  *   - BE_WORD: 送信タイムスタンプ (64fps カウンタの値の下１６ビット, 約1000秒で１周する)
  *   - OCTET: 中継フラグ
  *   - OCTET: 形式 (1固定)
- *   - BE_WORD: 要求APP ID
+ *   - BE_DWORD: 要求APP ID
  *   - OCTET: 要求channel
- *   - BE_WORD: 受諾APP ID
+ *   - BE_DWORD: 受諾APP ID
  *   - OCTET: 受諾channel
+ *   - BE_WORD: 送信元のペアマッチ確認回数
  *
  * @param u8DstAddr 送信先
  * @param pReq 設定データ
@@ -2232,14 +2295,11 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 	S_OCTET(1); // パケット形式
 
 	S_BE_DWORD(sAppData.u32ReqAppId);  // 要求APP ID
-	S_OCTET((((sAppData.u32ReqAppId & 0xF) + 10) % 0xF) + 11); // 要求channel
+	S_OCTET(sAppData.u8ReqCh); // 要求channel
 
-	switch (u32State) {
-	default:
-		S_BE_DWORD(sAppData.u32CandidateAppId);  // 受諾APP ID
-		S_OCTET(sAppData.u8CandidateCh); // 受諾channel
-		break;
-	}
+	S_BE_DWORD(sAppData.u32CandidateAppId);  // 受諾APP ID
+	S_OCTET(sAppData.u8CandidateCh); // 受諾channel
+	S_BE_WORD(sAppData.u16MatchCount);	// マッチカウンタ
 
 	sTx.u8Len = q - sTx.auData; // パケット長
 	sTx.u8Cmd = TOCONET_PACKET_CMD_APP_USER_PAIRING; // パケット種別
@@ -2865,7 +2925,6 @@ static void vReceiveSerMsg(tsRxDataApp *pRx) {
  * ペアリングパケットの受信処理を行います。
  *
  * - 受信したデータを UART に出力します。
- * - 低遅延で送信されてきたパケットの TimeStamp の MSB には１が設定される。
  *   このパケットは、タイムスタンプによる重複除去アルゴリズムとは独立して
  *   処理される。
  *
@@ -2925,19 +2984,28 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	uint32 u32ReqAppId = G_BE_DWORD();
 	// 要求ch
 	uint8 u8ReqCh = G_OCTET();
+	(void)u8ReqCh;
 	// 受諾AppId
 	uint32 u32AcceptAppId = G_BE_DWORD();
 	// 受諾ch
 	uint8 u8AcceptCh = G_OCTET();
-	if (u32AcceptAppId == 0) {
-		// ignore
-	} else if (u32AcceptAppId == sAppData.u32CandidateAppId) {
+	(void)u8AcceptCh;
+	sAppData.u16PeerMatched = G_BE_WORD();	// 相手方pairingマッチカウンタ
+
+	if (sAppData.u32CandidateAppId == 0) {
+		if (u32ReqAppId < sAppData.u32ReqAppId) {
+			sAppData.u32CandidateAppId = u32ReqAppId;
+			sAppData.u8CandidateCh = u8ReqCh;
+		} else if (sAppData.u32ReqAppId < u32ReqAppId) {
+			sAppData.u32CandidateAppId = sAppData.u32ReqAppId;
+			sAppData.u8CandidateCh = sAppData.u8ReqCh;
+		} else {
+			// bad case
+		}
+	} else if (sAppData.u32CandidateAppId == u32AcceptAppId) {
 		sAppData.u16MatchCount++;
 	} else {
-		if (u32ReqAppId < sAppData.u32ReqAppId) {
-
-		}
-
+		// ignore u32AcceptAppId == 0 or bad case(maybe multiple peer).
 	}
 
 	/* タイムスタンプ */

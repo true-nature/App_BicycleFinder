@@ -57,6 +57,7 @@ typedef enum
 	E_STATE_APP_PAIR_PROPOSE,				//!< Auto Pairing Propose phase
 	E_STATE_APP_PAIR_CONFIRM,				//!< Auto Pairing Confirm phase
 	E_STATE_APP_PAIR_COMPLETE,				//!< Auto Pairing Complete phase
+	E_STATE_APP_PAIR_FAILED,				//!< Auto Pairing Failed (timeout)
 } teStateApp;
 
 #endif /* EVENT_H_ */
