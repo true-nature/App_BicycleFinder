@@ -583,6 +583,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 	switch (pEv->eState) {
 	case E_STATE_IDLE:
 		if (eEvent == E_EVENT_START_UP) {
+			vfPrintf(&sSerStream, "!INF ENTERED AUTO PAIRING MODE.@%dms"LB, u32TickCount_ms);
 			vPortSetHi(PORT_OUT1);
 			vPortSetHi(PORT_OUT2);
 			vPortSetHi(PORT_OUT3);
@@ -591,56 +592,56 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			sAppData.u16CtRndCt = 0;
 
 			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();  // 要求APP ID
-			sAppData.u8ReqCh = ((sAppData.u32ReqAppId & 0xF) + 11); // 要求channel
+			sAppData.u8ReqCh = ((ToCoNet_u16GetRand() & 0xF) + 11); // 要求channel
 			sAppData.u32CandidateAppId = 0;
 			sAppData.u8CandidateCh = 0;
 			sAppData.u16MatchCount = 0;
 			sAppData.u16PeerMatched = 0;
-
-			/* Initialize the Interactive mode */
-			Interactive_vInit();
 		}
 
 		if (eEvent == E_EVENT_TICK_TIMER) {
 			if (!sAppData.u16CtRndCt) {
 				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xFF) + 10; // 始動時にランダムで少し待つ（同時電源投入でぶつからないように）
 			}
-		}
 
-		// 始動時ランダムな待ちを置く
-		if (sAppData.u16CtRndCt
-				&& PRSEV_u32TickFrNewState(pEv) > sAppData.u16CtRndCt) {
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_SCAN);
-			sAppData.u16CtRndCt = 32; // この変数は定期送信のタイミング用に再利用する。
+			// 始動時ランダムな待ちを置く
+			if (sAppData.u16CtRndCt
+					&& PRSEV_u32TickFrNewState(pEv) > sAppData.u16CtRndCt) {
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_SCAN);
+				sAppData.u16CtRndCt = 0;
+			}
 		}
 
 		break;
 
 	case E_STATE_APP_PAIR_SCAN:
-		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
+		if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+				&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 				) {
 			vSendPairingRequest(pEv->eState);
-			const uint32 mask = 0x03FF;
-			const uint32 duty = 4;
-			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			const uint32 mask = 0x3F;
+			const uint32 duty = 1;
+			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
 		// ペアリング相手が現れたら提案確認フェーズ
 		if (0 < sAppData.u16MatchCount) {
+			vfPrintf(&sSerStream, "!INF PEER EXIST.@%dms"LB, u32TickCount_ms);
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_PROPOSE);
 		}
-		else if (10000 <= PRSEV_u32TickFrNewState(pEv)) {
-			// 10秒待って相手が現れなければ諦める
+		else if (30000 <= PRSEV_u32TickFrNewState(pEv)) {
+			// 30秒待って相手が現れなければ諦める
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
 		}
 		break;
 
 	case E_STATE_APP_PAIR_PROPOSE:
-		if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
+		if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+				&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 				) {
 			vSendPairingRequest(pEv->eState);
-			const uint32 mask = 0x01FF;
-			const uint32 duty = 4;
-			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			const uint32 mask = 0x1F;
+			const uint32 duty = 1;
+			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
 		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 			// 1秒待ってから判断
@@ -655,6 +656,8 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 
 	case E_STATE_APP_PAIR_CONFIRM:
 		if (eEvent == E_EVENT_NEW_STATE) {
+			vfPrintf(&sSerStream, "!INF TRY NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
+			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x　ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
 			sToCoNet_AppContext.u32AppId = sAppData.u32CandidateAppId;
 			sAppData.u8AppIdentifier = u8CCITT8(
 					(uint8*) &sAppData.u32CandidateAppId, 4); // APP ID の CRC8
@@ -668,12 +671,13 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			sAppData.u16MatchCount = 0;
 			sAppData.u16PeerMatched = 0;
 		}
-		else if (eEvent == E_EVENT_APP_TICK_A // 秒64回のタイマー割り込み
-				) {
+		else if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+					&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
+					) {
 			vSendPairingRequest(pEv->eState);
-			const uint32 mask = 0x00FF;
-			const uint32 duty = 4;
-			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
+			const uint32 mask = 0xF;
+			const uint32 duty = 1;
+			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
 		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 			// 1秒待ってから判断
@@ -689,6 +693,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 	case E_STATE_APP_PAIR_COMPLETE:
 		// AppId,Chを書き換えて保存
 	{
+		vfPrintf(&sSerStream, "!INF SAVE NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
 		tsFlash sFlash = sAppData.sFlash;
 		sFlash.sData.u32appid = sAppData.u32CandidateAppId;
 		sFlash.sData.u8ch = sAppData.u8CandidateCh;
@@ -905,7 +910,6 @@ void cbAppColdStart(bool_t bStart) {
 
 		if (!(IS_APPCONF_ROLE_SILENT_MODE())) {
 			// 状態遷移マシンの登録
-			// 状態遷移マシンの登録
 			if (sAppData.bPairingMode) {
 				ToCoNet_Event_Register_State_Machine(vProcessEvCorePairing); // Auto Pairingの処理
 				sAppData.prPrsEv = (void*) vProcessEvCorePairing;
@@ -1030,8 +1034,8 @@ void cbToCoNet_vRxEvent(tsRxDataApp *psRx) {
 
 	if (IS_APPCONF_ROLE_SILENT_MODE()
 			// SILENTでは受信処理はしない。
-			|| sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC
-			// 10秒スリープでは受信処理はしない。
+			|| (!sAppData.bPairingMode && sAppData.u8Mode == E_IO_MODE_CHILD_SLP_10SEC)
+			// ペアリングモード以外の10秒スリープでは受信処理はしない。
 			// TODO: 受信機の電池切れを送信機で検出するための受信処理
 			) {
 		return;
@@ -2295,13 +2299,12 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 
 	S_OCTET(sAppData.u8AppIdentifier);
 	S_OCTET(APP_PROTOCOL_VERSION);
-	S_OCTET(LOGICAL_ID_CHILDREN); // アプリケーション論理アドレス
+	S_OCTET(LOGICAL_ID_CHILD_SLP_10SEC); // アプリケーション論理アドレス
 	S_BE_DWORD(ToCoNet_u32GetSerial());  // シリアル番号
-	S_OCTET(LOGICAL_ID_PARENT); // 宛先
+	// 自転車発見器のリモコンは子機宛に送信
+	S_OCTET(LOGICAL_ID_CHILD_SLP_1SEC);
 	S_BE_WORD(sAppData.u32CtTimer0 & 0xFFFF); // タイムスタンプ
 	S_OCTET(0); // 中継フラグ
-
-	S_OCTET(1); // パケット形式
 
 	S_BE_DWORD(sAppData.u32ReqAppId);  // 要求APP ID
 	S_OCTET(sAppData.u8ReqCh); // 要求channel
@@ -3007,6 +3010,7 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	|| (IS_LOGICAL_ID_CHILD(u8AppLogicalId) && (IS_LOGICAL_ID_PARENT(sAppData.u8AppLogicalId) || IS_LOGICAL_ID_CHILD(u8AppLogicalId_Dest))) ){
 		; // 親機⇒子機、または子機⇒親機への伝送
 	} else {
+		vfPrintf(&sSerStream, "!INF Master/Slave mismatch u8AppLogicalId:%02x, sAppData.u8AppLogicalId:%02x, u8AppLogicalId_Dest:%02x"LB, u8AppLogicalId, sAppData.u8AppLogicalId, u8AppLogicalId_Dest);
 		return;
 	}
 
@@ -3042,6 +3046,7 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	sAppData.sIOData_now.u32RxLastTick = u32TickCount_ms;
 
 	/* UART 出力 */
+	vfPrintf(&sSerStream, "!INF vReceivePairingData() u32ReqAppId:%08x sAppData.u32ReqAppId:%08x"LB, u32ReqAppId, sAppData.u32ReqAppId);
 	if (!Interactive_bGetMode()) {
 		if (IS_APPCONF_OPT_REGULAR_PACKET_NO_DISP()) {
 			; // 通常パケットの場合の出力抑制設定
