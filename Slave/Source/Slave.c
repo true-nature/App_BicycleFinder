@@ -739,7 +739,8 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF TRY NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
 			vfPrintf(&sSerStream, "!INF u16MatchCount=%d sAppData.u32CandidateAppId:%08x"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId);
-			sToCoNet_AppContext.u32AppId = sAppData.u32CandidateAppId;
+			// u32AppIdはcbAppColdStart以外で変更不可
+//			sToCoNet_AppContext.u32AppId = sAppData.u32CandidateAppId;
 			sAppData.u8AppIdentifier = u8CCITT8(
 					(uint8*) &sAppData.u32CandidateAppId, 4); // APP ID の CRC8
 			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh; // pairing用に固定
