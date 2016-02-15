@@ -625,13 +625,15 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
 		// ペアリング相手が現れたら提案確認フェーズ
-		if (0 < sAppData.u16MatchCount) {
-			vfPrintf(&sSerStream, "!INF PEER EXIST.@%dms"LB, u32TickCount_ms);
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_PROPOSE);
-		}
-		else if (30000 <= PRSEV_u32TickFrNewState(pEv)) {
-			// 30秒待って相手が現れなければ諦める
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (0 < sAppData.u16MatchCount) {
+				vfPrintf(&sSerStream, "!INF PEER EXIST.@%dms"LB, u32TickCount_ms);
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_PROPOSE);
+			}
+			else if (30000 <= PRSEV_u32TickFrNewState(pEv)) {
+				// 30秒待って相手が現れなければ諦める
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+			}
 		}
 		break;
 
@@ -666,8 +668,8 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			sAppData.u16PeerMatched = 0;
 			// u32AppIdはcbAppColdStart以外で変更不可なのでu8AppIdentifierだけを変更
 			sAppData.u8AppIdentifier = u8CCITT8(
-					(uint8*) &sAppData.u32CandidateAppId, 4); // APP ID の CRC8
-			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh; // pairing用に固定
+					(uint8*) &sAppData.u32CandidateAppId, 4);
+			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh;
 			sToCoNet_AppContext.u32ChMask = (1UL << sAppData.u8CandidateCh);
 			// 次の定期パケットのタイミングを仕込む
 			sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
@@ -682,40 +684,44 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			const uint32 duty = 1;
 			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
-		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
-			// 1秒待ってから判断
-			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
-			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
-					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_COMPLETE);
-			} else {
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
+				// 1秒待ってから判断
+				vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
+				if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
+						&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
+					ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_COMPLETE);
+				} else {
+					ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
+				}
 			}
 		}
 		break;
 
 	case E_STATE_APP_PAIR_COMPLETE:
 		// AppId,Chを書き換えて保存
-	{
-		vfPrintf(&sSerStream, "!INF SAVE NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
-		tsFlash sFlash = sAppData.sFlash;
-		sFlash.sData.u32appid = sAppData.u32CandidateAppId;
-		sFlash.sData.u8ch = sAppData.u8CandidateCh;
-		sFlash.sData.u32chmask = (1UL << sAppData.u8CandidateCh);
-		sFlash.sData.u32appkey = APP_ID;
-		sFlash.sData.u32ver = VERSION_U32;
-		bool_t bRet = bFlash_Write(&sFlash, FLASH_SECTOR_NUMBER - 1, 0);
-		V_PRINT("!INF FlashWrite %s"LB, bRet ? "Success" : "Failed");
-		vWait(100000);
-	}
+		if (eEvent == E_EVENT_NEW_STATE) {
+			vfPrintf(&sSerStream, "!INF SAVE NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
+			tsFlash sFlash = sAppData.sFlash;
+			sFlash.sData.u32appid = sAppData.u32CandidateAppId;
+			sFlash.sData.u8ch = sAppData.u8CandidateCh;
+			sFlash.sData.u32chmask = (1UL << sAppData.u8CandidateCh);
+			sFlash.sData.u32appkey = APP_ID;
+			sFlash.sData.u32ver = VERSION_U32;
+			bool_t bRet = bFlash_Write(&sFlash, FLASH_SECTOR_NUMBER - 1, 0);
+			V_PRINT("!INF FlashWrite %s"LB, bRet ? "Success" : "Failed");
+			vWait(100000);
+		}
 		// no break
 
 	case E_STATE_APP_PAIR_FAILED:
 		// 諦めてリセット
-		V_PRINT("!INF RESET SYSTEM.");
-		vPortSetHi(PORT_OUT4);
-		vWait(1000000);
-		vAHI_SwReset();
+		if (eEvent == E_EVENT_NEW_STATE) {
+			V_PRINT("!INF RESET SYSTEM.");
+			vPortSetHi(PORT_OUT4);
+			vWait(1000000);
+			vAHI_SwReset();
+		}
 		break;
 
 	default:
