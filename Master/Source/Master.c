@@ -594,6 +594,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();  // 要求APP ID
 			sAppData.u8ReqCh = ((ToCoNet_u16GetRand() & 0xF) + 11); // 要求channel
 			sAppData.u32CandidateAppId = 0;
+			sAppData.u32AnotherAppId = 0;
 			sAppData.u8CandidateCh = 0;
 			sAppData.u16MatchCount = 0;
 			sAppData.u16PeerMatched = 0;
@@ -645,6 +646,9 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		}
 		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 			// 1秒待ってから判断
+			sToCoNet_AppContext.bRxOnIdle = FALSE;
+			ToCoNet_vRfConfig();	// 受信を一旦停止
+			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
 			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
 					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_CONFIRM);
@@ -657,20 +661,18 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 	case E_STATE_APP_PAIR_CONFIRM:
 		if (eEvent == E_EVENT_NEW_STATE) {
 			vfPrintf(&sSerStream, "!INF TRY NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
-			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x　ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
-			// u32AppIdはcbAppColdStart以外で変更不可
-//			sToCoNet_AppContext.u32AppId = sAppData.u32CandidateAppId;
+			// カウンタを一旦クリア
+			sAppData.u16MatchCount = 0;
+			sAppData.u16PeerMatched = 0;
+			// u32AppIdはcbAppColdStart以外で変更不可なのでu8AppIdentifierだけを変更
 			sAppData.u8AppIdentifier = u8CCITT8(
 					(uint8*) &sAppData.u32CandidateAppId, 4); // APP ID の CRC8
 			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh; // pairing用に固定
 			sToCoNet_AppContext.u32ChMask = (1UL << sAppData.u8CandidateCh);
-			ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
 			// 次の定期パケットのタイミングを仕込む
 			sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
-			sAppData.u32CandidateAppId = 0;
-			sAppData.u8CandidateCh = 0;
-			sAppData.u16MatchCount = 0;
-			sAppData.u16PeerMatched = 0;
+			sToCoNet_AppContext.bRxOnIdle = TRUE;
+			ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
 		}
 		else if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
 					&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
@@ -682,6 +684,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		}
 		if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 			// 1秒待ってから判断
+			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
 			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
 					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_COMPLETE);
@@ -2278,8 +2281,9 @@ int16 i16TransmitIoSettingRequest(uint8 u8DstAddr, tsIOSetReq *pReq) {
  *   - OCTET: 形式 (1固定)
  *   - BE_DWORD: 要求APP ID
  *   - OCTET: 要求channel
- *   - BE_DWORD: 受諾APP ID
- *   - OCTET: 受諾channel
+ *   - BE_DWORD: 候補APP ID
+ *   - BE_DWORD: 対向APP ID
+ *   - OCTET: 候補channel
  *   - BE_WORD: 送信元のペアマッチ確認回数
  *
  * @param u8DstAddr 送信先
@@ -2310,7 +2314,8 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 	S_BE_DWORD(sAppData.u32ReqAppId);  // 要求APP ID
 	S_OCTET(sAppData.u8ReqCh); // 要求channel
 
-	S_BE_DWORD(sAppData.u32CandidateAppId);  // 受諾APP ID
+	S_BE_DWORD(sAppData.u32CandidateAppId);  // 候補APP ID
+	S_BE_DWORD(sAppData.u32AnotherAppId);  // 対向APP ID
 	S_OCTET(sAppData.u8CandidateCh); // 受諾channel
 	S_BE_WORD(sAppData.u16MatchCount);	// マッチカウンタ
 
@@ -3020,9 +3025,11 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	// 要求ch
 	uint8 u8ReqCh = G_OCTET();
 	(void)u8ReqCh;
-	// 受諾AppId
+	// 候補AppId
 	uint32 u32AcceptAppId = G_BE_DWORD();
-	// 受諾ch
+	// 対向AppId
+	uint32 u32AnotherAppId = G_BE_DWORD();
+	// 候補ch
 	uint8 u8AcceptCh = G_OCTET();
 	(void)u8AcceptCh;
 	sAppData.u16PeerMatched = G_BE_WORD();	// 相手方pairingマッチカウンタ
@@ -3030,14 +3037,17 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	if (sAppData.u32CandidateAppId == 0) {
 		if (u32ReqAppId < sAppData.u32ReqAppId) {
 			sAppData.u32CandidateAppId = u32ReqAppId;
+			sAppData.u32AnotherAppId = sAppData.u32ReqAppId;
 			sAppData.u8CandidateCh = u8ReqCh;
 		} else if (sAppData.u32ReqAppId < u32ReqAppId) {
 			sAppData.u32CandidateAppId = sAppData.u32ReqAppId;
+			sAppData.u32AnotherAppId = u32ReqAppId;
 			sAppData.u8CandidateCh = sAppData.u8ReqCh;
 		} else {
 			// bad case
 		}
-	} else if (sAppData.u32CandidateAppId == u32AcceptAppId) {
+	} else if (sAppData.u32CandidateAppId == u32AcceptAppId
+			&& sAppData.u32AnotherAppId == u32AnotherAppId) {
 		sAppData.u16MatchCount++;
 	} else {
 		// ignore u32AcceptAppId == 0 or bad case(maybe multiple peer).
@@ -3047,7 +3057,6 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	sAppData.sIOData_now.u32RxLastTick = u32TickCount_ms;
 
 	/* UART 出力 */
-	vfPrintf(&sSerStream, "!INF vReceivePairingData() u32ReqAppId:%08x sAppData.u32ReqAppId:%08x"LB, u32ReqAppId, sAppData.u32ReqAppId);
 	if (!Interactive_bGetMode()) {
 		if (IS_APPCONF_OPT_REGULAR_PACKET_NO_DISP()) {
 			; // 通常パケットの場合の出力抑制設定

@@ -168,9 +168,10 @@ typedef struct {
 	uint8 u8SerMsg_RequestNumber; //!< シリアルメッセージの要求番号
 
 	// auto pairing
-	uint32 u32ReqAppId;	//!< 要求されたAppId
-	uint8 u8ReqCh;	//!< 要求されたChannel
+	uint32 u32ReqAppId;	//!< 要求AppId
+	uint8 u8ReqCh;	//!< 要求Channel
 	uint32 u32CandidateAppId;	//!< AppId候補
+	uint32 u32AnotherAppId;	//!< 対向AppId
 	uint8 u8CandidateCh;	//!< Channel候補
 	uint16 u16MatchCount;	//!< pairingマッチカウンタ
 	uint16 u16PeerMatched;	//!< 相手方pairingマッチカウンタ
