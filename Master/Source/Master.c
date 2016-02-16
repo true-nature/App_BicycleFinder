@@ -687,6 +687,8 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		if (eEvent == E_EVENT_TICK_TIMER) {
 			if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 				// 1秒待ってから判断
+				sToCoNet_AppContext.bRxOnIdle = FALSE;
+				ToCoNet_vRfConfig();	// 受信を停止
 				vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
 				if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
 						&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
