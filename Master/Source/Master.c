@@ -653,6 +653,19 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			vfPrintf(&sSerStream, "!INF u16MatchCount=%d u32CandidateAppId:%08x ch:%d"LB, sAppData.u16MatchCount, sAppData.u32CandidateAppId, sAppData.u8CandidateCh);
 			if (AUTO_PAIR_COUNT_MIN <= sAppData.u16MatchCount
 					&& AUTO_PAIR_COUNT_MIN <= sAppData.u16PeerMatched) {
+				vfPrintf(&sSerStream, "!INF TRY NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
+				// カウンタを一旦クリア
+				sAppData.u16MatchCount = 0;
+				sAppData.u16PeerMatched = 0;
+				// u32AppIdはcbAppColdStart以外で変更不可なのでu8AppIdentifierだけを変更
+				sAppData.u8AppIdentifier = u8CCITT8(
+						(uint8*) &sAppData.u32CandidateAppId, 4);
+				sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh;
+				sToCoNet_AppContext.u32ChMask = (1UL << sAppData.u8CandidateCh);
+				// 次の定期パケットのタイミングを仕込む
+				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
+				sToCoNet_AppContext.bRxOnIdle = TRUE;
+				ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_CONFIRM);
 			} else {
 				ToCoNet_Event_SetState(pEv, E_STATE_APP_PAIR_FAILED);
@@ -661,22 +674,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 		break;
 
 	case E_STATE_APP_PAIR_CONFIRM:
-		if (eEvent == E_EVENT_NEW_STATE) {
-			vfPrintf(&sSerStream, "!INF TRY NEW ID/CH SETTINGS.@%dms"LB, u32TickCount_ms);
-			// カウンタを一旦クリア
-			sAppData.u16MatchCount = 0;
-			sAppData.u16PeerMatched = 0;
-			// u32AppIdはcbAppColdStart以外で変更不可なのでu8AppIdentifierだけを変更
-			sAppData.u8AppIdentifier = u8CCITT8(
-					(uint8*) &sAppData.u32CandidateAppId, 4);
-			sToCoNet_AppContext.u8Channel = sAppData.u8CandidateCh;
-			sToCoNet_AppContext.u32ChMask = (1UL << sAppData.u8CandidateCh);
-			// 次の定期パケットのタイミングを仕込む
-			sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0x3);
-			sToCoNet_AppContext.bRxOnIdle = TRUE;
-			ToCoNet_vRfConfig();	// 新たなRF設定に切り替える
-		}
-		else if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
+		if (eEvent == E_EVENT_APP_TICK_A  // 秒64回のタイマー割り込み
 					&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 					) {
 			vSendPairingRequest(pEv->eState);
@@ -684,7 +682,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 			const uint32 duty = 1;
 			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
-		if (eEvent == E_EVENT_TICK_TIMER) {
+		else if (eEvent == E_EVENT_TICK_TIMER) {
 			if (1000 <= PRSEV_u32TickFrNewState(pEv)) {
 				// 1秒待ってから判断
 				sToCoNet_AppContext.bRxOnIdle = FALSE;
