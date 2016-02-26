@@ -679,13 +679,13 @@
     )
   )
 
-  (module favorites:LED-1206 (layer F.Cu) (tedit 55A04A37) (tstamp 550E37E5)
+  (module favorites:LED-1206 (layer F.Cu) (tedit 56D05CAB) (tstamp 550E37E5)
     (at 35 21 90)
     (descr "LED 1206 smd package")
     (tags "LED1206 SMD")
     (path /54AD1F8E)
     (attr smd)
-    (fp_text reference LD1 (at 4.191 0 90) (layer F.SilkS)
+    (fp_text reference LD1 (at 0 2.4 90) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
     )
     (fp_text value SML-012WT (at -0.127 2.032 90) (layer F.SilkS) hide
