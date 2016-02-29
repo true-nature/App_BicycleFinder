@@ -186,12 +186,12 @@
       (net 1 /3V))
     (pad 2 smd rect (at 0 0 180) (size 4 4) (layers F.Cu F.Paste F.Mask)
       (net 11 GND))
-    (model favorites/BK-888.wrl
+    (model favorites.3dshapes/BK-888.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
     )
-    (model favorites/CR2032.wrl
+    (model favorites.3dshapes/CR2032.wrl
       (at (xyz 0 0 0.007874015748))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -258,7 +258,7 @@
       (net 11 GND))
     (pad 2 smd rect (at 2.075 1.075) (size 1.05 0.65) (layers F.Cu F.Paste F.Mask)
       (net 11 GND))
-    (model favorites/SKRPACE010.wrl
+    (model favorites.3dshapes/SKRPACE010.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -328,7 +328,7 @@
       (net 11 GND))
     (pad 2 thru_hole circle (at -2.54 5.08 180) (size 1.718 1.718) (drill 1) (layers *.Cu *.Mask F.SilkS)
       (net 11 GND))
-    (model favorites/JB-15HFBP2.wrl
+    (model favorites.3dshapes/JB-15HFBP2.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -357,7 +357,7 @@
     (pad 2 smd rect (at -7.15 -2.5) (size 2.3 1.2) (layers F.Cu F.Paste F.Mask)
       (net 11 GND))
     (pad "" np_thru_hole circle (at 0 0) (size 2.5 2.5) (drill 2.5) (layers *.Cu *.Mask F.SilkS))
-    (model favorites/B3FS-4002P.wrl
+    (model favorites.3dshapes/B3FS-4002P.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -391,7 +391,7 @@
       (net 7 /RST))
     (pad 5 smd rect (at -0.95 1.4 270) (size 0.6 1.4) (layers B.Cu B.Paste B.Mask)
       (net 10 /Vcc))
-    (model favorites/SSOP5.wrl
+    (model favorites.3dshapes/SSOP5.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -415,7 +415,7 @@
       (net 4 /DI4))
     (pad 2 smd rect (at 9.275 0) (size 2.54 1.9) (layers B.Cu B.Paste B.Mask)
       (net 11 GND))
-    (model favorites/FR2S1015.wrl
+    (model favorites.3dshapes/FR2S1015.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -453,27 +453,27 @@
       (clearance 0.7))
     (pad "" np_thru_hole circle (at 11 -20.3) (size 1.7 1.7) (drill 1.7) (layers *.Cu *.Mask F.SilkS)
       (clearance 0.7))
-    (model favorites/PS-65.wrl
+    (model favorites.3dshapes/PS-65.wrl
       (at (xyz 0 0 -0.03937))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
     )
-    (model favorites/ISO7045_M1_6x4.wrl
+    (model favorites.3dshapes/ISO7045_M1_6x4.wrl
       (at (xyz -0.433071 -0.799213 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
     )
-    (model favorites/ISO7045_M1_6x4.wrl
+    (model favorites.3dshapes/ISO7045_M1_6x4.wrl
       (at (xyz -0.433071 0.799213 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
     )
-    (model favorites/ISO7045_M1_6x4.wrl
+    (model favorites.3dshapes/ISO7045_M1_6x4.wrl
       (at (xyz 0.433071 -0.799213 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
     )
-    (model favorites/ISO7045_M1_6x4.wrl
+    (model favorites.3dshapes/ISO7045_M1_6x4.wrl
       (at (xyz 0.433071 0.799213 0))
       (scale (xyz 0.393701 0.393701 0.393701))
       (rotate (xyz 0 0 0))
@@ -624,7 +624,7 @@
       (net 5 /DO4))
     (pad 2 smd rect (at 1.41986 0 90) (size 1.59766 1.80086) (layers F.Cu F.Paste F.Mask)
       (net 25 /LED))
-    (model favorites/SML-012WT.wrl
+    (model favorites.3dshapes/SML-012WT.wrl
       (at (xyz 0 0 0))
       (scale (xyz 0.3937007874015748 0.3937007874015748 0.3937007874015748))
       (rotate (xyz 0 0 0))
