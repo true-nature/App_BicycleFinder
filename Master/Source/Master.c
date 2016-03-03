@@ -77,7 +77,7 @@
 /****************************************************************************/
 /***        Macro Definitions                                             ***/
 /****************************************************************************/
-#define BATTERY_LOW_ALARM_VOLT 2600
+#define BATTERY_LOW_ALARM_VOLT 2300
 #define BATTERY_REPEAT_TX_VOLT 2100
 #ifdef INCREASE_ADC_INTERVAL_ms
 #define APPT_TICK_A_MASK ~0
