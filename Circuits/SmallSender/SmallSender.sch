@@ -217,12 +217,12 @@ GND
 $Comp
 L SW_PUSH SW4
 U 1 1 5533A166
-P 5100 3700
-F 0 "SW4" H 5250 3810 50  0000 C CNN
-F 1 "SKRPACE010" H 5100 3620 50  0000 C CNN
-F 2 "favorites:SKRPACE010" H 5100 3700 60  0001 C CNN
-F 3 "~" H 5100 3700 60  0000 C CNN
-	1    5100 3700
+P 5050 3750
+F 0 "SW4" H 5200 3860 50  0000 C CNN
+F 1 "SKRPACE010" H 5050 3670 50  0000 C CNN
+F 2 "favorites:SKRPACE010" H 5050 3750 60  0001 C CNN
+F 3 "~" H 5050 3750 60  0000 C CNN
+	1    5050 3750
 	0    1    1    0   
 $EndComp
 NoConn ~ 8650 3200
@@ -239,8 +239,6 @@ F 3 "" H 3500 3350 60  0000 C CNN
 	1    3500 3350
 	1    0    0    -1  
 $EndComp
-Text Label 6450 2900 0    60   ~ 0
-PAIRING
 $Comp
 L SW_PUSH SW1
 U 1 1 568D0130
@@ -321,7 +319,7 @@ Wire Wire Line
 Wire Wire Line
 	5750 1500 5750 2800
 Wire Wire Line
-	5250 3400 7150 3400
+	5050 3400 7150 3400
 Wire Wire Line
 	5250 1500 5250 3400
 Wire Wire Line
@@ -396,10 +394,6 @@ Wire Wire Line
 Wire Wire Line
 	2450 1850 5150 1850
 Wire Wire Line
-	7150 2900 5100 2900
-Wire Wire Line
-	5100 2900 5100 3400
-Wire Wire Line
 	5950 4800 5950 4100
 Connection ~ 6250 4100
 Wire Wire Line
@@ -433,8 +427,8 @@ Wire Wire Line
 	4600 3750 4600 4100
 Connection ~ 4600 4100
 Wire Wire Line
-	5100 4000 5100 4100
-Connection ~ 5100 4100
+	5050 4050 5050 4100
+Connection ~ 5050 4100
 $Comp
 L R R2
 U 1 1 56D32256
@@ -462,4 +456,8 @@ $EndComp
 Wire Wire Line
 	6600 3850 6550 3850
 Connection ~ 6550 4400
+NoConn ~ 7150 2900
+Connection ~ 5250 3400
+Wire Wire Line
+	5050 3450 5050 3400
 $EndSCHEMATC
