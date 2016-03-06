@@ -445,7 +445,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		DBGOUT(3, "%d", sAppData.u8IOFixState);
 
 		// IO状態の確定後、チャタリングが落ち着くのを待って送信する。
-		if (sAppData.u8IOFixState == 0x3 && PRSEV_u32TickFrNewState(pEv) > 20) {
+		if (sAppData.u8IOFixState == 0x3 && eEvent == E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 20) {
 			if (sAppData.sIOData_now.u32BtmBitmap != 0) {
 				vfPrintf(&sSerStream,
 						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
@@ -489,7 +489,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF BATTTERY SELF:%dmV"LB, sAppData.sIOData_now.u16Volt, u32TickCount_ms);
 				// 送信中は約1秒周期でDO4のLED点滅, 自機の電池残量が少なければ250ms周期の早い点滅
 				mask = (1 << (sAppData.sIOData_now.u16Volt < BATTERY_LOW_ALARM_VOLT ? 8 : 10)) - 1;
-				duty = mask >> 2;
+				duty = mask >> 4;
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 		}
@@ -531,18 +531,18 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 	case E_STATE_FINISHED:
 		_C {
 			if (eEvent == E_EVENT_NEW_STATE) {
-				vfPrintf(&sSerStream, "!INF SLEEP %dms @%dms."LB,
+				vPortSetHi(PORT_OUT4);
+				vfPrintf(&sSerStream, "!INF Sleep %dms @%dms."LB,
 						sAppData.u32SleepDur, u32TickCount_ms);
 				SERIAL_vFlush(sSerStream.u8Device);
-				vPortSetHi(PORT_OUT4);
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
 			}
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_SLEEPING);
 		}
 		break;
 
 	case E_STATE_APP_SLEEPING:
 		if (eEvent == E_EVENT_NEW_STATE) {
-			vSleep(sAppData.u32SleepDur, TRUE, (sAppData.u32SleepDur == 0));
+			vSleep(0, TRUE, FALSE);
 		}
 
 		break;
@@ -620,7 +620,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 				&& (sAppData.u32CtTimer0 & 1) // 秒32回にする
 				) {
 			vSendPairingRequest(pEv->eState);
-			const uint32 mask = 0x3F;
+			const uint32 mask = 0x7F;
 			const uint32 duty = 1;
 			vPortSet_TrueAsLo(PORT_OUT4, (sAppData.u32CtTimer0 & mask) <= duty);
 		}
@@ -994,6 +994,8 @@ void cbAppWarmStart(bool_t bStart) {
 		sAppData.u16CtTimer0 = 0; // このカウンタは、起動時からのカウントとする
 		sAppData.u8IOFixState = FALSE; // IO読み取り状態の確定待ちフラグ
 		sAppData.bUpdatedAdc = 0; // ADCの変化フラグ
+		// 連続送信の電流節約のためCPUクロックを4MHzに下げる
+		sToCoNet_AppContext.u8CPUClk = 0;
 
 		// その他ハードウェアの初期化（基本、起動時に毎回実行する）
 		vInitHardware(TRUE);
@@ -1547,9 +1549,9 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 			// Lo でない場合は、プルアップ停止をするとリーク電流が発生する
 			vPortDisablePullup(PORT_CONF1);
 		}
-		if (bPortRead(PORT_CONF2)) {
+		if (bPortRead(PORT_INPUT1)) {
 			sAppData.bPairingMode = TRUE;
-			vPortDisablePullup(PORT_CONF2);
+//			vPortDisablePullup(PORT_INPUT1);
 		}
 	}
 
