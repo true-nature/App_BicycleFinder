@@ -131,15 +131,18 @@ const uint8 au8Mml_TwincleStar[] =
 // When The Saints Go Marching In
 const uint8 au8Mml_SaintsMarch[] =
 		"O6T200L4 CEFG1&G CEFG1&G CEFG2E2C2E2 D1&D EEDC2.C E2G2 GF2.&F2 EFG2E2C2D2C1";
+// Silent(無音)
+const uint8 au8Mml_Silent[] =
+		"O6T96L2 RR RR RR RR RR RR";
 
 const uint8 *au8MmlBank[MMLBANK_COUNT] = {
 		au8Mml_Butterfly,
 		au8Mml_HappyBirthday,
 		au8Mml_Canon,
-		au8Mml_Canon2,
 		au8Mml_JingleBells,
 		au8Mml_TwincleStar,
 		au8Mml_SaintsMarch,
+		au8Mml_Silent,
 };
 
 tsUserMML sUserMMLData;
