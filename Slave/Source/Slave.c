@@ -504,47 +504,52 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		break;
 
 	case E_STATE_RUNNING:
-		DBGOUT(3, "%d", sAppData.u8IOFixState);
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			DBGOUT(3, "%d", sAppData.u8IOFixState);
+			// IO状態が確定すれば送信する。
+			if (sAppData.u8IOFixState == 0x3) {
+				vfPrintf(&sSerStream,
+						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
+						sAppData.sIOData_now.au8Input[0] & 1,
+						sAppData.sIOData_now.au8Input[1] & 1,
+						sAppData.sIOData_now.au8Input[2] & 1,
+						sAppData.sIOData_now.au8Input[3] & 1,
+						sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[0],
+						sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[1],
+						sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[2],
+						sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
+								9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
 
-		// IO状態が確定すれば送信する。
-		if (sAppData.u8IOFixState == 0x3) {
-			vfPrintf(&sSerStream,
-					"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
-					sAppData.sIOData_now.au8Input[0] & 1,
-					sAppData.sIOData_now.au8Input[1] & 1,
-					sAppData.sIOData_now.au8Input[2] & 1,
-					sAppData.sIOData_now.au8Input[3] & 1,
-					sAppData.sIOData_now.au16InputADC[0] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[0],
-					sAppData.sIOData_now.au16InputADC[1] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[1],
-					sAppData.sIOData_now.au16InputADC[2] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[2],
-					sAppData.sIOData_now.au16InputADC[3] == 0xFFFF ?
-							9999 : sAppData.sIOData_now.au16InputADC[3], u32TickCount_ms);
-
-				// クイックで送信
-				sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
-				// 完了待ちをするため CbId を保存する。
-				// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
-				ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
+					// クイックで送信
+					sAppData.sIOData_now.i16TxCbId = i16TransmitIoData(TRUE, FALSE);
+					// 完了待ちをするため CbId を保存する。
+					// TODO: この時点で失敗した場合は、次の状態のタイムアウトで処理されるが非効率である。
+					ToCoNet_Event_SetState(pEv, E_STATE_WAIT_TX);
+			}
 		}
 		break;
 	case E_STATE_WAIT_TX:
 		if (eEvent == E_EVENT_APP_TX_COMPLETE) {
 			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
 		}
-		if ((PRSEV_u32TickFrNewState(pEv) > 100)
-				|| (u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 100)) {
-			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 100), u32TickCount_ms);
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+		else if (eEvent == E_EVENT_TICK_TIMER) {
+			if ((PRSEV_u32TickFrNewState(pEv) > 100)
+					|| (u32TickCount_ms - sAppData.u32AdcLastTick) > (sAppData.sFlash.sData.u16SleepDur_ms + 100)) {
+				vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), (sAppData.sFlash.sData.u16SleepDur_ms + 100), u32TickCount_ms);
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+			}
 		}
 		break;
 
 	case E_STATE_APP_WAIT_RX_IDLE:
-		if (PRSEV_u32TickFrNewState(pEv) >= 32) {
-			// ADCをスキップする場合は受信のための時間を確保する
-			ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (PRSEV_u32TickFrNewState(pEv) >= 32) {
+				// ADCをスキップする場合は受信のための時間を確保する
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_WAIT_PLAY_MML);
+			}
 		}
 		break;
 	case E_STATE_APP_WAIT_PLAY_MML:
@@ -569,7 +574,7 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vUpdateMmlIndex();
 				copyMmlByIndex(sAppData.sFlash.sData.u8MML_idx);
 				MML_vPlay(&sMML, sUserMMLData.u8Data);
-			} else {
+			} else if (eEvent == E_EVENT_TICK_TIMER) {
 				vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 				// DO3のLEDが先行して点滅
 				vPortSet_TrueAsLo(PORT_OUT3, ((u32TickCount_ms + duty) & mask) <= duty);

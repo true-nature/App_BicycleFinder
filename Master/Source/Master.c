@@ -445,7 +445,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		DBGOUT(3, "%d", sAppData.u8IOFixState);
 
 		// IO状態の確定後、チャタリングが落ち着くのを待って送信する。
-		if (sAppData.u8IOFixState == 0x3 && eEvent == E_EVENT_APP_TICK_A && PRSEV_u32TickFrNewState(pEv) > 20) {
+		if (sAppData.u8IOFixState == 0x3 && eEvent == E_EVENT_TICK_TIMER && PRSEV_u32TickFrNewState(pEv) > 20) {
 			if (sAppData.sIOData_now.u32BtmBitmap != 0) {
 				vfPrintf(&sSerStream,
 						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
@@ -493,10 +493,12 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 			}
 			vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 		}
-		int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
-		if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
-			vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
-			ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			int duration = (u8bm == 0x08 ? 100UL : (sAppData.sFlash.sData.u16SleepDur_ms + 200));
+			if ((u32TickCount_ms - sAppData.u32AdcLastTick) >  duration) {
+				vfPrintf(&sSerStream, "!INF WAIT_TX TIMEOUT %d > %d. @%dms"LB, (u32TickCount_ms - sAppData.u32AdcLastTick), duration, u32TickCount_ms);
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
+			}
 		}
 		break;
 
