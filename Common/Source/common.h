@@ -155,6 +155,15 @@ extern const uint8 au8IoModeTbl_To_LogicalID[8]; //!< tePortConf2Mode から論�
 #define IS_LOGICAL_ID_REPEATER(s) (s == 254) //!< 論理アドレスがリピータの場合
 
 #define AUTO_PAIR_COUNT_MIN (2)	//!< 自動ペアリング確認の最低カウント
+/**
+ * ADCの状態
+ */
+#define ADC_NOT_INITIALIZED 0xFF	//!< 0xFF:初期化前
+#define ADC_REQUEST 0			//!< 0x0:ADC開始要求
+#define ADC_CONVERTING 1		//!< 0x1:AD中
+#define ADC_CONVERTED 2			//!< 0x2:AD完了
+#define ADC_DAC_REFRESH 3		//!< 0x3:DACのリフレッシュ(JN514x only)
+#define ADC_COMPLETED 0x80			//!< 0x2:AD完了
 
 /*
  * シリアルコマンドの定義

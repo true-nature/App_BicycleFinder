@@ -249,7 +249,7 @@ void vProcessEvCorePwr(tsEvent *pEv, teEvent eEvent, uint32 u32evarg) {
 			static bool_t bStarted = FALSE;
 
 			if (!sAppData.u16CtRndCt) {
-				sAppData.u8AdcState = 0; // ADC の開始
+				sAppData.u8AdcState = ADC_REQUEST; // ADC の開始
 				bStarted = TRUE;
 				sAppData.u16CtRndCt = (ToCoNet_u16GetRand() & 0xFF) + 10; // 始動時にランダムで少し待つ（同時電源投入でぶつからないように）
 			}
@@ -433,7 +433,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
 						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
 			}
-			sAppData.u8AdcState = 0; // ADC の開始
+			sAppData.u8AdcState = ADC_REQUEST; // ADC の開始
 			sAppData.u32AdcLastTick = u32TickCount_ms;
 			u8bm = 0;	// ボタン状態をクリア
 
@@ -1322,8 +1322,8 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		sAppData.u16CtTimer0++;
 
 		// ADC の完了確認
-		if (sAppData.u8AdcState == 0x80) {
-			sAppData.u8AdcState = 0; // ADC の開始
+		if (sAppData.u8AdcState == ADC_COMPLETED) {
+			sAppData.u8AdcState = ADC_REQUEST; // ADC の開始
 		}
 
 		// 重複チェックのタイムアウト処理
@@ -1412,14 +1412,14 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 		break;
 
 	case E_AHI_DEVICE_TICK_TIMER:
-		if (sAppData.u8AdcState != 0xFF) { // 0xFF は準備中
+		if (sAppData.u8AdcState != ADC_NOT_INITIALIZED) { // 0xFF は準備中
 			switch (sAppData.u8AdcState) {
-			case 0:
+			case ADC_REQUEST:
 				vSnsObj_Process(&sAppData.sADC, E_ORDER_KICK);
-				sAppData.u8AdcState++;
+				sAppData.u8AdcState = ADC_CONVERTING;
 				break;
 
-			case 1:
+			case ADC_CONVERTING:
 				vSnsObj_Process(&sAppData.sADC, E_ORDER_KICK);
 
 				if (bSnsObj_isComplete(&sAppData.sADC)) {
@@ -1440,12 +1440,12 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 #if defined(JN514x)
 					sAppData.u8AdcState++;
 #else
-					sAppData.u8AdcState = 0x80; // 完了ステータス
+					sAppData.u8AdcState = ADC_COMPLETED; // 完了ステータス
 #endif
 				}
 				break;
 
-			case 2:
+			case ADC_CONVERTED:
 #if defined(JN514x)
 				// DAC の出力を行う (周期的なリフレッシュ)
 				if (bAHI_APRegulatorEnabled()) {
@@ -1456,7 +1456,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				sAppData.u8AdcState++;
 				break;
 
-			case 3:
+			case ADC_DAC_REFRESH:
 #if defined(JN514x)
 				// DAC の出力を行う (周期的なリフレッシュ)
 				if (bAHI_APRegulatorEnabled()) {
@@ -1464,10 +1464,10 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				}
 #endif
 
-				sAppData.u8AdcState = 0x80; // 完了ステータス
+				sAppData.u8AdcState = ADC_COMPLETED; // 完了ステータス
 				break;
 
-			case 0x80:
+			case ADC_COMPLETED:
 				break;
 
 			default:
@@ -1658,7 +1658,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 
 	// ADC
 	vADC_Init(&sAppData.sObjADC, &sAppData.sADC, TRUE);
-	sAppData.u8AdcState = 0xFF; // 初期化中
+	sAppData.u8AdcState = ADC_NOT_INITIALIZED; // 初期化中
 	if (IS_APPCONF_OPT_DISABLE_ADC()) {
 		// 動作時間短縮のため電源電圧以外はAD変換しない
 		sAppData.sObjADC.u8SourceMask = TEH_ADC_SRC_VOLT;
