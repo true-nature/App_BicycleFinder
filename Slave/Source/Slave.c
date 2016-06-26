@@ -1755,7 +1755,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	} else {
 		sAppData.sBTM_Config.u16Tick_ms = 4;
 	}
-	sAppData.sBTM_Config.u8MaxHistory = 5;
+	sAppData.sBTM_Config.u8MaxHistory = 25;
 	sAppData.sBTM_Config.u8DeviceTimer = 0xFF; // TickTimer を流用する。
 	sAppData.pr_BTM_handler = prBTM_InitExternal(&sAppData.sBTM_Config);
 	vBTM_Enable();
