@@ -445,7 +445,7 @@ static void vProcessEvCoreSlpSender(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 		DBGOUT(3, "%d", sAppData.u8IOFixState);
 
 		// IO状態の確定後、チャタリングが落ち着くのを待って送信する。
-		if (sAppData.u8IOFixState == 0x3 && eEvent == E_EVENT_TICK_TIMER && PRSEV_u32TickFrNewState(pEv) > 20) {
+		if (sAppData.u8IOFixState == 0x3 && eEvent == E_EVENT_TICK_TIMER && PRSEV_u32TickFrNewState(pEv) > 100) {
 			if (sAppData.sIOData_now.u32BtmBitmap != 0) {
 				vfPrintf(&sSerStream,
 						"!INF DI1-4:%d%d%d%d A1-4:%04d/%04d/%04d/%04d @%dms"LB,
