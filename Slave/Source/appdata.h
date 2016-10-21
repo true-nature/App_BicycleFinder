@@ -171,6 +171,7 @@ typedef struct {
 	// auto pairing
 	uint32 u32ReqAppId;	//!< 要求AppId
 	uint8 u8ReqCh;	//!< 要求Channel
+	uint16 u16TossRnd;	//!< コイン投げ乱数
 	uint32 u32CandidateAppId;	//!< AppId候補
 	uint32 u32AnotherAppId;	//!< 対向AppId
 	uint8 u8CandidateCh;	//!< Channel候補

@@ -595,6 +595,7 @@ static void vProcessEvCorePairing(tsEvent *pEv, teEvent eEvent, uint32 u32evarg)
 
 			sAppData.u32ReqAppId = ToCoNet_u32GetSerial();  // 要求APP ID
 			sAppData.u8ReqCh = ((ToCoNet_u16GetRand() & 0xF) + 11); // 要求channel
+			sAppData.u16TossRnd = ToCoNet_u16GetRand();
 			sAppData.u32CandidateAppId = 0;
 			sAppData.u32AnotherAppId = 0;
 			sAppData.u8CandidateCh = 0;
@@ -2323,6 +2324,7 @@ static int16 i16TransmitPairingRequest(uint32 u32State)
 
 	S_BE_DWORD(sAppData.u32ReqAppId);  // 要求APP ID
 	S_OCTET(sAppData.u8ReqCh); // 要求channel
+	S_BE_WORD(sAppData.u16TossRnd);	// コイン投げ乱数
 
 	S_BE_DWORD(sAppData.u32CandidateAppId);  // 候補APP ID
 	S_BE_DWORD(sAppData.u32AnotherAppId);  // 対向APP ID
@@ -3035,6 +3037,8 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	// 要求ch
 	uint8 u8ReqCh = G_OCTET();
 	(void)u8ReqCh;
+	// 勝負のコイン投げ乱数
+	uint16 u16TossRnd = G_BE_WORD();
 	// 候補AppId
 	uint32 u32AcceptAppId = G_BE_DWORD();
 	// 対向AppId
@@ -3045,16 +3049,18 @@ static void vReceivePairingData(tsRxDataApp *pRx) {
 	sAppData.u16PeerMatched = G_BE_WORD();	// 相手方pairingマッチカウンタ
 
 	if (sAppData.u32CandidateAppId == 0) {
-		if (u32ReqAppId < sAppData.u32ReqAppId) {
+		// 候補決定前ならコイン投げ乱数の大きい方を採用
+		if (sAppData.u16TossRnd < u16TossRnd) {
 			sAppData.u32CandidateAppId = u32ReqAppId;
 			sAppData.u32AnotherAppId = sAppData.u32ReqAppId;
 			sAppData.u8CandidateCh = u8ReqCh;
-		} else if (sAppData.u32ReqAppId < u32ReqAppId) {
+		} else if (u16TossRnd < sAppData.u16TossRnd) {
 			sAppData.u32CandidateAppId = sAppData.u32ReqAppId;
 			sAppData.u32AnotherAppId = u32ReqAppId;
 			sAppData.u8CandidateCh = sAppData.u8ReqCh;
 		} else {
-			// bad case
+			// コイン投げをやり直し
+			sAppData.u16TossRnd = ToCoNet_u16GetRand();
 		}
 	} else if (sAppData.u32CandidateAppId == u32AcceptAppId
 			&& sAppData.u32AnotherAppId == u32AnotherAppId) {
