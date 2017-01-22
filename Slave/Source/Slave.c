@@ -167,6 +167,8 @@ static const struct {
 		{0, 0}	// sentinel
 };
 static uint8 su8FlasherIndex;
+static const uint32 FLASHER_SETSTATE_DELAY_ms = 400;	//!< チャタリング回避のための不感時間
+static const uint32 FLASHER_MIN_CYCLE = 2;		//!< min cycle to exit flash mode
 static const uint32 FLASHER_MAX_CYCLE = 1500;	//!< max cycle of flasher pattern
 static uint32 su32FlasherCycle;	//!< flaasher cycle timeout counter
 #endif
@@ -478,9 +480,14 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vfPrintf(&sSerStream, "!INF %s WAKE UP. @%dms"LB,
 						sAppData.bWakeupByButton ? "DI" : "TIMER", u32TickCount_ms);
 			}
-			// flasher用に分岐
-			if (sAppData.bSafetyLightMode) {
-				ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_RUNNING);
+			if (sAppData.bWakeupByButton) {
+				if (sAppData.bSafetyLightMode) {
+					// flasherモードでスリープ中にボタンが押された場合
+					ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_EXIT);
+				} else {
+					// flasher切り替え用に分岐
+					ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_DETECTION);
+				}
 			} else {
 #if defined(INCREASE_ADC_INTERVAL_ms)
 				if (sAppData.u16CtRndCt == 0) {
@@ -499,6 +506,48 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 
 				ToCoNet_Event_SetState(pEv, E_STATE_RUNNING);
 #endif
+			}
+		}
+		break;
+
+	case E_STATE_APP_FLASHER_DETECTION:
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (PRSEV_u32TickFrNewState(pEv) > FLASHER_SETSTATE_DELAY_ms) {
+				// スイッチ解放時のチャタリングが落ち着く頃にflasher動作用へ分岐
+				sAppData.bSafetyLightMode = TRUE;
+				su32FlasherCycle = 0;
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_RUNNING);
+			}
+		}
+		break;
+
+	case E_STATE_APP_FLASHER_RUNNING:
+		// LEDフラッシャーとして動作中
+		if (eEvent == E_EVENT_NEW_STATE || eEvent == E_EVENT_START_UP) {
+			if ((FLASHER_MAX_CYCLE < su32FlasherCycle) || (FLASHER_MIN_CYCLE <= su32FlasherCycle && bPortRead(PORT_INPUT1))){
+				vfPrintf(&sSerStream, "."LB);
+				// 一定時間でLEDフラッシャーモードを脱出する
+				ToCoNet_Event_SetState(pEv, E_STATE_APP_FLASHER_EXIT);
+			} else {
+				vfPrintf(&sSerStream, ",");
+				su8FlasherIndex++;
+				if (cu8FlasherPattern[su8FlasherIndex].sleep == 0) {
+					su8FlasherIndex = 0;
+					su32FlasherCycle++;
+				}
+				vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex].led & 8);
+				vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex].led & 4);
+				ToCoNet_Event_vKeepStateOnRamHoldSleep(pEv); // 次の起床後も同じSTATEで開始
+				vSleep(cu8FlasherPattern[su8FlasherIndex].sleep, TRUE, FALSE);
+			}
+		}
+		break;
+
+	case E_STATE_APP_FLASHER_EXIT:
+		if (eEvent == E_EVENT_TICK_TIMER) {
+			if (PRSEV_u32TickFrNewState(pEv) > FLASHER_SETSTATE_DELAY_ms) {
+				// 終了時のチャタリング回避
+				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
 		}
 		break;
@@ -578,28 +627,6 @@ static void vProcessEvCoreSlpBeacon(tsEvent *pEv, teEvent eEvent, uint32 u32evar
 				vPortSet_TrueAsLo(PORT_OUT4, (u32TickCount_ms & mask) <= duty);
 				// DO3のLEDが先行して点滅
 				vPortSet_TrueAsLo(PORT_OUT3, ((u32TickCount_ms + duty) & mask) <= duty);
-			}
-		}
-		break;
-
-	case E_STATE_APP_FLASHER_RUNNING:
-		// LEDフラッシャーとして動作中
-		if (eEvent == E_EVENT_NEW_STATE || eEvent == E_EVENT_START_UP) {
-			su8FlasherIndex++;
-			if (cu8FlasherPattern[su8FlasherIndex].sleep == 0) {
-				su8FlasherIndex = 0;
-				su32FlasherCycle++;
-			}
-			vPortSet_TrueAsLo(PORT_OUT4, cu8FlasherPattern[su8FlasherIndex].led & 8);
-			vPortSet_TrueAsLo(PORT_OUT3, cu8FlasherPattern[su8FlasherIndex].led & 4);
-			vfPrintf(&sSerStream, "%dms."LB,PRSEV_u32TickFrNewState(pEv));
-			if (sAppData.bSafetyLightMode && su32FlasherCycle < FLASHER_MAX_CYCLE) {
-				// 最大30分間継続
-				ToCoNet_Event_vKeepStateOnRamHoldSleep(pEv); // 次の起床後も同じSTATEで開始
-				vSleep(cu8FlasherPattern[su8FlasherIndex].sleep, TRUE, FALSE);
-			} else {
-				// 起床中にスイッチが押されたらLEDフラッシャーモードを脱出する
-				ToCoNet_Event_SetState(pEv, E_STATE_FINISHED);
 			}
 		}
 		break;
@@ -1102,12 +1129,7 @@ void cbAppWarmStart(bool_t bStart) {
 		DUPCHK_vInit(&sDupChk_IoData);
 		DUPCHK_vInit(&sDupChk_SerMsg);
 
-		if (sAppData.bWakeupByButton) {
-			// ボタン起床ならばLEDフラッシャーモードを反転
-			sAppData.bSafetyLightMode = !sAppData.bSafetyLightMode;
-			su32FlasherCycle = 0;
-		}
-		if (!sAppData.bSafetyLightMode) {
+		if (!sAppData.bSafetyLightMode && !sAppData.bWakeupByButton) {
 			// 間欠モードで受信を有効にする
 			sToCoNet_AppContext.bRxOnIdle = TRUE;
 			//ToCoNet_vRfConfig();
@@ -1347,10 +1369,7 @@ void cbToCoNet_vHwEvent(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 				DBGOUT(1, "vHwEvent u8bm:%x", u8bm);
 				if ((u8bm & 0x01) && bPortRead(PORT_INPUT1) && !sAppData.bWakeupByButton) {
 					vfPrintf(&sSerStream, "u8bm:%02X" LB, u8bm);
-					if (sAppData.bSafetyLightMode) {
-						// LEDフラッシャーを停止
-						sAppData.bSafetyLightMode = FALSE;
-					} else {
+					if (!sAppData.bSafetyLightMode) {
 						// メロディー再生中ならメロディー変更
 						ToCoNet_Event_Process(E_EVENT_APP_CHANGE_MML, 0, sAppData.prPrsEv);
 					}
@@ -1756,7 +1775,7 @@ PUBLIC uint8 cbToCoNet_u8HwInt(uint32 u32DeviceId, uint32 u32ItemBitmap) {
 	} else {
 		sAppData.sBTM_Config.u16Tick_ms = 4;
 	}
-	sAppData.sBTM_Config.u8MaxHistory = 25;
+	sAppData.sBTM_Config.u8MaxHistory = 5;
 	sAppData.sBTM_Config.u8DeviceTimer = 0xFF; // TickTimer を流用する。
 	sAppData.pr_BTM_handler = prBTM_InitExternal(&sAppData.sBTM_Config);
 	vBTM_Enable();
