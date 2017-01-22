@@ -1,5 +1,4 @@
 EESchema Schematic File Version 2
-LIBS:SmallSender-rescue
 LIBS:favorites
 LIBS:power
 LIBS:device
@@ -45,17 +44,6 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L Battery BATTERY1
-U 1 1 5493D0B5
-P 1850 2850
-F 0 "BATTERY1" H 1650 2950 50  0000 C CNN
-F 1 "CR2032" H 1650 2750 50  0000 C CNN
-F 2 "favorites:BK-888+BK-2032M" H 1850 2850 60  0001 C CNN
-F 3 "" H 1850 2850 60  0000 C CNN
-	1    1850 2850
-	1    0    0    -1  
-$EndComp
 $Comp
 L SW_PUSH SW2
 U 1 1 549BC4AC
@@ -460,4 +448,15 @@ NoConn ~ 7150 2900
 Connection ~ 5250 3400
 Wire Wire Line
 	5050 3450 5050 3400
+$Comp
+L Battery_Cell BATTERY1
+U 1 1 588425B9
+P 1850 2900
+F 0 "BATTERY1" H 1950 3000 50  0000 L CNN
+F 1 "CR2032" H 1950 2900 50  0000 L CNN
+F 2 "" V 1850 2960 50  0000 C CNN
+F 3 "" V 1850 2960 50  0000 C CNN
+	1    1850 2900
+	-1   0    0    -1  
+$EndComp
 $EndSCHEMATC
